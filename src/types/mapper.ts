@@ -18,6 +18,8 @@ export interface WormholeNode {
   id: string; // system name, e.g. "J152438" or "Jita"
   name: string;
   systemClass: 'C1' | 'C2' | 'C3' | 'C4' | 'C5' | 'C6' | 'Highsec' | 'Lowsec' | 'Nullsec' | 'Thera' | 'Pochven';
+  security?: number;
+  sigCode?: string;
   effect?: string;
   statics: string[];
   structures: ScannedStructure[];
@@ -25,6 +27,8 @@ export interface WormholeNode {
   signatures: WormholeSignature[];
   notes?: string;
   lastUpdated: string;
+  x?: number;
+  y?: number;
 }
 
 export interface WormholeConnection {
@@ -32,6 +36,8 @@ export interface WormholeConnection {
   from: string;
   to: string;
   wormholeType?: string; // e.g. "H296", "K162"
+  sigFrom?: string;
+  sigTo?: string;
   massStatus?: 'stable' | 'destab' | 'critical';
   timeStatus?: 'stable' | 'eol'; // end of life
 }
