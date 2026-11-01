@@ -2,10 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Network, Compass, Building2, Users, Plus, Trash2, 
   Check, Share2, ZoomIn, ZoomOut, Maximize2, Crosshair,
-  User, MapPin, Eye, Radio, ExternalLink, Layers, Sparkles
+  User, MapPin, Eye, Radio, ExternalLink, Layers, Sparkles, KeyRound, LogOut
 } from 'lucide-react';
 import { mapperService } from '../services/mapperService';
 import { ChainMapState, WormholeNode, WormholeConnection } from '../types/mapper';
+import { authService, PilotProfile } from '../services/authService';
+import { PilotLoginModal } from './PilotLoginModal';
 
 export const ChainMapperView: React.FC = () => {
   const [mapState, setMapState] = useState<ChainMapState>(mapperService.getState());
@@ -25,23 +27,26 @@ export const ChainMapperView: React.FC = () => {
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const [currentPilotName, setCurrentPilotName] = useState<string>(() => {
-    return localStorage.getItem('synd_pilot_name') || 'USS Hauler';
-  });
+  const [currentPilot, setCurrentPilot] = useState<PilotProfile | null>(authService.getPilot());
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
   useEffect(() => {
-    const unsubscribe = mapperService.subscribe((state) => {
+    const unsubAuth = authService.subscribe((pilot) => {
+      setCurrentPilot(pilot);
+      if (pilot) {
+        mapperService.setPilotLocation(pilot.characterName, selectedSystemId);
+      }
+    });
+
+    const unsubMap = mapperService.subscribe((state) => {
       setMapState({ ...state });
     });
 
-    // Auto-announce saved pilot location on boot / refresh
-    const savedName = localStorage.getItem('synd_pilot_name');
-    if (savedName && savedName.trim()) {
-      mapperService.setPilotLocation(savedName.trim(), selectedSystemId);
-    }
-
-    return () => unsubscribe();
+    return () => {
+      unsubAuth();
+      unsubMap();
+    };
   }, []);
 
   const toggleFullscreen = () => {
@@ -55,9 +60,9 @@ export const ChainMapperView: React.FC = () => {
   const selectedSystem: WormholeNode | undefined = 
     mapState.systems[selectedSystemId] || Object.values(mapState.systems)[0];
 
-  // Active player system (e.g. J103955)
+  // Active player system
   const activeSystem = Object.values(mapState.systems).find(s => 
-    s.activePilots && s.activePilots.some(p => p.includes('(You)') || p.includes(currentPilotName))
+    s.activePilots && currentPilot && s.activePilots.some(p => p.toLowerCase().includes(currentPilot.characterName.toLowerCase()))
   ) || mapState.systems['J103955'] || selectedSystem;
 
   // Pan canvas handlers
@@ -196,38 +201,41 @@ export const ChainMapperView: React.FC = () => {
       {/* 1. TOP TITLE BAR (Tripwire / Pathfinder style) */}
       <div className="bg-[#0b0f1a] border-b border-gray-800/80 px-4 py-2 flex items-center justify-between text-xs z-20 flex-wrap gap-2">
         <div className="flex items-center gap-3 flex-wrap">
-          {/* Pilot Identity Control (USS Hauler / Syndra) */}
+          {/* Pilot Identity & EVE SSO Profile */}
           <div className="flex items-center gap-2 text-white font-bold tracking-wide text-xs">
             <span className="text-cyan-400 text-lg leading-none">≡</span>
-            <span className="text-gray-400 hidden sm:inline">Pilot:</span>
-            <input
-              type="text"
-              value={currentPilotName}
-              onChange={(e) => {
-                const name = e.target.value;
-                setCurrentPilotName(name);
-                localStorage.setItem('synd_pilot_name', name);
-              }}
-              onBlur={() => {
-                if (currentPilotName.trim() && selectedSystem) {
-                  mapperService.setPilotLocation(currentPilotName.trim(), selectedSystem.id);
-                }
-              }}
-              placeholder="Your Pilot Name"
-              className="bg-black/90 border border-gray-700 focus:border-cyan-400 rounded px-2.5 py-1 text-xs text-white font-bold w-36 font-mono"
-            />
-            <button
-              onClick={() => {
-                if (currentPilotName.trim() && selectedSystem) {
-                  mapperService.setPilotLocation(currentPilotName.trim(), selectedSystem.id);
-                }
-              }}
-              className="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-black font-bold text-xs flex items-center gap-1 shadow-[0_0_10px_rgba(16,185,129,0.3)] transition-all whitespace-nowrap"
-              title={`Move ${currentPilotName} to ${selectedSystem?.name || 'J103955'}`}
-            >
-              <MapPin className="w-3 h-3" />
-              <span>I'M IN {selectedSystem?.name || 'J103955'}</span>
-            </button>
+
+            {currentPilot ? (
+              <div className="flex items-center gap-2 bg-[#080d1a] border border-cyan-500/50 rounded-xl px-2.5 py-1 shadow-[0_0_12px_rgba(6,182,212,0.2)]">
+                <img
+                  src={currentPilot.avatarUrl}
+                  alt={currentPilot.characterName}
+                  className="w-5 h-5 rounded border border-cyan-400 object-cover"
+                />
+                <span className="text-white font-bold">{currentPilot.characterName}</span>
+                {currentPilot.corporationTicker && (
+                  <span className="text-[10px] text-cyan-300 hidden sm:inline">[{currentPilot.corporationTicker}]</span>
+                )}
+                <button
+                  onClick={() => {
+                    mapperService.setPilotLocation(currentPilot.characterName, selectedSystem?.id || 'J103955');
+                  }}
+                  className="px-2 py-0.5 rounded bg-emerald-600 hover:bg-emerald-500 text-black font-bold text-xs flex items-center gap-1 shadow-[0_0_8px_rgba(16,185,129,0.4)] transition-all whitespace-nowrap ml-1"
+                  title={`Move ${currentPilot.characterName} to ${selectedSystem?.name || 'J103955'}`}
+                >
+                  <MapPin className="w-3 h-3" />
+                  <span>I'M IN {selectedSystem?.name || 'J103955'}</span>
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setIsLoginModalOpen(true)}
+                className="px-3 py-1 rounded-lg bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-black font-bold text-xs flex items-center gap-1.5 shadow-[0_0_14px_rgba(6,182,212,0.35)] transition-all"
+              >
+                <KeyRound className="w-3.5 h-3.5" />
+                <span>SIGN IN PILOT / EVE SSO</span>
+              </button>
+            )}
           </div>
 
           <span className="hidden lg:inline-block w-px h-4 bg-gray-700/60"></span>
@@ -543,28 +551,41 @@ export const ChainMapperView: React.FC = () => {
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={currentPilotName}
-                    onChange={(e) => {
-                      setCurrentPilotName(e.target.value);
-                      localStorage.setItem('synd_pilot_name', e.target.value);
-                    }}
-                    placeholder="Pilot Name"
-                    className="bg-black/80 border border-gray-800 focus:border-cyan-500 rounded px-2.5 py-1 text-xs text-white placeholder-gray-600 focus:outline-none flex-1 font-mono"
-                  />
+                {currentPilot ? (
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <img
+                        src={currentPilot.avatarUrl}
+                        alt={currentPilot.characterName}
+                        className="w-7 h-7 rounded border border-cyan-400 object-cover"
+                      />
+                      <div className="leading-tight">
+                        <div className="text-white font-bold">{currentPilot.characterName}</div>
+                        <div className="text-[10px] text-cyan-300/80">
+                          {currentPilot.corporationTicker ? `[${currentPilot.corporationTicker}]` : currentPilot.corporationName}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        mapperService.setPilotLocation(currentPilot.characterName, selectedSystem.id);
+                      }}
+                      className="px-3 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-black font-bold text-xs flex items-center gap-1 shadow-[0_0_10px_rgba(16,185,129,0.3)] transition-all whitespace-nowrap"
+                      title="Move your pilot marker to this system"
+                    >
+                      <MapPin className="w-3 h-3" />
+                      <span>I'M HERE</span>
+                    </button>
+                  </div>
+                ) : (
                   <button
-                    onClick={() => {
-                      mapperService.setPilotLocation(currentPilotName, selectedSystem.id);
-                    }}
-                    className="px-3 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-black font-bold text-xs flex items-center gap-1 transition-all shadow-[0_0_10px_rgba(16,185,129,0.3)] whitespace-nowrap"
-                    title="Move your pilot marker to this system"
+                    onClick={() => setIsLoginModalOpen(true)}
+                    className="w-full py-2 rounded-lg bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-black font-bold text-xs flex items-center justify-center gap-1.5 shadow-[0_0_10px_rgba(6,182,212,0.3)]"
                   >
-                    <MapPin className="w-3 h-3" />
-                    <span>I'M HERE</span>
+                    <KeyRound className="w-3.5 h-3.5" />
+                    <span>Log in as Pilot to Set Location</span>
                   </button>
-                </div>
+                )}
 
                 {selectedSystem.activePilots && selectedSystem.activePilots.length > 0 && (
                   <div className="flex flex-wrap items-center gap-1.5 mt-2 pt-2 border-t border-gray-800/60">
@@ -653,6 +674,14 @@ export const ChainMapperView: React.FC = () => {
             </div>
           </div>
         )}
+        {/* Pilot Login Modal */}
+        <PilotLoginModal
+          isOpen={isLoginModalOpen}
+          onClose={() => setIsLoginModalOpen(false)}
+          onSuccess={(profile) => {
+            mapperService.setPilotLocation(profile.characterName, selectedSystem?.id || 'J103955');
+          }}
+        />
       </div>
     </div>
   );

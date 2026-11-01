@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Radar, Users, Flame, Cpu, Volume2, VolumeX, Clock, Radio, Network, Pickaxe, ExternalLink } from 'lucide-react';
+import { 
+  Radar, Users, Flame, Cpu, Volume2, VolumeX, Clock, 
+  Radio, Network, Pickaxe, ExternalLink, KeyRound, LogOut, User
+} from 'lucide-react';
+import { authService, PilotProfile } from '../services/authService';
+import { PilotLoginModal } from './PilotLoginModal';
 
 interface HeaderProps {
   activeTab: 'dscan' | 'mapper' | 'ore' | 'local' | 'killfeed' | 'eft';
@@ -20,6 +25,14 @@ export const Header: React.FC<HeaderProps> = ({
   setAutoWatchEnabled,
 }) => {
   const [eveTime, setEveTime] = useState<string>('');
+  const [currentPilot, setCurrentPilot] = useState<PilotProfile | null>(authService.getPilot());
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    return authService.subscribe((profile) => {
+      setCurrentPilot(profile);
+    });
+  }, []);
 
   useEffect(() => {
     const updateTime = () => {
@@ -167,12 +180,56 @@ export const Header: React.FC<HeaderProps> = ({
               {audioAlertsEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
             </button>
 
-            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-black/60 border border-cyan-950/80 rounded-lg text-cyan-400/90 font-mono text-xs">
+            <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 bg-black/60 border border-cyan-950/80 rounded-lg text-cyan-400/90 font-mono text-xs">
               <Clock className="w-3.5 h-3.5 text-cyan-500" />
               <span>{eveTime} EVE</span>
             </div>
+
+            {/* Pilot Profile & SSO Sign In */}
+            {currentPilot ? (
+              <div className="flex items-center gap-2 pl-1.5 pr-2.5 py-1 bg-[#090e1a] border border-cyan-500/50 rounded-xl text-xs font-mono shadow-[0_0_12px_rgba(6,182,212,0.2)]">
+                <img
+                  src={currentPilot.avatarUrl}
+                  alt={currentPilot.characterName}
+                  className="w-7 h-7 rounded-lg border border-cyan-400/60 object-cover"
+                />
+                <div className="hidden sm:block text-left leading-tight">
+                  <div className="text-white font-bold truncate max-w-[120px]">
+                    {currentPilot.characterName}
+                  </div>
+                  <div className="text-[10px] text-cyan-300/80 truncate max-w-[120px]">
+                    {currentPilot.corporationTicker ? `[${currentPilot.corporationTicker}]` : currentPilot.corporationName}
+                  </div>
+                </div>
+                <button
+                  onClick={() => authService.logout()}
+                  className="p-1 text-gray-400 hover:text-red-400 transition-colors ml-1"
+                  title="Log Out / Switch Pilot"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setIsLoginModalOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-black font-bold text-xs font-mono shadow-[0_0_12px_rgba(6,182,212,0.3)] transition-all"
+                title="Sign in with your EVE Online Character"
+              >
+                <KeyRound className="w-3.5 h-3.5" />
+                <span>PILOT SIGN IN</span>
+              </button>
+            )}
           </div>
         </div>
+
+        {/* Pilot Login Modal */}
+        <PilotLoginModal
+          isOpen={isLoginModalOpen}
+          onClose={() => setIsLoginModalOpen(false)}
+          onSuccess={(profile) => {
+            // Success handler
+          }}
+        />
 
         {/* Mobile Navigation bar */}
         <div className="flex md:hidden overflow-x-auto py-2 gap-2 border-t border-gray-800/80">

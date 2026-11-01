@@ -22,7 +22,7 @@ const INITIAL_SYSTEMS = {
   'Sobaseki': { id: 'Sobaseki', name: 'Sobaseki', systemClass: 'Highsec', security: 0.8, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 470, y: 130 },
   'Isanamo': { id: 'Isanamo', name: 'Isanamo', systemClass: 'Highsec', security: 0.6, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 470, y: 220 },
   'Uemisaisen': { id: 'Uemisaisen', name: 'Uemisaisen', systemClass: 'Highsec', security: 0.6, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 470, y: 310 },
-  'J103955': { id: 'J103955', name: 'J103955', systemClass: 'C3', sigCode: 'JVC', statics: ['Lowsec'], structures: [], activePilots: ['Syndra en Tilavine', 'USS Hauler'], signatures: [], lastUpdated: '13:30', x: 410, y: 400 },
+  'J103955': { id: 'J103955', name: 'J103955', systemClass: 'C3', sigCode: 'JVC', statics: ['Lowsec'], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 410, y: 400 },
   'J142349': { id: 'J142349', name: 'J142349', systemClass: 'C5', sigCode: 'JPV', statics: ['C3'], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 410, y: 490 },
   'New Caldari': { id: 'New Caldari', name: 'New Caldari', systemClass: 'Highsec', security: 1.0, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 740, y: 130 },
   'Alikara': { id: 'Alikara', name: 'Alikara', systemClass: 'Highsec', security: 0.7, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 740, y: 220 },
@@ -64,7 +64,7 @@ const INITIAL_CONNECTIONS = [
 let chainMap = {
   systems: { ...INITIAL_SYSTEMS },
   connections: [ ...INITIAL_CONNECTIONS ],
-  onlineBuddies: ['Syndra en Tilavine (Host)', 'USS Hauler (Fleet)']
+  onlineBuddies: []
 };
 
 const stateFilePath = path.join(__dirname, 'chainState.json');
@@ -329,24 +329,24 @@ const eveLogsBase = findEveLogsDir();
 console.log(`[EVE Location Follower] EVE Logs directory: ${eveLogsBase || 'NOT FOUND'}`);
 
 function detectHostCharacterName() {
-  if (!eveLogsBase) return 'Syndra en Tilavine';
+  if (!eveLogsBase) return null;
   const gameDir = path.join(eveLogsBase, 'Gamelogs');
-  if (!fs.existsSync(gameDir)) return 'Syndra en Tilavine';
+  if (!fs.existsSync(gameDir)) return null;
   const files = fs.readdirSync(gameDir).filter(f => f.endsWith('.txt')).map(f => {
     const full = path.join(gameDir, f);
     return { file: full, mtime: fs.statSync(full).mtime.getTime() };
   }).sort((a, b) => b.mtime - a.mtime);
-  if (files.length === 0) return 'Syndra en Tilavine';
+  if (files.length === 0) return null;
   try {
     const content = fs.readFileSync(files[0].file, 'utf8');
     const m = content.match(/Listener:\s*([^\r\n]+)/);
     if (m && m[1].trim()) return m[1].trim();
   } catch (e) {}
-  return 'Syndra en Tilavine';
+  return null;
 }
 
 const hostPilotName = detectHostCharacterName();
-console.log(`[Host Character Identified] Flying as: ${hostPilotName}`);
+console.log(`[Host Character Identified] Flying as: ${hostPilotName || 'Awaiting Pilot Sign In'}`);
 
 function handleSystemTransition(newSys, fromSys) {
   if (!newSys) return;
