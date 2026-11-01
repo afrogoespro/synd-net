@@ -656,6 +656,21 @@ export const ChainMapperView: React.FC = () => {
                             )}
                           </button>
                         )}
+
+                        {isSelected && node.id !== 'Jita' && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (window.confirm(`Delete system "${node.name}" and all its connections?`)) {
+                                mapperService.deleteSystem(node.id);
+                              }
+                            }}
+                            className="p-0.5 rounded text-gray-400 hover:text-red-400 hover:bg-red-950/40 transition-colors pointer-events-auto"
+                            title="Delete this system from the map"
+                          >
+                            <Trash2 className="w-2.5 h-2.5" />
+                          </button>
+                        )}
                       </div>
                     </div>
 
@@ -795,6 +810,50 @@ export const ChainMapperView: React.FC = () => {
                 >
                   ✕
                 </button>
+              </div>
+
+              {/* Node Actions: Fold / Compress & Delete */}
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <button
+                  onClick={() => mapperService.toggleSystemCollapse(selectedSystem.id)}
+                  className={`py-2 px-3 rounded-xl border text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all ${
+                    selectedSystem.isCollapsed
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-sm'
+                      : 'bg-gray-900/90 hover:bg-gray-800 text-gray-200 border-gray-700'
+                  }`}
+                  title={selectedSystem.isCollapsed ? 'Click to expand folded branch' : 'Click to compress / fold this branch'}
+                >
+                  {selectedSystem.isCollapsed ? (
+                    <>
+                      <ChevronRight className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Expand Branch</span>
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+                      <span>Fold Branch</span>
+                    </>
+                  )}
+                </button>
+
+                {selectedSystem.id !== 'Jita' ? (
+                  <button
+                    onClick={() => {
+                      if (window.confirm(`Delete system "${selectedSystem.name}" and all its connections from the chain map?`)) {
+                        mapperService.deleteSystem(selectedSystem.id);
+                      }
+                    }}
+                    className="py-2 px-3 rounded-xl border border-red-500/40 bg-red-950/40 hover:bg-red-900/50 text-red-300 font-mono text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-sm"
+                    title="Permanently remove this system from the map"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete System</span>
+                  </button>
+                ) : (
+                  <div className="text-[10px] text-gray-500 font-mono flex items-center justify-center py-2 border border-gray-800 rounded-xl">
+                    Root Hub (Locked)
+                  </div>
+                )}
               </div>
 
               {/* Fleet Pilot Location Control ("I'M HERE") */}
@@ -973,11 +1032,26 @@ export const ChainMapperView: React.FC = () => {
               </div>
             </div>
 
-            {/* Footer Clear */}
+            {/* Footer Actions */}
             <div className="pt-3 mt-3 border-t border-gray-800 flex items-center justify-between text-[11px] text-gray-500">
-              <span>Updated {selectedSystem.lastUpdated}</span>
               <button
-                onClick={() => mapperService.clearMap()}
+                onClick={() => {
+                  if (window.confirm("Prune all disconnected / dead-end systems from the map?")) {
+                    mapperService.pruneDeadEnds();
+                  }
+                }}
+                className="hover:text-amber-400 flex items-center gap-1 transition-colors font-mono"
+                title="Prune dead-end disconnected systems"
+              >
+                <span>Prune Inactive</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  if (window.confirm("Reset entire chain map back to defaults?")) {
+                    mapperService.clearMap();
+                  }
+                }}
                 className="hover:text-red-400 flex items-center gap-1 transition-colors"
                 title="Reset Entire Chain Map"
               >

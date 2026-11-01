@@ -377,11 +377,46 @@ class MapperService {
   }
 
   // Toggle fold / collapse for a subchain node
-  public toggleSystemCollapse(systemId: string) {
+  public async toggleSystemCollapse(systemId: string) {
     if (this.state.systems[systemId]) {
       this.state.systems[systemId].isCollapsed = !this.state.systems[systemId].isCollapsed;
       this.notify();
+
+      try {
+        await fetch('/api/map/system/collapse', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ systemId })
+        });
+      } catch {}
     }
+  }
+
+  // Delete a system and all its connections
+  public async deleteSystem(systemId: string) {
+    if (!systemId) return;
+    const cleanSys = systemId.trim();
+
+    delete this.state.systems[cleanSys];
+    this.state.connections = this.state.connections.filter(
+      c => c.from !== cleanSys && c.to !== cleanSys
+    );
+    this.notify();
+
+    try {
+      await fetch('/api/map/system/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ systemId: cleanSys })
+      });
+    } catch {}
+  }
+
+  // Prune disconnected / dead-end systems
+  public async pruneDeadEnds() {
+    try {
+      await fetch('/api/map/prune', { method: 'POST' });
+    } catch {}
   }
 
   public async clearMap() {

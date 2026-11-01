@@ -7,9 +7,11 @@
       "security": 0.9,
       "statics": [],
       "structures": [],
-      "activePilots": [],
+      "activePilots": [
+        "Ennis Urbanski"
+      ],
       "signatures": [],
-      "lastUpdated": "23:14",
+      "lastUpdated": "23:34",
       "x": 650,
       "y": 40
     },
@@ -89,7 +91,7 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "23:14",
+      "lastUpdated": "23:34",
       "x": 470,
       "y": 130
     },
@@ -111,7 +113,7 @@
       ],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "23:18",
+      "lastUpdated": "23:34",
       "x": 470,
       "y": 220
     },
@@ -124,7 +126,7 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "23:16",
+      "lastUpdated": "23:34",
       "x": 470,
       "y": 310
     },
@@ -149,8 +151,49 @@
       "activePilots": [
         "USS Hauler"
       ],
-      "signatures": [],
-      "lastUpdated": "23:19",
+      "signatures": [
+        {
+          "id": "sig-1793575697532-0.44354183298131344",
+          "sigId": "ZSG-272",
+          "type": "Relic",
+          "name": "Relic Site",
+          "group": "Relic Site",
+          "distance": "19.27 AU",
+          "signalPercent": 100,
+          "createdTime": "23:28"
+        },
+        {
+          "id": "sig-1793575697532-0.45092741884249576",
+          "sigId": "ZBU-471",
+          "type": "Anomaly",
+          "name": "Cosmic Signature",
+          "group": "Unknown",
+          "distance": "20.78 AU",
+          "signalPercent": 100,
+          "createdTime": "23:28"
+        },
+        {
+          "id": "sig-1793575697532-0.5600023148944304",
+          "sigId": "QJX-710",
+          "type": "Anomaly",
+          "name": "Cosmic Signature",
+          "group": "Unknown",
+          "distance": "17.96 AU",
+          "signalPercent": 100,
+          "createdTime": "23:28"
+        },
+        {
+          "id": "sig-1793575697532-0.7569232939734488",
+          "sigId": "JLV-427",
+          "type": "Anomaly",
+          "name": "Cosmic Signature",
+          "group": "Unknown",
+          "distance": "17.12 AU",
+          "signalPercent": 2,
+          "createdTime": "23:28"
+        }
+      ],
+      "lastUpdated": "23:28",
       "x": 410,
       "y": 400
     },
@@ -471,9 +514,39 @@
           "distance": "9.07 AU",
           "signalPercent": 9,
           "createdTime": "23:20"
+        },
+        {
+          "id": "sig-1793575494149-0.5013726808748106",
+          "sigId": "ZBU-471",
+          "type": "Anomaly",
+          "name": "Cosmic Signature",
+          "group": "Unknown",
+          "distance": "21.70 AU",
+          "signalPercent": 3,
+          "createdTime": "23:24"
+        },
+        {
+          "id": "sig-1793575494149-0.4975898574244586",
+          "sigId": "JLV-427",
+          "type": "Anomaly",
+          "name": "Cosmic Signature",
+          "group": "Unknown",
+          "distance": "17.30 AU",
+          "signalPercent": 1,
+          "createdTime": "23:24"
+        },
+        {
+          "id": "sig-1793575494149-0.12988995621162602",
+          "sigId": "ZSG-272",
+          "type": "Anomaly",
+          "name": "Cosmic Signature",
+          "group": "Unknown",
+          "distance": "19.16 AU",
+          "signalPercent": 7,
+          "createdTime": "23:24"
         }
       ],
-      "lastUpdated": "23:20"
+      "lastUpdated": "23:34"
     },
     "Wormhole System": {
       "id": "Wormhole System",
@@ -500,11 +573,21 @@
       "systemClass": "Highsec",
       "statics": [],
       "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "23:34"
+    },
+    "Ajanen": {
+      "id": "Ajanen",
+      "name": "Ajanen",
+      "systemClass": "Highsec",
+      "statics": [],
+      "structures": [],
       "activePilots": [
         "Syndra en Tilavine"
       ],
       "signatures": [],
-      "lastUpdated": "23:23"
+      "lastUpdated": "23:34"
     }
   },
   "connections": [
@@ -679,6 +762,22 @@
       "from": "Erenta",
       "to": "Kuoka",
       "wormholeType": "Stargate",
+      "massStatus": "stable",
+      "timeStatus": "stable"
+    },
+    {
+      "id": "conn-1793575848755",
+      "from": "Kuoka",
+      "to": "Ajanen",
+      "wormholeType": "Stargate",
+      "massStatus": "stable",
+      "timeStatus": "stable"
+    },
+    {
+      "id": "conn-1793576098494",
+      "from": "J103955",
+      "to": "Sobaseki",
+      "wormholeType": "Wormhole",
       "massStatus": "stable",
       "timeStatus": "stable"
     }

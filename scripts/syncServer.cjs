@@ -376,6 +376,87 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Delete a system and its connections
+  if (req.url === '/api/map/system/delete' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try {
+        const { systemId } = JSON.parse(body);
+        const cleanSys = (systemId || '').trim();
+        if (cleanSys && chainMap.systems[cleanSys]) {
+          delete chainMap.systems[cleanSys];
+          chainMap.connections = chainMap.connections.filter(
+            c => c.from !== cleanSys && c.to !== cleanSys
+          );
+          saveState();
+          broadcastUpdate('MAP_UPDATE', chainMap);
+          console.log(`[System Deleted] Removed ${cleanSys} and all associated connections`);
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, chainMap }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // Toggle branch collapse state
+  if (req.url === '/api/map/system/collapse' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try {
+        const { systemId } = JSON.parse(body);
+        const cleanSys = (systemId || '').trim();
+        if (cleanSys && chainMap.systems[cleanSys]) {
+          chainMap.systems[cleanSys].isCollapsed = !chainMap.systems[cleanSys].isCollapsed;
+          saveState();
+          broadcastUpdate('MAP_UPDATE', chainMap);
+          console.log(`[System Collapse Toggled] ${cleanSys} isCollapsed = ${chainMap.systems[cleanSys].isCollapsed}`);
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, chainMap }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // Prune disconnected / dead-end systems
+  if (req.url === '/api/map/prune' && req.method === 'POST') {
+    try {
+      // Find systems with no connections and no active pilots
+      const toDelete = [];
+      Object.keys(chainMap.systems).forEach(sysId => {
+        if (sysId === 'Jita' || sysId === 'J103955') return;
+        const hasConn = chainMap.connections.some(c => c.from === sysId || c.to === sysId);
+        const hasPilots = (chainMap.systems[sysId].activePilots || []).length > 0;
+        if (!hasConn && !hasPilots) {
+          toDelete.push(sysId);
+        }
+      });
+
+      toDelete.forEach(sysId => {
+        delete chainMap.systems[sysId];
+      });
+
+      saveState();
+      broadcastUpdate('MAP_UPDATE', chainMap);
+      console.log(`[Map Pruned] Removed ${toDelete.length} disconnected systems`);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, prunedCount: toDelete.length, chainMap }));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
+
   // Clear or reset map
   if (req.url === '/api/map/clear' && req.method === 'POST') {
     chainMap = {
@@ -521,132 +602,142 @@ function handleSystemTransition(newSys, fromSys, customPilot) {
   });
 }
 
-// 1. Tail Local Chatlogs (Fires instantly on EVERY wormhole & gate jump)
-let activeLocalFile = null;
-let localFileSize = 0;
+// 1. Multi-File Tailer for Local Chatlogs (Fires instantly on EVERY wormhole & gate jump)
+const trackedChatFiles = new Map(); // filePath -> lastReadByteOffset
 
-function getLatestLocalChatFile() {
-  if (!eveLogsBase) return null;
-  const chatDir = path.join(eveLogsBase, 'Chatlogs');
-  if (!fs.existsSync(chatDir)) return null;
-
-  const files = fs.readdirSync(chatDir)
-    .filter(f => f.startsWith('Local_') && f.endsWith('.txt'))
-    .map(f => {
-      const full = path.join(chatDir, f);
-      return { file: full, mtime: fs.statSync(full).mtime.getTime() };
-    })
-    .sort((a, b) => b.mtime - a.mtime);
-
-  return files.length > 0 ? files[0].file : null;
-}
-
-// Read current location and chain on boot
-const initialLocal = getLatestLocalChatFile();
-if (initialLocal) {
+function getChatListener(filePath) {
   try {
-    const content = fs.readFileSync(initialLocal, 'utf16le');
-    const matches = [...content.matchAll(/Channel changed to Local\s*:\s*([A-Za-z0-9\-]+)/gi)];
-    if (matches.length > 0) {
-      console.log(`[EVE Location Follower] Discovered ${matches.length} system jumps in local session!`);
-      // Replay all jumps from session into chain map
-      let prev = null;
-      for (const m of matches) {
-        const sys = m[1].trim();
-        handleSystemTransition(sys, prev);
-        prev = sys;
-      }
-      const currentLoc = matches[matches.length - 1][1].trim();
-      console.log(`[EVE Location Follower] Current active character location: ${currentLoc}`);
-    }
+    const head = fs.readFileSync(filePath, { encoding: 'utf16le' }).slice(0, 600);
+    const m = head.match(/Listener:\s*([^\r\n]+)/i);
+    if (m && m[1].trim()) return m[1].trim();
+  } catch (e) {}
+  return null;
+}
+
+function pollActiveChatlogs() {
+  if (!eveLogsBase) return;
+  const chatDir = path.join(eveLogsBase, 'Chatlogs');
+  if (!fs.existsSync(chatDir)) return;
+
+  const now = Date.now();
+  let files = [];
+  try {
+    files = fs.readdirSync(chatDir)
+      .filter(f => f.startsWith('Local_') && f.endsWith('.txt'))
+      .map(f => {
+        const full = path.join(chatDir, f);
+        try {
+          return { file: full, mtime: fs.statSync(full).mtime.getTime() };
+        } catch { return null; }
+      })
+      .filter(f => f && (now - f.mtime) < 4 * 60 * 60 * 1000);
   } catch (e) {
-    console.error('[EVE Location Follower] Initial chat log read error', e);
+    return;
+  }
+
+  for (const { file } of files) {
+    try {
+      const stat = fs.statSync(file);
+      if (!trackedChatFiles.has(file)) {
+        // Read recent jumps from end of file on startup
+        const startOffset = Math.max(0, stat.size - 4000);
+        trackedChatFiles.set(file, startOffset);
+      }
+
+      const prevSize = trackedChatFiles.get(file);
+      if (stat.size > prevSize) {
+        trackedChatFiles.set(file, stat.size);
+        const buf = Buffer.alloc(stat.size - prevSize);
+        const fd = fs.openSync(file, 'r');
+        fs.readSync(fd, buf, 0, buf.length, prevSize);
+        fs.closeSync(fd);
+
+        const text = buf.toString('utf16le');
+        const matches = [...text.matchAll(/Channel changed to Local\s*:\s*([A-Za-z0-9\-]+)/gi)];
+        if (matches.length > 0) {
+          const listener = getChatListener(file);
+          for (const m of matches) {
+            handleSystemTransition(m[1].trim(), null, listener);
+          }
+        }
+      }
+    } catch (e) {}
   }
 }
 
-// Poll Local chatlog every 800ms
-setInterval(() => {
-  const latest = getLatestLocalChatFile();
-  if (latest && latest !== activeLocalFile) {
-    activeLocalFile = latest;
-    localFileSize = fs.existsSync(latest) ? fs.statSync(latest).size : 0;
-  }
+// 2. Multi-File Tailer for Gamelogs (Catches gate jumps, undocks, and jump tunnels)
+const trackedGameFiles = new Map();
 
-  if (!activeLocalFile || !fs.existsSync(activeLocalFile)) return;
-  const stat = fs.statSync(activeLocalFile);
-  if (stat.size > localFileSize) {
-    const stream = fs.createReadStream(activeLocalFile, {
-      start: localFileSize,
-      end: stat.size,
-      encoding: 'utf16le'
-    });
-    let buffer = '';
-    stream.on('data', chunk => { buffer += chunk; });
-    stream.on('end', () => {
-      localFileSize = stat.size;
-      const matches = [...buffer.matchAll(/Channel changed to Local\s*:\s*([A-Za-z0-9\-]+)/gi)];
-      for (const m of matches) {
-        handleSystemTransition(m[1]);
-      }
-    });
-  }
-}, 800);
+function getGamelogListener(filePath) {
+  try {
+    const head = fs.readFileSync(filePath, { encoding: 'utf8' }).slice(0, 600);
+    const m = head.match(/Listener:\s*([^\r\n]+)/i);
+    if (m && m[1].trim()) return m[1].trim();
+  } catch (e) {}
+  return null;
+}
 
-// 2. Tail Gamelogs (Catches gate jumps & undocks)
-let activeGameLog = null;
-let gameLogSize = 0;
-
-function getLatestGamelogFile() {
-  if (!eveLogsBase) return null;
+function pollActiveGamelogs() {
+  if (!eveLogsBase) return;
   const gameDir = path.join(eveLogsBase, 'Gamelogs');
-  if (!fs.existsSync(gameDir)) return null;
+  if (!fs.existsSync(gameDir)) return;
 
-  const files = fs.readdirSync(gameDir)
-    .filter(f => f.endsWith('.txt'))
-    .map(f => {
-      const full = path.join(gameDir, f);
-      return { file: full, mtime: fs.statSync(full).mtime.getTime() };
-    })
-    .sort((a, b) => b.mtime - a.mtime);
-
-  return files.length > 0 ? files[0].file : null;
-}
-
-setInterval(() => {
-  const latest = getLatestGamelogFile();
-  if (latest && latest !== activeGameLog) {
-    activeGameLog = latest;
-    gameLogSize = fs.existsSync(latest) ? fs.statSync(latest).size : 0;
+  const now = Date.now();
+  let files = [];
+  try {
+    files = fs.readdirSync(gameDir)
+      .filter(f => f.endsWith('.txt'))
+      .map(f => {
+        const full = path.join(gameDir, f);
+        try {
+          return { file: full, mtime: fs.statSync(full).mtime.getTime() };
+        } catch { return null; }
+      })
+      .filter(f => f && (now - f.mtime) < 4 * 60 * 60 * 1000);
+  } catch (e) {
+    return;
   }
 
-  if (!activeGameLog || !fs.existsSync(activeGameLog)) return;
-  const stat = fs.statSync(activeGameLog);
-  if (stat.size > gameLogSize) {
-    const stream = fs.createReadStream(activeGameLog, {
-      start: gameLogSize,
-      end: stat.size,
-      encoding: 'utf8'
-    });
-    let buffer = '';
-    stream.on('data', chunk => { buffer += chunk; });
-    stream.on('end', () => {
-      gameLogSize = stat.size;
-      const lines = buffer.split(/\r?\n/);
-      for (const line of lines) {
-        // Jumping from Kisogo to Urlen
-        const jumpMatch = line.match(/Jumping from\s+([A-Za-z0-9\-\s]+?)\s+to\s+([A-Za-z0-9\-]+)/i);
-        if (jumpMatch) {
-          handleSystemTransition(jumpMatch[2], jumpMatch[1].trim());
-        }
-        // Undocking
-        const undockMatch = line.match(/Undocking from .+ to ([A-Za-z0-9\-]+) solar system/i);
-        if (undockMatch) {
-          handleSystemTransition(undockMatch[1]);
+  for (const { file } of files) {
+    try {
+      const stat = fs.statSync(file);
+      if (!trackedGameFiles.has(file)) {
+        trackedGameFiles.set(file, Math.max(0, stat.size - 4000));
+      }
+
+      const prevSize = trackedGameFiles.get(file);
+      if (stat.size > prevSize) {
+        trackedGameFiles.set(file, stat.size);
+        const buf = Buffer.alloc(stat.size - prevSize);
+        const fd = fs.openSync(file, 'r');
+        fs.readSync(fd, buf, 0, buf.length, prevSize);
+        fs.closeSync(fd);
+
+        const text = buf.toString('utf8');
+        const listener = getGamelogListener(file);
+        const lines = text.split(/\r?\n/);
+        for (const line of lines) {
+          const jumpMatch = line.match(/Jumping from\s+([A-Za-z0-9\-\s]+?)\s+to\s+([A-Za-z0-9\-]+)/i);
+          if (jumpMatch) {
+            handleSystemTransition(jumpMatch[2].trim(), jumpMatch[1].trim(), listener);
+          }
+          const undockMatch = line.match(/Undocking from .+ to ([A-Za-z0-9\-]+) solar system/i);
+          if (undockMatch) {
+            handleSystemTransition(undockMatch[1].trim(), null, listener);
+          }
         }
       }
-    });
+    } catch (e) {}
   }
-}, 1000);
+}
+
+// Initial sweep on boot
+pollActiveChatlogs();
+pollActiveGamelogs();
+
+// High frequency polling (every 400ms for instant reaction)
+setInterval(pollActiveChatlogs, 400);
+setInterval(pollActiveGamelogs, 500);
 
 // Background Windows OS Clipboard Listener
 // Allows hands-free scanning: when you press Ctrl+C in EVE, this reads it from the OS without tabbing out!
