@@ -576,6 +576,7 @@ export const ChainMapperView: React.FC = () => {
               const isSelected = node.id === selectedSystem?.id;
               const isActivePlayer = node.id === activeSystem?.id;
               const pilotCount = node.activePilots ? node.activePilots.length : 0;
+              const sortedPilots = [...(node.activePilots || [])].sort((a, b) => a.localeCompare(b));
               const structCount = node.structures ? node.structures.length : 0;
               const childrenConnections = mapState.connections.filter(c => c.from === node.id && c.to !== node.id);
               const hasChildren = childrenConnections.length > 0;
@@ -669,42 +670,61 @@ export const ChainMapperView: React.FC = () => {
                       </span>
                     </div>
 
-                    {/* Pilot Presence Badge (Purple Circle with number) */}
+                    {/* Pilot Presence Badge (Purple Circle with number) + Hover Tooltip */}
                     {pilotCount > 0 && (
-                      <div 
-                        className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-purple-600 border border-purple-300 text-white font-bold text-[10px] flex items-center justify-center shadow-[0_0_10px_rgba(168,85,247,0.9)] animate-pulse"
-                        title={node.activePilots?.join(', ')}
-                      >
-                        {pilotCount}
+                      <div className="absolute -top-2 -right-2 group/pilot z-30">
+                        {/* Purple Circular Count Badge */}
+                        <div 
+                          className="w-5 h-5 rounded-full bg-purple-600 border border-purple-300 text-white font-bold text-[10px] flex items-center justify-center shadow-[0_0_10px_rgba(168,85,247,0.9)] cursor-pointer hover:scale-110 transition-transform"
+                        >
+                          {pilotCount}
+                        </div>
+
+                        {/* Stacked Pilots in Alphabetical Order on Hover */}
+                        <div className={`opacity-0 group-hover/pilot:opacity-100 pointer-events-none group-hover/pilot:pointer-events-auto transition-all duration-150 absolute top-full right-0 mt-1 min-w-[190px] p-2.5 rounded-2xl backdrop-blur-xl border shadow-2xl z-50 animate-in fade-in zoom-in-95 ${
+                          isDark 
+                            ? 'bg-[#0a0f1d]/95 border-purple-500/50 text-white shadow-[0_0_20px_rgba(168,85,247,0.3)]' 
+                            : 'bg-white/95 border-purple-300 text-slate-900 shadow-xl'
+                        }`}>
+                          <div className={`text-[9px] font-mono font-bold uppercase tracking-wider pb-1.5 mb-2 border-b flex items-center justify-between ${
+                            isDark ? 'text-purple-300 border-purple-500/30' : 'text-purple-700 border-purple-200'
+                          }`}>
+                            <span>PILOTS IN {node.name}</span>
+                            <span className="px-1.5 py-0.2 rounded-full bg-purple-500/20 text-purple-300 font-bold">{pilotCount}</span>
+                          </div>
+                          
+                          <div className="space-y-1.5">
+                            {sortedPilots.map((pilotName, pIdx) => {
+                              const isMe = currentPilot && pilotName.toLowerCase().includes(currentPilot.characterName.toLowerCase());
+                              return (
+                                <div
+                                  key={pIdx}
+                                  className={`px-2.5 py-1.5 rounded-xl text-xs font-mono flex items-center gap-2 border transition-colors ${
+                                    isMe
+                                      ? isDark
+                                        ? 'bg-cyan-950/70 border-cyan-500/60 text-cyan-200'
+                                        : 'bg-cyan-50 border-cyan-400 text-cyan-900 font-bold'
+                                      : isDark
+                                      ? 'bg-purple-950/40 border-purple-800/50 text-gray-200'
+                                      : 'bg-purple-50 border-purple-200 text-purple-950'
+                                  }`}
+                                >
+                                  <span className={`w-2 h-2 rounded-full shrink-0 ${isMe ? 'bg-cyan-400' : 'bg-emerald-500 animate-pulse'}`}></span>
+                                  <User className={`w-3.5 h-3.5 shrink-0 ${isMe ? 'text-cyan-400' : 'text-purple-500'}`} />
+                                  <span className="font-semibold truncate flex-1">{pilotName}</span>
+                                  {isMe && (
+                                    <span className="text-[8px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold uppercase">
+                                      YOU
+                                    </span>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
-
-                  {/* Visible Fleet Pilot Name Tags directly under the node card */}
-                  {pilotCount > 0 && (
-                    <div className="absolute top-[58px] left-0 right-0 flex flex-col gap-1 pointer-events-auto z-10">
-                      {node.activePilots!.map((pilotName, pIdx) => {
-                        const isMe = currentPilot && pilotName.toLowerCase().includes(currentPilot.characterName.toLowerCase());
-                        return (
-                          <div
-                            key={pIdx}
-                            className={`px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1.5 shadow-lg border ${
-                              isMe 
-                                ? isDark
-                                  ? 'bg-[#0e1629]/95 text-cyan-300 border-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.3)]' 
-                                  : 'bg-sky-100 text-sky-900 border-sky-400 shadow-sm'
-                                : isDark
-                                  ? 'bg-[#1b102e]/95 text-purple-200 border-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.4)]'
-                                  : 'bg-purple-100 text-purple-900 border-purple-300 shadow-sm'
-                            }`}
-                          >
-                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isMe ? 'bg-cyan-400' : 'bg-emerald-500 animate-pulse'}`}></span>
-                            <span className="truncate">{pilotName}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
                 </div>
               );
             })}

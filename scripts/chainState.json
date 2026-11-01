@@ -147,8 +147,7 @@
         }
       ],
       "activePilots": [
-        "USS Hauler",
-        "Syndra en Tilavine"
+        "USS Hauler"
       ],
       "signatures": [],
       "lastUpdated": "23:19",
@@ -494,6 +493,18 @@
       "activePilots": [],
       "signatures": [],
       "lastUpdated": "23:19"
+    },
+    "Kuoka": {
+      "id": "Kuoka",
+      "name": "Kuoka",
+      "systemClass": "Highsec",
+      "statics": [],
+      "structures": [],
+      "activePilots": [
+        "Syndra en Tilavine"
+      ],
+      "signatures": [],
+      "lastUpdated": "23:23"
     }
   },
   "connections": [
@@ -659,6 +670,14 @@
       "id": "conn-1793575053642",
       "from": "Uemisaisen",
       "to": "Erenta",
+      "wormholeType": "Stargate",
+      "massStatus": "stable",
+      "timeStatus": "stable"
+    },
+    {
+      "id": "conn-1793575402216",
+      "from": "Erenta",
+      "to": "Kuoka",
       "wormholeType": "Stargate",
       "massStatus": "stable",
       "timeStatus": "stable"
