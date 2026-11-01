@@ -330,6 +330,7 @@ const server = http.createServer((req, res) => {
           chainMap.onlineBuddies.push(pilotName);
         }
 
+        saveState();
         broadcastUpdate('MAP_UPDATE', chainMap);
         console.log(`[Pilot Location Updated] ${pilotName} -> ${cleanSys}`);
         res.writeHead(200, { 'Content-Type': 'application/json' });

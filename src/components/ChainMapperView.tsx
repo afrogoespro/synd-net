@@ -70,6 +70,11 @@ export const ChainMapperView: React.FC = () => {
     s.activePilots && currentPilot && s.activePilots.some(p => p.toLowerCase().includes(currentPilot.characterName.toLowerCase()))
   ) || mapState.systems['J103955'] || selectedSystem;
 
+  // Extract all active pilots across the chain
+  const allActivePilots = Object.entries(mapState.systems).flatMap(([sysName, s]) => 
+    (s.activePilots || []).map(p => ({ pilotName: p, systemName: sysName }))
+  );
+
   // Pan canvas handlers
   const handleMouseDown = (e: React.MouseEvent) => {
     // Only pan if clicking canvas background (not a node or button)
@@ -266,6 +271,32 @@ export const ChainMapperView: React.FC = () => {
             <span className="text-gray-600">|</span>
             <span>{Object.keys(mapState.systems).length} Systems Mapped</span>
           </div>
+
+          {/* Active Fleet in Chain */}
+          {allActivePilots.length > 0 && (
+            <div className="flex items-center gap-1.5 flex-wrap pl-2 border-l border-gray-800">
+              <span className="text-[10px] text-gray-400 font-bold uppercase hidden sm:inline">FLEET:</span>
+              {allActivePilots.map((p, idx) => {
+                const isMe = currentPilot && p.pilotName.toLowerCase().includes(currentPilot.characterName.toLowerCase());
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => setSelectedSystemId(p.systemName)}
+                    className={`px-2 py-0.5 rounded text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm ${
+                      isMe 
+                        ? 'bg-cyan-950/90 border border-cyan-500/70 text-cyan-200' 
+                        : 'bg-purple-950/90 border border-purple-500/70 text-purple-200 hover:border-purple-300'
+                    }`}
+                    title={`Click to focus on ${p.pilotName} in ${p.systemName}`}
+                  >
+                    <span className={`w-2 h-2 rounded-full ${isMe ? 'bg-cyan-400' : 'bg-emerald-400 animate-pulse'}`}></span>
+                    <span>{p.pilotName}</span>
+                    <span className="text-[10px] opacity-75 font-mono">@{p.systemName}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Top Controls */}
@@ -534,6 +565,28 @@ export const ChainMapperView: React.FC = () => {
                       </div>
                     )}
                   </div>
+
+                  {/* Visible Fleet Pilot Name Tags directly under the node card */}
+                  {pilotCount > 0 && (
+                    <div className="absolute top-[58px] left-0 right-0 flex flex-col gap-1 pointer-events-auto z-10">
+                      {node.activePilots!.map((pilotName, pIdx) => {
+                        const isMe = currentPilot && pilotName.toLowerCase().includes(currentPilot.characterName.toLowerCase());
+                        return (
+                          <div
+                            key={pIdx}
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1.5 shadow-lg border ${
+                              isMe 
+                                ? 'bg-[#0e1629]/95 text-cyan-300 border-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.3)]' 
+                                : 'bg-[#1b102e]/95 text-purple-200 border-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.4)]'
+                            }`}
+                          >
+                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isMe ? 'bg-cyan-400' : 'bg-emerald-400 animate-pulse'}`}></span>
+                            <span className="truncate">{pilotName}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               );
             })}

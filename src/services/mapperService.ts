@@ -17,7 +17,7 @@ const DEFAULT_SYSTEMS: Record<string, WormholeNode> = {
   'Sobaseki': { id: 'Sobaseki', name: 'Sobaseki', systemClass: 'Highsec', security: 0.8, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 470, y: 130 },
   'Isanamo': { id: 'Isanamo', name: 'Isanamo', systemClass: 'Highsec', security: 0.6, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 470, y: 220 },
   'Uemisaisen': { id: 'Uemisaisen', name: 'Uemisaisen', systemClass: 'Highsec', security: 0.6, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 470, y: 310 },
-  'J103955': { id: 'J103955', name: 'J103955', systemClass: 'C3', sigCode: 'JVC', statics: ['Lowsec'], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 410, y: 400 },
+  'J103955': { id: 'J103955', name: 'J103955', systemClass: 'C3', sigCode: 'JVC', statics: ['Lowsec'], structures: [], activePilots: ['Syndra en Tilavine', 'USS Hauler'], signatures: [], lastUpdated: '22:45', x: 410, y: 400 },
   'J142349': { id: 'J142349', name: 'J142349', systemClass: 'C5', sigCode: 'JPV', statics: ['C3'], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 410, y: 490 },
   'New Caldari': { id: 'New Caldari', name: 'New Caldari', systemClass: 'Highsec', security: 1.0, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 740, y: 130 },
   'Alikara': { id: 'Alikara', name: 'Alikara', systemClass: 'Highsec', security: 0.7, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 740, y: 220 },

@@ -32,6 +32,13 @@ class AuthService {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         this.currentPilot = JSON.parse(saved);
+        if (this.currentPilot?.characterName) {
+          fetch('/api/map/pilot', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pilotName: this.currentPilot.characterName, systemName: 'J103955' })
+          }).catch(() => {});
+        }
       }
     } catch (e) {
       this.currentPilot = null;
@@ -133,6 +140,15 @@ class AuthService {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
     localStorage.setItem('synd_pilot_name', verifiedName);
     this.notify();
+
+    // Broadcast pilot location to server and fleet buddies immediately
+    try {
+      fetch('/api/map/pilot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pilotName: verifiedName, systemName: 'J103955' })
+      }).catch(() => {});
+    } catch {}
 
     return profile;
   }

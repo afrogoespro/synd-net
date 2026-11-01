@@ -4,6 +4,7 @@ import {
   Radio, Network, Pickaxe, ExternalLink, KeyRound, LogOut, User
 } from 'lucide-react';
 import { authService, PilotProfile } from '../services/authService';
+import { mapperService } from '../services/mapperService';
 import { PilotLoginModal } from './PilotLoginModal';
 
 interface HeaderProps {
@@ -227,7 +228,8 @@ export const Header: React.FC<HeaderProps> = ({
           isOpen={isLoginModalOpen}
           onClose={() => setIsLoginModalOpen(false)}
           onSuccess={(profile) => {
-            // Success handler
+            const activeSys = mapperService.getActiveSystem()?.id || 'J103955';
+            mapperService.setPilotLocation(profile.characterName, activeSys);
           }}
         />
 
