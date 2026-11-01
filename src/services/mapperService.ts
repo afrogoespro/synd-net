@@ -278,6 +278,8 @@ class MapperService {
     wormholeType?: string;
     massStatus?: 'stable' | 'destab' | 'critical';
     timeStatus?: 'stable' | 'eol';
+    tactical?: 'clear' | 'bubbled' | 'camped';
+    isFrig?: boolean;
   }) {
     let conn = this.state.connections.find(c => 
       (data.connectionId && c.id === data.connectionId) ||
@@ -292,7 +294,9 @@ class MapperService {
         to: data.to,
         wormholeType: data.wormholeType || 'Wormhole',
         massStatus: data.massStatus || 'stable',
-        timeStatus: data.timeStatus || 'stable'
+        timeStatus: data.timeStatus || 'stable',
+        tactical: data.tactical || 'clear',
+        isFrig: data.isFrig || false
       };
       this.state.connections.push(conn);
     }
@@ -302,6 +306,8 @@ class MapperService {
     if (data.wormholeType !== undefined) conn.wormholeType = data.wormholeType.trim();
     if (data.massStatus !== undefined) conn.massStatus = data.massStatus;
     if (data.timeStatus !== undefined) conn.timeStatus = data.timeStatus;
+    if (data.tactical !== undefined) conn.tactical = data.tactical;
+    if (data.isFrig !== undefined) conn.isFrig = data.isFrig;
 
     if (data.to && this.state.systems[data.to] && data.sigFrom) {
       this.state.systems[data.to].sigCode = data.sigFrom.trim().toUpperCase();
@@ -417,6 +423,86 @@ class MapperService {
     try {
       await fetch('/api/map/prune', { method: 'POST' });
     } catch {}
+  }
+
+  // GalaxyFinder Tidy Tree Auto-Organizer
+  public autoOrganizeTreeLayout() {
+    const systems = this.state.systems;
+    const connections = this.state.connections;
+    const sysKeys = Object.keys(systems);
+    if (sysKeys.length === 0) return;
+
+    // Root is 'Jita' or first system
+    const rootId = systems['Jita'] ? 'Jita' : sysKeys[0];
+    const visited = new Set<string>();
+    const levels: string[][] = [];
+
+    // BFS tree traversal
+    let currentLevel = [rootId];
+    visited.add(rootId);
+
+    while (currentLevel.length > 0) {
+      levels.push(currentLevel);
+      const nextLevel: string[] = [];
+
+      for (const parentId of currentLevel) {
+        const children = connections
+          .filter(c => c.from === parentId && !visited.has(c.to))
+          .map(c => c.to);
+
+        for (const childId of children) {
+          if (!visited.has(childId)) {
+            visited.add(childId);
+            nextLevel.push(childId);
+          }
+        }
+      }
+
+      currentLevel = nextLevel;
+    }
+
+    // Add unvisited systems
+    const remaining = sysKeys.filter(k => !visited.has(k));
+    if (remaining.length > 0) {
+      levels.push(remaining);
+    }
+
+    // Assign X, Y coordinates
+    const NODE_WIDTH = 130;
+    const HORIZONTAL_GAP = 28;
+    const VERTICAL_GAP = 92;
+    const ROOT_CENTER_X = 650;
+    const START_Y = 40;
+
+    levels.forEach((levelNodes, depth) => {
+      const totalWidth = levelNodes.length * (NODE_WIDTH + HORIZONTAL_GAP) - HORIZONTAL_GAP;
+      const startX = ROOT_CENTER_X - totalWidth / 2;
+      const y = START_Y + depth * VERTICAL_GAP;
+
+      levelNodes.forEach((nodeId, idx) => {
+        if (systems[nodeId]) {
+          systems[nodeId].x = Math.round(startX + idx * (NODE_WIDTH + HORIZONTAL_GAP));
+          systems[nodeId].y = y;
+        }
+      });
+    });
+
+    this.notify();
+
+    fetch('/api/map/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chainMap: this.state })
+    }).catch(() => {});
+  }
+
+  // Toggle collapse on all subchains
+  public toggleCollapseAll(collapse?: boolean) {
+    const shouldCollapse = collapse !== undefined ? collapse : !Object.values(this.state.systems).some(s => s.isCollapsed);
+    Object.values(this.state.systems).forEach(s => {
+      s.isCollapsed = shouldCollapse;
+    });
+    this.notify();
   }
 
   public async clearMap() {

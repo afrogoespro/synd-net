@@ -3,11 +3,12 @@ import {
   Network, Compass, Building2, Users, Plus, Trash2, 
   Check, Share2, ZoomIn, ZoomOut, Maximize2, Crosshair,
   User, MapPin, Eye, Radio, ExternalLink, Layers, Sparkles, KeyRound, LogOut,
-  Sun, Moon, ChevronDown, ChevronRight
+  Sun, Moon, ChevronDown, ChevronRight, FolderTree, GitFork, Copy, Route, Navigation, Zap
 } from 'lucide-react';
 import { mapperService } from '../services/mapperService';
 import { ChainMapState, WormholeNode, WormholeConnection, WormholeSignature } from '../types/mapper';
 import { authService, PilotProfile } from '../services/authService';
+import { calculateTradeHubRoutes, findShortestRoute, WH_SYSTEM_EFFECTS, TradeHubRoute } from '../services/routeService';
 import { PilotLoginModal } from './PilotLoginModal';
 import { SignaturePromptModal } from './SignaturePromptModal';
 import { IntegratedIntelDeck } from './IntegratedIntelDeck';
@@ -50,6 +51,9 @@ export const ChainMapperView: React.FC = () => {
   // Connection signature & status edit modal
   const [selectedConnection, setSelectedConnection] = useState<WormholeConnection | null>(null);
   const [isConnModalOpen, setIsConnModalOpen] = useState<boolean>(false);
+
+  // GalaxyFinder Follow-Me Mode
+  const [followMe, setFollowMe] = useState<boolean>(true);
 
   // Calculate hidden / collapsed descendant nodes
   const hiddenNodeIds = useMemo(() => {
@@ -113,6 +117,43 @@ export const ChainMapperView: React.FC = () => {
   const allActivePilots = Object.entries(mapState.systems).flatMap(([sysName, s]) => 
     (s.activePilots || []).map(p => ({ pilotName: p, systemName: sysName }))
   );
+
+  // GalaxyFinder Center on System
+  const centerOnSystem = (sysId: string) => {
+    const target = mapState.systems[sysId];
+    if (target && target.x !== undefined && target.y !== undefined && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      setPan({
+        x: Math.round(rect.width / 2 - target.x * zoom - 68),
+        y: Math.round(rect.height / 2 - target.y * zoom - 28)
+      });
+    }
+  };
+
+  // Live GalaxyFinder Follow-Me auto-tracking
+  useEffect(() => {
+    const unsubJump = mapperService.onJump((jump) => {
+      setSelectedSystemId(jump.systemName);
+      if (followMe) {
+        setTimeout(() => {
+          centerOnSystem(jump.systemName);
+        }, 80);
+      }
+    });
+    return () => unsubJump();
+  }, [followMe, zoom, mapState.systems]);
+
+  // Route to Jita from active pilot location
+  const jitaRoute = useMemo(() => {
+    const fromSys = activeSystem?.id || selectedSystem?.id || 'J103955';
+    return findShortestRoute(mapState.connections, fromSys, 'Jita');
+  }, [mapState.connections, activeSystem?.id, selectedSystem?.id]);
+
+  // Trade hub routes from currently selected system
+  const tradeHubRoutes = useMemo(() => {
+    const sysId = selectedSystem?.id || 'J103955';
+    return calculateTradeHubRoutes(mapState.connections, sysId);
+  }, [mapState.connections, selectedSystem?.id]);
 
   // Pan canvas handlers
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -347,7 +388,74 @@ export const ChainMapperView: React.FC = () => {
         </div>
 
         {/* Top Controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* GalaxyFinder Follow-Me Mode */}
+          <button
+            onClick={() => {
+              const next = !followMe;
+              setFollowMe(next);
+              if (next && activeSystem) {
+                centerOnSystem(activeSystem.id);
+              }
+            }}
+            className={`px-2.5 py-1 rounded-lg border text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm ${
+              followMe
+                ? 'bg-emerald-950/90 border-emerald-500/80 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.3)]'
+                : isDark
+                ? 'bg-gray-900 border-gray-800 text-gray-400 hover:text-white'
+                : 'bg-slate-100 border-slate-300 text-slate-600 hover:text-slate-900'
+            }`}
+            title={followMe ? 'Follow Me: ON (Auto-pans canvas on jump)' : 'Follow Me: OFF (Click to enable auto-tracking)'}
+          >
+            <Navigation className={`w-3.5 h-3.5 ${followMe ? 'text-emerald-400 animate-pulse' : ''}`} />
+            <span>{followMe ? 'FOLLOW: ON' : 'FOLLOW: OFF'}</span>
+          </button>
+
+          {/* GalaxyFinder Tidy Tree */}
+          <button
+            onClick={() => mapperService.autoOrganizeTreeLayout()}
+            className={`px-2.5 py-1 rounded-lg border text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm ${
+              isDark
+                ? 'bg-cyan-950/70 border-cyan-700/60 text-cyan-300 hover:bg-cyan-900 shadow-[0_0_10px_rgba(6,182,212,0.15)]'
+                : 'bg-sky-50 border-sky-300 text-sky-800 hover:bg-sky-100'
+            }`}
+            title="GalaxyFinder Tidy Tree: Auto-organize hierarchical system layout"
+          >
+            <FolderTree className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="hidden sm:inline">TIDY TREE</span>
+          </button>
+
+          {/* GalaxyFinder Collapse All */}
+          <button
+            onClick={() => mapperService.toggleCollapseAll()}
+            className={`px-2.5 py-1 rounded-lg border text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm ${
+              isDark
+                ? 'bg-gray-900 hover:bg-gray-800 text-gray-300 border-gray-800'
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
+            }`}
+            title="Toggle Collapse / Expand all branches across map"
+          >
+            <GitFork className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline">COLLAPSE ALL</span>
+          </button>
+
+          {/* GalaxyFinder Live Jita Jump Count */}
+          <div
+            onClick={() => {
+              setSelectedSystemId('Jita');
+              centerOnSystem('Jita');
+            }}
+            className={`px-2.5 py-1 rounded-lg border text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all ${
+              jitaRoute.jumps !== null
+                ? 'bg-blue-950/80 border-blue-500/60 text-blue-300 hover:border-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.2)]'
+                : 'bg-gray-900/60 border-gray-800 text-gray-500'
+            }`}
+            title={`Shortest route to Jita 4-4: ${jitaRoute.jumps !== null ? `${jitaRoute.jumps} jumps via [${jitaRoute.path.join(' -> ')}]` : 'No connection in current chain'}`}
+          >
+            <Route className="w-3.5 h-3.5 text-blue-400" />
+            <span>JITA: {jitaRoute.jumps !== null ? `${jitaRoute.jumps} J` : '∞'}</span>
+          </div>
+
           <button
             onClick={handleCopyBuddyLink}
             className="px-2.5 py-1 rounded bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 border border-cyan-700/60 flex items-center gap-1.5 transition-all shadow-[0_0_10px_rgba(6,182,212,0.15)] text-xs"
@@ -561,6 +669,26 @@ export const ChainMapperView: React.FC = () => {
                       >
                         {sigLabel}
                       </text>
+
+                      {/* Tactical Tags: Camped, Bubbled, Frig Hole */}
+                      {conn.tactical === 'bubbled' && (
+                        <g transform={`translate(${badgeWidth / 2 + 7}, 0)`}>
+                          <circle r="5.5" fill="#f59e0b" stroke="#000" strokeWidth="1" />
+                          <text y="2.5" fontSize="7" fontWeight="bold" fill="#000" textAnchor="middle">B</text>
+                        </g>
+                      )}
+                      {conn.tactical === 'camped' && (
+                        <g transform={`translate(${badgeWidth / 2 + 7}, 0)`}>
+                          <circle r="5.5" fill="#ef4444" stroke="#000" strokeWidth="1" />
+                          <text y="2.5" fontSize="7" fontWeight="bold" fill="#fff" textAnchor="middle">C</text>
+                        </g>
+                      )}
+                      {conn.isFrig && (
+                        <g transform={`translate(${-badgeWidth / 2 - 7}, 0)`}>
+                          <circle r="5.5" fill="#38bdf8" stroke="#000" strokeWidth="1" />
+                          <text y="2.5" fontSize="7" fontWeight="bold" fill="#000" textAnchor="middle">F</text>
+                        </g>
+                      )}
                     </g>
                   )}
                 </g>
@@ -796,12 +924,25 @@ export const ChainMapperView: React.FC = () => {
                   <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider">
                     SYSTEM INSPECTOR
                   </span>
-                  <h3 className="text-xl font-bold text-white flex items-center gap-2 mt-0.5">
-                    {selectedSystem.name}
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded border border-cyan-700/60 bg-cyan-950/80 text-cyan-300 uppercase">
-                      {selectedSystem.systemClass}
-                    </span>
-                  </h3>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                      {selectedSystem.name}
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded border border-cyan-700/60 bg-cyan-950/80 text-cyan-300 uppercase">
+                        {selectedSystem.systemClass}
+                      </span>
+                    </h3>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(selectedSystem.name);
+                        setCopiedLink(true);
+                        setTimeout(() => setCopiedLink(false), 1500);
+                      }}
+                      className="p-1 rounded text-gray-400 hover:text-cyan-300 hover:bg-cyan-950 transition-colors"
+                      title="Copy system name to clipboard"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
 
                 <button
@@ -810,6 +951,70 @@ export const ChainMapperView: React.FC = () => {
                 >
                   ✕
                 </button>
+              </div>
+
+              {/* GalaxyFinder System Effect Banner */}
+              {selectedSystem.effect && WH_SYSTEM_EFFECTS[selectedSystem.effect] && (
+                <div 
+                  className="mb-3 p-2.5 rounded-xl border bg-black/40 backdrop-blur-sm"
+                  style={{ borderColor: WH_SYSTEM_EFFECTS[selectedSystem.effect].color + '60' }}
+                >
+                  <div className="flex items-center gap-1.5 font-bold text-xs" style={{ color: WH_SYSTEM_EFFECTS[selectedSystem.effect].color }}>
+                    <Zap className="w-3.5 h-3.5" />
+                    <span>{WH_SYSTEM_EFFECTS[selectedSystem.effect].effect}</span>
+                  </div>
+                  <div className="text-[10px] text-gray-300 mt-1 leading-relaxed">
+                    {WH_SYSTEM_EFFECTS[selectedSystem.effect].desc}
+                  </div>
+                </div>
+              )}
+
+              {/* GalaxyFinder Trade Hub Navigator */}
+              <div className="mb-3 p-3 bg-[#070b14] border border-blue-900/40 rounded-xl space-y-2">
+                <div className="text-[10px] text-blue-400 font-bold uppercase flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Route className="w-3.5 h-3.5" />
+                    <span>Trade Hub Navigator</span>
+                  </span>
+                  <span className="text-gray-500 text-[9px] font-mono">GalaxyFinder BFS</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  {tradeHubRoutes.map(hub => {
+                    const hasPath = hub.jumps !== null;
+                    return (
+                      <div
+                        key={hub.hubName}
+                        onClick={() => {
+                          if (hasPath && hub.path.length > 0) {
+                            setSelectedSystemId(hub.hubName);
+                            centerOnSystem(hub.hubName);
+                          }
+                        }}
+                        className={`p-2 rounded-lg border text-left transition-all ${
+                          hasPath
+                            ? 'bg-[#0d1629] border-blue-500/40 hover:border-blue-400 cursor-pointer text-white shadow-sm'
+                            : 'bg-[#060a12] border-gray-800 text-gray-500 cursor-default'
+                        }`}
+                        title={hasPath ? `Route: ${hub.path.join(' -> ')}` : `No connection to ${hub.hubName} in current chain`}
+                      >
+                        <div className="flex items-center justify-between leading-none mb-1">
+                          <span className="font-bold text-xs">{hub.hubName}</span>
+                          <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-bold ${
+                            hasPath ? 'bg-blue-950 text-blue-300 border border-blue-700/60' : 'bg-gray-900 text-gray-600'
+                          }`}>
+                            {hasPath ? `${hub.jumps} J` : 'None'}
+                          </span>
+                        </div>
+                        {hasPath && hub.path.length > 1 && (
+                          <div className="text-[9px] text-gray-400 truncate font-mono">
+                            via {hub.path[1]}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Node Actions: Fold / Compress & Delete */}
@@ -1080,6 +1285,8 @@ export const ChainMapperView: React.FC = () => {
             initialType={selectedConnection.wormholeType || 'K162'}
             initialMass={selectedConnection.massStatus || 'stable'}
             initialTime={selectedConnection.timeStatus || 'stable'}
+            initialTactical={selectedConnection.tactical || 'clear'}
+            initialIsFrig={selectedConnection.isFrig || false}
             connectionId={selectedConnection.id}
             onClose={() => {
               setIsConnModalOpen(false);

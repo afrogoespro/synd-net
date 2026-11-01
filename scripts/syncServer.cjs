@@ -272,6 +272,8 @@ const server = http.createServer((req, res) => {
           if (wormholeType !== undefined) conn.wormholeType = wormholeType.trim();
           if (massStatus !== undefined) conn.massStatus = massStatus;
           if (timeStatus !== undefined) conn.timeStatus = timeStatus;
+          if (tactical !== undefined) conn.tactical = tactical;
+          if (isFrig !== undefined) conn.isFrig = isFrig;
 
           // If toSystem exists, update its displayed sigCode
           if (to && chainMap.systems[to] && sigFrom) {

@@ -47,6 +47,8 @@ export interface WormholeConnection {
   sigTo?: string;
   massStatus?: 'stable' | 'destab' | 'critical';
   timeStatus?: 'stable' | 'eol'; // end of life
+  tactical?: 'clear' | 'bubbled' | 'camped';
+  isFrig?: boolean;
 }
 
 export interface ChainMapState {

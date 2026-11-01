@@ -10,6 +10,8 @@ interface SignaturePromptModalProps {
   initialType?: string;
   initialMass?: 'stable' | 'destab' | 'critical';
   initialTime?: 'stable' | 'eol';
+  initialTactical?: 'clear' | 'bubbled' | 'camped';
+  initialIsFrig?: boolean;
   connectionId?: string;
   onClose: () => void;
   onSaved?: (sig: string) => void;
@@ -27,6 +29,8 @@ export const SignaturePromptModal: React.FC<SignaturePromptModalProps> = ({
   initialType = 'K162',
   initialMass = 'stable',
   initialTime = 'stable',
+  initialTactical = 'clear',
+  initialIsFrig = false,
   connectionId,
   onClose,
   onSaved
@@ -35,6 +39,8 @@ export const SignaturePromptModal: React.FC<SignaturePromptModalProps> = ({
   const [wormholeType, setWormholeType] = useState<string>(initialType);
   const [massStatus, setMassStatus] = useState<'stable' | 'destab' | 'critical'>(initialMass);
   const [timeStatus, setTimeStatus] = useState<'stable' | 'eol'>(initialTime);
+  const [tactical, setTactical] = useState<'clear' | 'bubbled' | 'camped'>(initialTactical);
+  const [isFrig, setIsFrig] = useState<boolean>(initialIsFrig);
   const [pasteText, setPasteText] = useState<string>('');
 
   useEffect(() => {
@@ -42,8 +48,10 @@ export const SignaturePromptModal: React.FC<SignaturePromptModalProps> = ({
     setWormholeType(initialType || 'K162');
     setMassStatus(initialMass);
     setTimeStatus(initialTime);
+    setTactical(initialTactical);
+    setIsFrig(initialIsFrig);
     setPasteText('');
-  }, [isOpen, initialSig, initialType, initialMass, initialTime, fromSystem, toSystem]);
+  }, [isOpen, initialSig, initialType, initialMass, initialTime, initialTactical, initialIsFrig, fromSystem, toSystem]);
 
   if (!isOpen) return null;
 
@@ -89,7 +97,9 @@ export const SignaturePromptModal: React.FC<SignaturePromptModalProps> = ({
       sigFrom: cleanSig || undefined,
       wormholeType: wormholeType.trim().toUpperCase() || 'Wormhole',
       massStatus,
-      timeStatus
+      timeStatus,
+      tactical,
+      isFrig
     });
 
     if (onSaved) onSaved(cleanSig);
@@ -275,6 +285,64 @@ export const SignaturePromptModal: React.FC<SignaturePromptModalProps> = ({
                   className="w-full bg-[#050811] border border-gray-800 rounded-lg px-2.5 py-1.5 text-[10px] text-gray-300 placeholder-gray-600 focus:outline-none focus:border-cyan-500"
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Tactical Tags: Clear, Bubbled, Camped, Frig Hole */}
+          <div className="p-3 bg-[#070b16] border border-cyan-950/60 rounded-xl space-y-2">
+            <span className="text-xs text-gray-300 font-semibold flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+                <span>Tactical & Transit Status</span>
+              </span>
+              <span className="text-[10px] text-gray-500">GalaxyFinder Tags</span>
+            </span>
+
+            <div className="grid grid-cols-4 gap-2">
+              <button
+                type="button"
+                onClick={() => setTactical('clear')}
+                className={`py-1.5 px-2 rounded-lg text-[11px] font-bold border transition-all ${
+                  tactical === 'clear'
+                    ? 'bg-emerald-950/80 border-emerald-400 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.3)]'
+                    : 'bg-[#0a0f1d] border-gray-800 text-gray-400 hover:text-gray-200'
+                }`}
+              >
+                Clear
+              </button>
+              <button
+                type="button"
+                onClick={() => setTactical('bubbled')}
+                className={`py-1.5 px-2 rounded-lg text-[11px] font-bold border transition-all ${
+                  tactical === 'bubbled'
+                    ? 'bg-amber-950/80 border-amber-400 text-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.3)]'
+                    : 'bg-[#0a0f1d] border-gray-800 text-gray-400 hover:text-gray-200'
+                }`}
+              >
+                Bubbled
+              </button>
+              <button
+                type="button"
+                onClick={() => setTactical('camped')}
+                className={`py-1.5 px-2 rounded-lg text-[11px] font-bold border transition-all ${
+                  tactical === 'camped'
+                    ? 'bg-red-950/80 border-red-400 text-red-300 shadow-[0_0_10px_rgba(239,68,68,0.4)]'
+                    : 'bg-[#0a0f1d] border-gray-800 text-gray-400 hover:text-gray-200'
+                }`}
+              >
+                Camped
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsFrig(!isFrig)}
+                className={`py-1.5 px-2 rounded-lg text-[11px] font-bold border transition-all ${
+                  isFrig
+                    ? 'bg-sky-950/80 border-sky-400 text-sky-300 shadow-[0_0_10px_rgba(56,189,248,0.3)]'
+                    : 'bg-[#0a0f1d] border-gray-800 text-gray-400 hover:text-gray-200'
+                }`}
+              >
+                Frig Hole
+              </button>
             </div>
           </div>
         </div>
