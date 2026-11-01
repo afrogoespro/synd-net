@@ -7,6 +7,7 @@ import { LocalIntelView } from './components/LocalIntelView';
 import { LiveKillfeedView } from './components/LiveKillfeedView';
 import { EFTInspectorView } from './components/EFTInspectorView';
 import { WormholeScoutPopup } from './components/WormholeScoutPopup';
+import { WormholeTacticalHUD } from './components/WormholeTacticalHUD';
 import { scoutWatcher, ScoutAlertEvent } from './services/scoutWatcher';
 import { mapperService } from './services/mapperService';
 import { DScanReport } from './types/dscan';
@@ -17,6 +18,21 @@ export function App() {
   const [autoWatchEnabled, setAutoWatchEnabled] = useState<boolean>(true);
   const [activeScoutAlert, setActiveScoutAlert] = useState<ScoutAlertEvent | null>(null);
   const [copiedReport, setCopiedReport] = useState<boolean>(false);
+  const [currentSystem, setCurrentSystem] = useState<string>('J103955');
+  const [showHud, setShowHud] = useState<boolean>(true);
+
+  // Subscribe to live character jumps from EVE log tailer
+  useEffect(() => {
+    const unsubJump = mapperService.onJump((jumpData) => {
+      setCurrentSystem(jumpData.systemName);
+      if (jumpData.systemName.startsWith('J')) {
+        setShowHud(true);
+        playTacticalAlert('wh_entry');
+      }
+    });
+
+    return () => unsubJump();
+  }, []);
 
   // Play audio chime for alerts
   const playTacticalAlert = (type: 'critical' | 'radar' | 'wh_entry') => {
@@ -153,11 +169,20 @@ export function App() {
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* High-Level Wormhole Tactical Entry HUD */}
+        {showHud && currentSystem.startsWith('J') && (
+          <WormholeTacticalHUD
+            systemName={currentSystem}
+            onNavigateTab={(tab) => setActiveTab(tab)}
+            onDismiss={() => setShowHud(false)}
+          />
+        )}
+
         {activeTab === 'dscan' && <DScanParserView onScanAnalyzed={handleScanAnalyzed} />}
         {activeTab === 'mapper' && <ChainMapperView />}
         {activeTab === 'ore' && <OreSiteEvaluatorView />}
         {activeTab === 'local' && <LocalIntelView />}
-        {activeTab === 'killfeed' && <LiveKillfeedView />}
+        {activeTab === 'killfeed' && <LiveKillfeedView activeSystemName={currentSystem} />}
         {activeTab === 'eft' && <EFTInspectorView />}
       </main>
 

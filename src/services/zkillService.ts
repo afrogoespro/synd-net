@@ -299,3 +299,128 @@ export async function fetchLiveRecentKills(limit: number = 15): Promise<Killmail
     return [];
   }
 }
+
+// Fetch real recent kills for a specific solar system (e.g. J103955)
+export async function fetchLiveSystemKills(systemName: string, limit: number = 10): Promise<{
+  systemName: string;
+  threatLevel: 'Quiet' | 'Low Risk' | 'Active Hunters' | 'Extreme Danger';
+  totalKills24h: number;
+  kills: KillmailItem[];
+}> {
+  const cleanSys = systemName.trim().toUpperCase();
+
+  const KNOWN_SYS_IDS: Record<string, number> = {
+    'J103955': 31000940,
+    'J204842': 31001427,
+    'J123947': 31001150,
+    'J155214': 31001300,
+    'J142349': 31001220,
+    'J101817': 31000910,
+    'J151141': 31001280
+  };
+
+  let systemId = KNOWN_SYS_IDS[cleanSys] || 0;
+  if (!systemId) {
+    try {
+      const res = await fetch(`https://esi.evetech.net/latest/universe/ids/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify([cleanSys])
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.systems && data.systems.length > 0) {
+          systemId = data.systems[0].id;
+        }
+      }
+    } catch (e) {}
+  }
+
+  if (!systemId) {
+    return { systemName: cleanSys, threatLevel: 'Quiet', totalKills24h: 0, kills: [] };
+  }
+
+  try {
+    let res = await fetch(`/api/zkill/solarSystemID/${systemId}/`);
+    if (!res.ok) {
+      res = await fetch(`https://zkillboard.com/api/solarSystemID/${systemId}/`, {
+        headers: { 'Accept': 'application/json' }
+      });
+    }
+
+    if (!res.ok) {
+      return { systemName: cleanSys, threatLevel: 'Quiet', totalKills24h: 0, kills: [] };
+    }
+
+    const killsRaw = await res.json();
+    if (!Array.isArray(killsRaw)) {
+      return { systemName: cleanSys, threatLevel: 'Quiet', totalKills24h: 0, kills: [] };
+    }
+
+    const now = Date.now();
+    const oneDayAgo = now - 24 * 60 * 60 * 1000;
+    const recent24h = killsRaw.filter((k: any) => new Date(k.killmail_time).getTime() > oneDayAgo);
+    const count24h = recent24h.length;
+
+    let threat: 'Quiet' | 'Low Risk' | 'Active Hunters' | 'Extreme Danger' = 'Quiet';
+    if (count24h >= 6) threat = 'Extreme Danger';
+    else if (count24h >= 3) threat = 'Active Hunters';
+    else if (count24h >= 1) threat = 'Low Risk';
+
+    // Collect IDs to resolve names
+    const idsToResolve = new Set<number>();
+    killsRaw.slice(0, limit).forEach((k: any) => {
+      if (k.victim?.ship_type_id) idsToResolve.add(k.victim.ship_type_id);
+      if (k.victim?.character_id) idsToResolve.add(k.victim.character_id);
+      if (k.victim?.corporation_id) idsToResolve.add(k.victim.corporation_id);
+      const fb = k.attackers?.find((a: any) => a.final_blow) || k.attackers?.[0];
+      if (fb) {
+        if (fb.ship_type_id) idsToResolve.add(fb.ship_type_id);
+        if (fb.character_id) idsToResolve.add(fb.character_id);
+        if (fb.corporation_id) idsToResolve.add(fb.corporation_id);
+      }
+    });
+
+    const nameMap = await lookupEntityNames(Array.from(idsToResolve));
+
+    const formattedKills: KillmailItem[] = killsRaw.slice(0, limit).map((k: any) => {
+      const fb = k.attackers?.find((a: any) => a.final_blow) || k.attackers?.[0] || {};
+      const victimShip = nameMap[k.victim?.ship_type_id] || `Ship ${k.victim?.ship_type_id}`;
+      return {
+        id: `zkill-${k.killmail_id}`,
+        killmailId: k.killmail_id,
+        killmailTime: new Date(k.killmail_time).toLocaleTimeString(),
+        solarSystemName: cleanSys,
+        solarSystemSecurity: -0.99,
+        regionName: 'W-Space',
+        victim: {
+          characterName: nameMap[k.victim?.character_id] || (k.victim?.character_id ? `Pilot ${k.victim.character_id}` : 'Structure / NPC'),
+          corporationName: nameMap[k.victim?.corporation_id] || 'Unknown Corp',
+          shipTypeName: victimShip,
+          shipTypeId: k.victim?.ship_type_id || 0,
+          damageTaken: k.victim?.damage_taken || 0
+        },
+        attackerCount: k.attackers?.length || 1,
+        finalBlow: {
+          characterName: nameMap[fb.character_id] || (fb.character_id ? `Pilot ${fb.character_id}` : 'NPC / Sentry'),
+          corporationName: nameMap[fb.corporation_id] || 'Unknown Corp',
+          shipTypeName: nameMap[fb.ship_type_id] || 'Unknown Ship',
+          shipTypeId: fb.ship_type_id || 0
+        },
+        totalValue: k.zkb?.totalValue || 0,
+        isSolo: k.attackers?.length === 1,
+        isCapital: false,
+        zkillUrl: `https://zkillboard.com/kill/${k.killmail_id}/`
+      };
+    });
+
+    return {
+      systemName: cleanSys,
+      threatLevel: threat,
+      totalKills24h: count24h,
+      kills: formattedKills
+    };
+  } catch (err) {
+    return { systemName: cleanSys, threatLevel: 'Quiet', totalKills24h: 0, kills: [] };
+  }
+}

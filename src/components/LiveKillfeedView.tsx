@@ -1,21 +1,38 @@
 import React, { useState, useEffect } from 'react';
-import { Flame, ExternalLink, RefreshCw, Filter, Zap, Radio } from 'lucide-react';
+import { Flame, ExternalLink, RefreshCw, Filter, Zap, Radio, Target, ShieldAlert } from 'lucide-react';
 import { KillmailItem } from '../types/killmail';
-import { fetchLiveRecentKills } from '../services/zkillService';
+import { fetchLiveRecentKills, fetchLiveSystemKills } from '../services/zkillService';
 
-export const LiveKillfeedView: React.FC = () => {
+interface LiveKillfeedViewProps {
+  activeSystemName?: string;
+}
+
+export const LiveKillfeedView: React.FC<LiveKillfeedViewProps> = ({
+  activeSystemName = 'J103955'
+}) => {
   const [kills, setKills] = useState<KillmailItem[]>([]);
+  const [systemKills, setSystemKills] = useState<KillmailItem[]>([]);
+  const [systemThreat, setSystemThreat] = useState<string>('Quiet');
+  const [systemKills24h, setSystemKills24h] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
-  const [spaceFilter, setSpaceFilter] = useState<'all' | 'lowsec' | 'nullsec' | 'wspace'>('all');
+  const [spaceFilter, setSpaceFilter] = useState<'all' | 'lowsec' | 'nullsec' | 'wspace' | 'system'>('wspace');
   const [autoRefresh, setAutoRefresh] = useState<boolean>(true);
 
   // Load real kills from zKillboard API
   const refreshKills = async () => {
     setLoading(true);
-    const liveKills = await fetchLiveRecentKills(20);
+    const liveKills = await fetchLiveRecentKills(30);
     if (liveKills.length > 0) {
       setKills(liveKills);
     }
+
+    if (activeSystemName && activeSystemName.startsWith('J')) {
+      const sysIntel = await fetchLiveSystemKills(activeSystemName, 10);
+      setSystemKills(sysIntel.kills);
+      setSystemThreat(sysIntel.threatLevel);
+      setSystemKills24h(sysIntel.totalKills24h);
+    }
+
     setLoading(false);
   };
 
@@ -26,18 +43,14 @@ export const LiveKillfeedView: React.FC = () => {
     let interval: any = null;
     if (autoRefresh) {
       interval = setInterval(() => {
-        fetchLiveRecentKills(20).then(data => {
-          if (data.length > 0) {
-            setKills(data);
-          }
-        });
+        refreshKills();
       }, 12000);
     }
 
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [autoRefresh]);
+  }, [autoRefresh, activeSystemName]);
 
   // Format ISK
   const formatIsk = (val: number): string => {
@@ -50,18 +63,20 @@ export const LiveKillfeedView: React.FC = () => {
     return `${val.toLocaleString()} ISK`;
   };
 
-  const filteredKills = kills.filter(k => {
-    if (spaceFilter === 'lowsec') {
-      return k.solarSystemSecurity > 0.0 && k.solarSystemSecurity < 0.5;
-    }
-    if (spaceFilter === 'nullsec') {
-      return k.solarSystemSecurity <= 0.0 && k.regionName !== 'W-Space';
-    }
-    if (spaceFilter === 'wspace') {
-      return k.regionName === 'W-Space' || k.solarSystemName.startsWith('J');
-    }
-    return true;
-  });
+  const filteredKills = spaceFilter === 'system'
+    ? systemKills
+    : kills.filter(k => {
+        if (spaceFilter === 'lowsec') {
+          return k.solarSystemSecurity > 0.0 && k.solarSystemSecurity < 0.5;
+        }
+        if (spaceFilter === 'nullsec') {
+          return k.solarSystemSecurity <= 0.0 && k.regionName !== 'W-Space';
+        }
+        if (spaceFilter === 'wspace') {
+          return k.regionName === 'W-Space' || k.solarSystemName.startsWith('J');
+        }
+        return true;
+      });
 
   return (
     <div className="space-y-6">
@@ -142,9 +157,58 @@ export const LiveKillfeedView: React.FC = () => {
             >
               J-Space
             </button>
+            {activeSystemName && (
+              <button
+                onClick={() => setSpaceFilter('system')}
+                className={`px-2.5 py-1 rounded transition-colors font-bold flex items-center gap-1 ${
+                  spaceFilter === 'system'
+                    ? 'bg-cyan-500/30 text-cyan-200 border border-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.4)]'
+                    : 'bg-black/40 text-cyan-400 border border-cyan-800/60 hover:bg-cyan-950/40'
+                }`}
+                title={`Filter kills specifically for active system ${activeSystemName}`}
+              >
+                <Target className="w-3 h-3 text-cyan-400" />
+                <span>{activeSystemName} (Local)</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
+
+      {/* System Threat Summary Banner */}
+      {spaceFilter === 'system' && (
+        <div className="bg-[#0b1220] border border-cyan-700/60 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 font-mono text-xs shadow-lg">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-cyan-500/20 text-cyan-300">
+              <ShieldAlert className="w-5 h-5 text-cyan-400" />
+            </div>
+            <div>
+              <div className="font-bold text-white text-sm flex items-center gap-2">
+                <span>LOCAL J-SPACE COMBAT LOG // {activeSystemName}</span>
+                <span className={`text-[10px] px-2 py-0.5 rounded font-bold border ${
+                  systemThreat === 'Extreme Danger' ? 'bg-red-950 text-red-300 border-red-700' :
+                  systemThreat === 'Active Hunters' ? 'bg-orange-950 text-orange-300 border-orange-700' :
+                  systemThreat === 'Low Risk' ? 'bg-amber-950 text-amber-300 border-amber-700' :
+                  'bg-emerald-950 text-emerald-300 border-emerald-700'
+                }`}>
+                  {systemThreat.toUpperCase()} ({systemKills24h} kills in 24h)
+                </span>
+              </div>
+              <p className="text-[11px] text-gray-400 mt-0.5 font-sans">
+                Real-time destructions reported to zKillboard inside this specific wormhole.
+              </p>
+            </div>
+          </div>
+
+          <div className="text-[11px] text-gray-400">
+            {systemKills.length > 0 ? (
+              <span className="text-amber-400 font-bold">⚠️ Recent combat recorded in system</span>
+            ) : (
+              <span className="text-emerald-400 font-bold">✓ Zero kills recorded recently (Quiet system)</span>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Killfeed list */}
       <div className="space-y-3 font-mono">

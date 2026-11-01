@@ -1,6 +1,7 @@
 import { ChainMapState, WormholeNode, WormholeConnection, ScannedStructure } from '../types/mapper';
 
 export type MapUpdateCallback = (state: ChainMapState) => void;
+export type JumpCallback = (jumpData: { systemName: string; fromSystem?: string }) => void;
 
 const DEFAULT_SYSTEMS: Record<string, WormholeNode> = {
   'Jita': { id: 'Jita', name: 'Jita', systemClass: 'Highsec', security: 0.9, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 650, y: 40 },
@@ -59,6 +60,7 @@ class MapperService {
   };
 
   private listeners: MapUpdateCallback[] = [];
+  private jumpListeners: JumpCallback[] = [];
   private activeSystemId: string = 'J103955';
   private eventSource: EventSource | null = null;
 
@@ -77,6 +79,10 @@ class MapperService {
             this.state = data.payload;
             this.notify();
           }
+          if (data.type === 'JUMP' && data.payload) {
+            this.activeSystemId = data.payload.systemName;
+            this.jumpListeners.forEach(cb => cb(data.payload));
+          }
         } catch (err) {
           console.error("Map stream error:", err);
         }
@@ -86,6 +92,13 @@ class MapperService {
         // Fallback silently if sync server isn't running
       };
     } catch {}
+  }
+
+  public onJump(cb: JumpCallback) {
+    this.jumpListeners.push(cb);
+    return () => {
+      this.jumpListeners = this.jumpListeners.filter(l => l !== cb);
+    };
   }
 
   public subscribe(cb: MapUpdateCallback) {
