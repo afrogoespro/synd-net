@@ -160,6 +160,61 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Update pilot location (e.g. buddy sets their location or moves)
+  if (req.url === '/api/map/pilot' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try {
+        const { pilotName, systemName } = JSON.parse(body);
+        if (!pilotName || !systemName) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'pilotName and systemName are required' }));
+          return;
+        }
+
+        const cleanSys = systemName.trim();
+        // Remove pilot from all systems first
+        Object.values(chainMap.systems).forEach(sys => {
+          sys.activePilots = (sys.activePilots || []).filter(p => !p.startsWith(pilotName));
+        });
+
+        // Ensure system exists
+        if (!chainMap.systems[cleanSys]) {
+          chainMap.systems[cleanSys] = {
+            id: cleanSys,
+            name: cleanSys,
+            systemClass: cleanSys.startsWith('J') ? 'C2' : 'Highsec',
+            statics: [],
+            structures: [],
+            activePilots: [pilotName],
+            signatures: [],
+            lastUpdated: new Date().toLocaleTimeString()
+          };
+        } else {
+          chainMap.systems[cleanSys].activePilots = chainMap.systems[cleanSys].activePilots || [];
+          if (!chainMap.systems[cleanSys].activePilots.includes(pilotName)) {
+            chainMap.systems[cleanSys].activePilots.push(pilotName);
+          }
+        }
+
+        // Add to online buddies list if not present
+        if (!chainMap.onlineBuddies.includes(pilotName)) {
+          chainMap.onlineBuddies.push(pilotName);
+        }
+
+        broadcastUpdate('MAP_UPDATE', chainMap);
+        console.log(`[Pilot Location Updated] ${pilotName} -> ${cleanSys}`);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, chainMap }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
+
   // Clear or reset map
   if (req.url === '/api/map/clear' && req.method === 'POST') {
     chainMap = {
@@ -230,6 +285,11 @@ function handleSystemTransition(newSys, fromSys) {
     else whClass = 'C2';
   }
 
+  // Remove host pilot from other systems so marker stays only on current system
+  Object.values(chainMap.systems).forEach(sys => {
+    sys.activePilots = (sys.activePilots || []).filter(p => !p.includes('Ennis Urbanski'));
+  });
+
   if (!chainMap.systems[newSys]) {
     chainMap.systems[newSys] = {
       id: newSys,
@@ -241,6 +301,12 @@ function handleSystemTransition(newSys, fromSys) {
       signatures: [],
       lastUpdated: new Date().toLocaleTimeString()
     };
+  } else {
+    chainMap.systems[newSys].activePilots = chainMap.systems[newSys].activePilots || [];
+    if (!chainMap.systems[newSys].activePilots.includes('Ennis Urbanski (You)')) {
+      chainMap.systems[newSys].activePilots.push('Ennis Urbanski (You)');
+    }
+    chainMap.systems[newSys].lastUpdated = new Date().toLocaleTimeString();
   }
 
   // Connect previous system to new system

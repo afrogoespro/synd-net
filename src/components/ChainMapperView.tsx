@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Network, Compass, Building2, Users, Plus, Trash2, Copy, 
-  Check, ExternalLink, Share2, Sparkles, RefreshCw, Radio, ArrowRight
+  Check, ExternalLink, Share2, Sparkles, RefreshCw, Radio, ArrowRight,
+  User, MapPin
 } from 'lucide-react';
 import { mapperService } from '../services/mapperService';
 import { ChainMapState, WormholeNode } from '../types/mapper';
@@ -12,6 +13,9 @@ export const ChainMapperView: React.FC = () => {
   const [newSystemInput, setNewSystemInput] = useState<string>('');
   const [whTypeInput, setWhTypeInput] = useState<string>('K162');
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
+  const [currentPilotName, setCurrentPilotName] = useState<string>(() => {
+    return localStorage.getItem('synd_pilot_name') || 'Syndra en Tilavine';
+  });
 
   useEffect(() => {
     const unsubscribe = mapperService.subscribe((state) => {
@@ -161,7 +165,29 @@ export const ChainMapperView: React.FC = () => {
                         </span>
                       </div>
 
-                      <div className="text-[10px] text-gray-500 mt-1">
+                      {/* Active Pilots in this system */}
+                      {sys.activePilots && sys.activePilots.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1 mt-2.5 pt-2 border-t border-gray-800/60">
+                          {sys.activePilots.map((p, pIdx) => {
+                            const isYou = p.includes('(You)');
+                            return (
+                              <span
+                                key={pIdx}
+                                className={`text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1 border ${
+                                  isYou
+                                    ? 'bg-cyan-500/20 text-cyan-300 border-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.4)]'
+                                    : 'bg-emerald-500/20 text-emerald-300 border-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.4)]'
+                                }`}
+                              >
+                                <User className="w-2.5 h-2.5" />
+                                <span>{p}</span>
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      <div className="text-[10px] text-gray-500 mt-1.5">
                         Updated {sys.lastUpdated}
                       </div>
                     </button>
@@ -235,6 +261,55 @@ export const ChainMapperView: React.FC = () => {
               >
                 <ExternalLink className="w-4 h-4" />
               </a>
+            </div>
+
+            {/* Fleet Member Location Control */}
+            <div className="bg-[#090d16] border border-cyan-900/40 rounded-xl p-3 mb-4 text-xs">
+              <div className="text-[10px] text-gray-400 font-bold uppercase mb-2 flex items-center justify-between">
+                <span className="flex items-center gap-1 text-cyan-400 font-mono">
+                  <MapPin className="w-3.5 h-3.5" />
+                  Fleet Pilot Location
+                </span>
+                <span className="text-[10px] text-gray-500">
+                  {selectedSystem?.activePilots?.length || 0} Pilot(s) in system
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={currentPilotName}
+                  onChange={(e) => {
+                    setCurrentPilotName(e.target.value);
+                    localStorage.setItem('synd_pilot_name', e.target.value);
+                  }}
+                  placeholder="Pilot Name (e.g. Syndra)"
+                  className="bg-black/80 border border-gray-800 focus:border-cyan-500 rounded px-2.5 py-1 text-xs text-white placeholder-gray-600 focus:outline-none flex-1 font-mono"
+                />
+                <button
+                  onClick={() => {
+                    if (selectedSystem) {
+                      mapperService.setPilotLocation(currentPilotName, selectedSystem.id);
+                    }
+                  }}
+                  className="px-3 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-black font-bold text-xs flex items-center gap-1 transition-all shadow-[0_0_10px_rgba(16,185,129,0.3)] whitespace-nowrap"
+                  title="Move your pilot marker to this system"
+                >
+                  <MapPin className="w-3 h-3" />
+                  <span>I'M HERE</span>
+                </button>
+              </div>
+
+              {selectedSystem?.activePilots && selectedSystem.activePilots.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5 mt-2 pt-2 border-t border-gray-800/60">
+                  {selectedSystem.activePilots.map((p, idx) => (
+                    <span key={idx} className="text-[10px] px-2 py-0.5 rounded bg-gray-900 border border-gray-800 text-cyan-300 font-bold flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                      {p}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Scanned Structures on Grid */}

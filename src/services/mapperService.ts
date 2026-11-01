@@ -194,6 +194,32 @@ class MapperService {
     } catch {}
   }
 
+  // Set a pilot's location (e.g. buddy sets their position to this system)
+  public async setPilotLocation(pilotName: string, systemName: string) {
+    if (!pilotName || !systemName) return;
+
+    // Update local state immediately
+    Object.values(this.state.systems).forEach(sys => {
+      sys.activePilots = (sys.activePilots || []).filter(p => !p.startsWith(pilotName));
+    });
+
+    if (this.state.systems[systemName]) {
+      this.state.systems[systemName].activePilots = this.state.systems[systemName].activePilots || [];
+      if (!this.state.systems[systemName].activePilots.includes(pilotName)) {
+        this.state.systems[systemName].activePilots.push(pilotName);
+      }
+    }
+    this.notify();
+
+    try {
+      await fetch('/api/map/pilot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pilotName, systemName })
+      });
+    } catch {}
+  }
+
   public async clearMap() {
     this.state = {
       systems: {
