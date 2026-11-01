@@ -22,7 +22,7 @@ const INITIAL_SYSTEMS = {
   'Sobaseki': { id: 'Sobaseki', name: 'Sobaseki', systemClass: 'Highsec', security: 0.8, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 470, y: 130 },
   'Isanamo': { id: 'Isanamo', name: 'Isanamo', systemClass: 'Highsec', security: 0.6, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 470, y: 220 },
   'Uemisaisen': { id: 'Uemisaisen', name: 'Uemisaisen', systemClass: 'Highsec', security: 0.6, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 470, y: 310 },
-  'J103955': { id: 'J103955', name: 'J103955', systemClass: 'C3', sigCode: 'JVC', statics: ['Lowsec'], structures: [], activePilots: ['Syndra en Tilavine', 'Ennis Urbanski (You)'], signatures: [], lastUpdated: '13:30', x: 410, y: 400 },
+  'J103955': { id: 'J103955', name: 'J103955', systemClass: 'C3', sigCode: 'JVC', statics: ['Lowsec'], structures: [], activePilots: ['Syndra en Tilavine', 'USS Hauler'], signatures: [], lastUpdated: '13:30', x: 410, y: 400 },
   'J142349': { id: 'J142349', name: 'J142349', systemClass: 'C5', sigCode: 'JPV', statics: ['C3'], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 410, y: 490 },
   'New Caldari': { id: 'New Caldari', name: 'New Caldari', systemClass: 'Highsec', security: 1.0, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 740, y: 130 },
   'Alikara': { id: 'Alikara', name: 'Alikara', systemClass: 'Highsec', security: 0.7, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 740, y: 220 },
@@ -64,8 +64,35 @@ const INITIAL_CONNECTIONS = [
 let chainMap = {
   systems: { ...INITIAL_SYSTEMS },
   connections: [ ...INITIAL_CONNECTIONS ],
-  onlineBuddies: ['Ennis Urbanski (You)', 'Syndra en Tilavine']
+  onlineBuddies: ['Syndra en Tilavine (Host)', 'USS Hauler (Fleet)']
 };
+
+const stateFilePath = path.join(__dirname, 'chainState.json');
+
+function saveState() {
+  try {
+    fs.writeFileSync(stateFilePath, JSON.stringify(chainMap, null, 2), 'utf8');
+  } catch (e) {
+    console.error('Failed to save chainState.json', e);
+  }
+}
+
+function loadState() {
+  try {
+    if (fs.existsSync(stateFilePath)) {
+      const data = JSON.parse(fs.readFileSync(stateFilePath, 'utf8'));
+      if (data && data.systems) {
+        chainMap = data;
+        console.log(`[Persistence] Restored saved chain state with ${Object.keys(chainMap.systems).length} systems!`);
+      }
+    }
+  } catch (e) {
+    console.warn('[Persistence] Could not load saved state, using defaults', e);
+  }
+}
+
+// Load saved state on boot
+loadState();
 
 let lastActiveSystem = 'J103955';
 
@@ -301,6 +328,26 @@ function findEveLogsDir() {
 const eveLogsBase = findEveLogsDir();
 console.log(`[EVE Location Follower] EVE Logs directory: ${eveLogsBase || 'NOT FOUND'}`);
 
+function detectHostCharacterName() {
+  if (!eveLogsBase) return 'Syndra en Tilavine';
+  const gameDir = path.join(eveLogsBase, 'Gamelogs');
+  if (!fs.existsSync(gameDir)) return 'Syndra en Tilavine';
+  const files = fs.readdirSync(gameDir).filter(f => f.endsWith('.txt')).map(f => {
+    const full = path.join(gameDir, f);
+    return { file: full, mtime: fs.statSync(full).mtime.getTime() };
+  }).sort((a, b) => b.mtime - a.mtime);
+  if (files.length === 0) return 'Syndra en Tilavine';
+  try {
+    const content = fs.readFileSync(files[0].file, 'utf8');
+    const m = content.match(/Listener:\s*([^\r\n]+)/);
+    if (m && m[1].trim()) return m[1].trim();
+  } catch (e) {}
+  return 'Syndra en Tilavine';
+}
+
+const hostPilotName = detectHostCharacterName();
+console.log(`[Host Character Identified] Flying as: ${hostPilotName}`);
+
 function handleSystemTransition(newSys, fromSys) {
   if (!newSys) return;
   newSys = newSys.trim();
@@ -325,9 +372,10 @@ function handleSystemTransition(newSys, fromSys) {
 
   // Remove host pilot from other systems so marker stays only on current system
   Object.values(chainMap.systems).forEach(sys => {
-    sys.activePilots = (sys.activePilots || []).filter(p => !p.includes('Ennis Urbanski'));
+    sys.activePilots = (sys.activePilots || []).filter(p => !p.includes(hostPilotName));
   });
 
+  const hostTag = `${hostPilotName}`;
   if (!chainMap.systems[newSys]) {
     chainMap.systems[newSys] = {
       id: newSys,
@@ -335,17 +383,19 @@ function handleSystemTransition(newSys, fromSys) {
       systemClass: whClass,
       statics: whClass === 'C2' ? ['C2', 'Highsec'] : whClass === 'C3' ? ['Lowsec'] : [],
       structures: [],
-      activePilots: ['Ennis Urbanski (You)'],
+      activePilots: [hostTag],
       signatures: [],
       lastUpdated: new Date().toLocaleTimeString()
     };
   } else {
     chainMap.systems[newSys].activePilots = chainMap.systems[newSys].activePilots || [];
-    if (!chainMap.systems[newSys].activePilots.includes('Ennis Urbanski (You)')) {
-      chainMap.systems[newSys].activePilots.push('Ennis Urbanski (You)');
+    if (!chainMap.systems[newSys].activePilots.includes(hostTag)) {
+      chainMap.systems[newSys].activePilots.push(hostTag);
     }
     chainMap.systems[newSys].lastUpdated = new Date().toLocaleTimeString();
   }
+
+  saveState();
 
   // Connect previous system to new system
   if (previous && previous !== newSys) {

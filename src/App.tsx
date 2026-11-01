@@ -168,9 +168,13 @@ export function App() {
         onSimulateWHEntry={handleSimulateWHEntry}
       />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* High-Level Wormhole Tactical Entry HUD */}
-        {showHud && currentSystem.startsWith('J') && (
+      <main className={`flex-1 w-full ${
+        activeTab === 'mapper' 
+          ? 'p-0 m-0 max-w-none h-[calc(100vh-64px)] overflow-hidden flex flex-col' 
+          : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6'
+      }`}>
+        {/* High-Level Wormhole Tactical Entry HUD (shown on non-mapper tabs or if toggled) */}
+        {showHud && activeTab !== 'mapper' && currentSystem.startsWith('J') && (
           <WormholeTacticalHUD
             systemName={currentSystem}
             onNavigateTab={(tab) => setActiveTab(tab)}

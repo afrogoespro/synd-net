@@ -1,0 +1,484 @@
+{
+  "systems": {
+    "Jita": {
+      "id": "Jita",
+      "name": "Jita",
+      "systemClass": "Highsec",
+      "security": 0.9,
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "14:01:39",
+      "x": 650,
+      "y": 40
+    },
+    "Ikuchi": {
+      "id": "Ikuchi",
+      "name": "Ikuchi",
+      "systemClass": "Highsec",
+      "security": 1,
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "13:30",
+      "x": 180,
+      "y": 130
+    },
+    "Ansila": {
+      "id": "Ansila",
+      "name": "Ansila",
+      "systemClass": "Highsec",
+      "security": 0.9,
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "13:30",
+      "x": 180,
+      "y": 220
+    },
+    "Hykkota": {
+      "id": "Hykkota",
+      "name": "Hykkota",
+      "systemClass": "Highsec",
+      "security": 0.8,
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "13:30",
+      "x": 180,
+      "y": 310
+    },
+    "J151141": {
+      "id": "J151141",
+      "name": "J151141",
+      "systemClass": "C1",
+      "sigCode": "YSO",
+      "statics": [
+        "Highsec"
+      ],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "13:30",
+      "x": 180,
+      "y": 400
+    },
+    "Muvolailen": {
+      "id": "Muvolailen",
+      "name": "Muvolailen",
+      "systemClass": "Highsec",
+      "security": 0.7,
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "13:30",
+      "x": 330,
+      "y": 130
+    },
+    "Sobaseki": {
+      "id": "Sobaseki",
+      "name": "Sobaseki",
+      "systemClass": "Highsec",
+      "security": 0.8,
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "14:01:39",
+      "x": 470,
+      "y": 130
+    },
+    "Isanamo": {
+      "id": "Isanamo",
+      "name": "Isanamo",
+      "systemClass": "Highsec",
+      "security": 0.6,
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "14:01:39",
+      "x": 470,
+      "y": 220
+    },
+    "Uemisaisen": {
+      "id": "Uemisaisen",
+      "name": "Uemisaisen",
+      "systemClass": "Highsec",
+      "security": 0.6,
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "14:01:39",
+      "x": 470,
+      "y": 310
+    },
+    "J103955": {
+      "id": "J103955",
+      "name": "J103955",
+      "systemClass": "C3",
+      "sigCode": "JVC",
+      "statics": [
+        "Lowsec"
+      ],
+      "structures": [],
+      "activePilots": [
+        "USS Hauler",
+        "Syndra en Tilavine"
+      ],
+      "signatures": [],
+      "lastUpdated": "14:01:39",
+      "x": 410,
+      "y": 400
+    },
+    "J142349": {
+      "id": "J142349",
+      "name": "J142349",
+      "systemClass": "C5",
+      "sigCode": "JPV",
+      "statics": [
+        "C3"
+      ],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "13:30",
+      "x": 410,
+      "y": 490
+    },
+    "New Caldari": {
+      "id": "New Caldari",
+      "name": "New Caldari",
+      "systemClass": "Highsec",
+      "security": 1,
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "13:30",
+      "x": 740,
+      "y": 130
+    },
+    "Alikara": {
+      "id": "Alikara",
+      "name": "Alikara",
+      "systemClass": "Highsec",
+      "security": 0.7,
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "13:30",
+      "x": 740,
+      "y": 220
+    },
+    "J101817": {
+      "id": "J101817",
+      "name": "J101817",
+      "systemClass": "C1",
+      "sigCode": "ISA",
+      "statics": [
+        "Highsec"
+      ],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "13:30",
+      "x": 880,
+      "y": 220
+    },
+    "J204842": {
+      "id": "J204842",
+      "name": "J204842",
+      "systemClass": "C3",
+      "sigCode": "XSX",
+      "statics": [
+        "Lowsec"
+      ],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "13:30",
+      "x": 740,
+      "y": 310
+    },
+    "J123947": {
+      "id": "J123947",
+      "name": "J123947",
+      "systemClass": "C4",
+      "sigCode": "RCO",
+      "statics": [
+        "C3",
+        "C4"
+      ],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "13:30",
+      "x": 620,
+      "y": 400
+    },
+    "J155214": {
+      "id": "J155214",
+      "name": "J155214",
+      "systemClass": "C4",
+      "sigCode": "MFD",
+      "statics": [
+        "C3",
+        "C2"
+      ],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "13:30",
+      "x": 790,
+      "y": 400
+    },
+    "Atlar": {
+      "id": "Atlar",
+      "name": "Atlar",
+      "systemClass": "Lowsec",
+      "security": 0.4,
+      "sigCode": "UCY",
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "13:30",
+      "x": 740,
+      "y": 490
+    },
+    "Perimeter": {
+      "id": "Perimeter",
+      "name": "Perimeter",
+      "systemClass": "Highsec",
+      "security": 1,
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "14:01:39",
+      "x": 990,
+      "y": 130
+    },
+    "Niyabainen": {
+      "id": "Niyabainen",
+      "name": "Niyabainen",
+      "systemClass": "Highsec",
+      "security": 1,
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "13:30",
+      "x": 990,
+      "y": 220
+    },
+    "Maurasi": {
+      "id": "Maurasi",
+      "name": "Maurasi",
+      "systemClass": "Highsec",
+      "security": 0.9,
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "13:30",
+      "x": 1120,
+      "y": 130
+    },
+    "Urlen": {
+      "id": "Urlen",
+      "name": "Urlen",
+      "systemClass": "Highsec",
+      "security": 1,
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "14:01:39",
+      "x": 1120,
+      "y": 220
+    },
+    "Kisogo": {
+      "id": "Kisogo",
+      "name": "Kisogo",
+      "systemClass": "Highsec",
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "14:01:39"
+    }
+  },
+  "connections": [
+    {
+      "id": "c-jita-ikuchi",
+      "from": "Jita",
+      "to": "Ikuchi",
+      "wormholeType": "Stargate"
+    },
+    {
+      "id": "c-ikuchi-ansila",
+      "from": "Ikuchi",
+      "to": "Ansila",
+      "wormholeType": "Stargate"
+    },
+    {
+      "id": "c-ansila-hykkota",
+      "from": "Ansila",
+      "to": "Hykkota",
+      "wormholeType": "Stargate"
+    },
+    {
+      "id": "c-hykkota-j151141",
+      "from": "Hykkota",
+      "to": "J151141",
+      "wormholeType": "Wormhole",
+      "sigFrom": "YSO"
+    },
+    {
+      "id": "c-jita-muvolailen",
+      "from": "Jita",
+      "to": "Muvolailen",
+      "wormholeType": "Stargate"
+    },
+    {
+      "id": "c-jita-sobaseki",
+      "from": "Jita",
+      "to": "Sobaseki",
+      "wormholeType": "Stargate"
+    },
+    {
+      "id": "c-sobaseki-isanamo",
+      "from": "Sobaseki",
+      "to": "Isanamo",
+      "wormholeType": "Stargate"
+    },
+    {
+      "id": "c-isanamo-uemisaisen",
+      "from": "Isanamo",
+      "to": "Uemisaisen",
+      "wormholeType": "Stargate"
+    },
+    {
+      "id": "c-uemisaisen-j103955",
+      "from": "Uemisaisen",
+      "to": "J103955",
+      "wormholeType": "Wormhole",
+      "sigFrom": "ANF"
+    },
+    {
+      "id": "c-j103955-j142349",
+      "from": "J103955",
+      "to": "J142349",
+      "wormholeType": "Wormhole",
+      "sigFrom": "JPV"
+    },
+    {
+      "id": "c-jita-newcaldari",
+      "from": "Jita",
+      "to": "New Caldari",
+      "wormholeType": "Stargate"
+    },
+    {
+      "id": "c-newcaldari-alikara",
+      "from": "New Caldari",
+      "to": "Alikara",
+      "wormholeType": "Stargate"
+    },
+    {
+      "id": "c-alikara-j101817",
+      "from": "Alikara",
+      "to": "J101817",
+      "wormholeType": "Wormhole",
+      "sigFrom": "ISA"
+    },
+    {
+      "id": "c-alikara-j204842",
+      "from": "Alikara",
+      "to": "J204842",
+      "wormholeType": "Wormhole",
+      "sigFrom": "HMV"
+    },
+    {
+      "id": "c-j204842-j123947",
+      "from": "J204842",
+      "to": "J123947",
+      "wormholeType": "Wormhole",
+      "sigFrom": "RCO"
+    },
+    {
+      "id": "c-j204842-j155214",
+      "from": "J204842",
+      "to": "J155214",
+      "wormholeType": "Wormhole",
+      "sigFrom": "MFD"
+    },
+    {
+      "id": "c-j204842-atlar",
+      "from": "J204842",
+      "to": "Atlar",
+      "wormholeType": "Wormhole",
+      "sigFrom": "UCY"
+    },
+    {
+      "id": "c-jita-perimeter",
+      "from": "Jita",
+      "to": "Perimeter",
+      "wormholeType": "Stargate"
+    },
+    {
+      "id": "c-perimeter-niyabainen",
+      "from": "Perimeter",
+      "to": "Niyabainen",
+      "wormholeType": "Stargate"
+    },
+    {
+      "id": "c-jita-maurasi",
+      "from": "Jita",
+      "to": "Maurasi",
+      "wormholeType": "Stargate"
+    },
+    {
+      "id": "c-maurasi-urlen",
+      "from": "Maurasi",
+      "to": "Urlen",
+      "wormholeType": "Stargate"
+    },
+    {
+      "id": "conn-1793570499857",
+      "from": "J103955",
+      "to": "Kisogo",
+      "wormholeType": "Wormhole",
+      "massStatus": "stable",
+      "timeStatus": "stable"
+    },
+    {
+      "id": "conn-1793570499859",
+      "from": "Kisogo",
+      "to": "Urlen",
+      "wormholeType": "Stargate",
+      "massStatus": "stable",
+      "timeStatus": "stable"
+    },
+    {
+      "id": "conn-1793570499860",
+      "from": "Urlen",
+      "to": "Perimeter",
+      "wormholeType": "Stargate",
+      "massStatus": "stable",
+      "timeStatus": "stable"
+    }
+  ],
+  "onlineBuddies": [
+    "Syndra en Tilavine (Host)",
+    "USS Hauler (Fleet)"
+  ]
+}

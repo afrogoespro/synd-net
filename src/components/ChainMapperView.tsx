@@ -26,15 +26,31 @@ export const ChainMapperView: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [currentPilotName, setCurrentPilotName] = useState<string>(() => {
-    return localStorage.getItem('synd_pilot_name') || 'Syndra en Tilavine';
+    return localStorage.getItem('synd_pilot_name') || 'USS Hauler';
   });
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
   useEffect(() => {
     const unsubscribe = mapperService.subscribe((state) => {
       setMapState({ ...state });
     });
+
+    // Auto-announce saved pilot location on boot / refresh
+    const savedName = localStorage.getItem('synd_pilot_name');
+    if (savedName && savedName.trim()) {
+      mapperService.setPilotLocation(savedName.trim(), selectedSystemId);
+    }
+
     return () => unsubscribe();
   }, []);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => {});
+    } else {
+      document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => {});
+    }
+  };
 
   const selectedSystem: WormholeNode | undefined = 
     mapState.systems[selectedSystemId] || Object.values(mapState.systems)[0];
@@ -175,19 +191,48 @@ export const ChainMapperView: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-140px)] min-h-[640px] font-mono select-none overflow-hidden rounded-2xl border border-cyan-950/60 bg-[#04060c] shadow-2xl relative">
+    <div className="flex flex-col w-full h-full min-h-[calc(100vh-64px)] font-mono select-none overflow-hidden bg-[#04060c] relative">
       
       {/* 1. TOP TITLE BAR (Tripwire / Pathfinder style) */}
-      <div className="bg-[#0b0f1a] border-b border-gray-800/80 px-4 py-2.5 flex items-center justify-between text-xs z-20">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-white font-bold tracking-wide text-sm">
+      <div className="bg-[#0b0f1a] border-b border-gray-800/80 px-4 py-2 flex items-center justify-between text-xs z-20 flex-wrap gap-2">
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Pilot Identity Control (USS Hauler / Syndra) */}
+          <div className="flex items-center gap-2 text-white font-bold tracking-wide text-xs">
             <span className="text-cyan-400 text-lg leading-none">≡</span>
-            <span>{currentPilotName} - <span className="text-cyan-300">{activeSystem?.name || 'J103955'}</span></span>
+            <span className="text-gray-400 hidden sm:inline">Pilot:</span>
+            <input
+              type="text"
+              value={currentPilotName}
+              onChange={(e) => {
+                const name = e.target.value;
+                setCurrentPilotName(name);
+                localStorage.setItem('synd_pilot_name', name);
+              }}
+              onBlur={() => {
+                if (currentPilotName.trim() && selectedSystem) {
+                  mapperService.setPilotLocation(currentPilotName.trim(), selectedSystem.id);
+                }
+              }}
+              placeholder="Your Pilot Name"
+              className="bg-black/90 border border-gray-700 focus:border-cyan-400 rounded px-2.5 py-1 text-xs text-white font-bold w-36 font-mono"
+            />
+            <button
+              onClick={() => {
+                if (currentPilotName.trim() && selectedSystem) {
+                  mapperService.setPilotLocation(currentPilotName.trim(), selectedSystem.id);
+                }
+              }}
+              className="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-black font-bold text-xs flex items-center gap-1 shadow-[0_0_10px_rgba(16,185,129,0.3)] transition-all whitespace-nowrap"
+              title={`Move ${currentPilotName} to ${selectedSystem?.name || 'J103955'}`}
+            >
+              <MapPin className="w-3 h-3" />
+              <span>I'M IN {selectedSystem?.name || 'J103955'}</span>
+            </button>
           </div>
 
-          <span className="hidden sm:inline-block w-px h-4 bg-gray-700/60"></span>
+          <span className="hidden lg:inline-block w-px h-4 bg-gray-700/60"></span>
 
-          <div className="hidden sm:flex items-center gap-2 text-[11px] text-gray-400">
+          <div className="hidden lg:flex items-center gap-2 text-[11px] text-gray-400">
             <span className="flex items-center gap-1.5 text-emerald-400 font-bold">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
               LIVE SYNC
@@ -216,6 +261,14 @@ export const ChainMapperView: React.FC = () => {
             title="Toggle System Inspector"
           >
             <Layers className="w-4 h-4" />
+          </button>
+
+          <button
+            onClick={toggleFullscreen}
+            className="p-1.5 rounded bg-gray-900 hover:bg-gray-800 text-gray-400 hover:text-white border border-gray-800 transition-colors"
+            title="Toggle Fullscreen"
+          >
+            <Maximize2 className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -432,9 +485,9 @@ export const ChainMapperView: React.FC = () => {
           <button
             onClick={handleFit}
             className="p-2 rounded-lg hover:bg-cyan-950 text-gray-300 hover:text-cyan-300 transition-colors"
-            title="Fit to Screen"
+            title="Fit to Screen (Reset Zoom)"
           >
-            <Maximize2 className="w-4 h-4" />
+            <Sparkles className="w-4 h-4" />
           </button>
           <button
             onClick={handleCenterOnPilot}
@@ -442,6 +495,13 @@ export const ChainMapperView: React.FC = () => {
             title="Center on Active Pilot (J103955)"
           >
             <Crosshair className="w-4 h-4" />
+          </button>
+          <button
+            onClick={toggleFullscreen}
+            className="p-2 rounded-lg hover:bg-cyan-950 text-cyan-300 hover:text-white transition-colors"
+            title="Toggle True Fullscreen (Fills entire monitor)"
+          >
+            <Maximize2 className="w-4 h-4" />
           </button>
         </div>
 
