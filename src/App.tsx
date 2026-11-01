@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
+import { CommandDashboardView } from './components/CommandDashboardView';
 import { DScanParserView } from './components/DScanParserView';
 import { ChainMapperView } from './components/ChainMapperView';
 import { OreSiteEvaluatorView } from './components/OreSiteEvaluatorView';
@@ -14,13 +15,23 @@ import { mapperService } from './services/mapperService';
 import { DScanReport } from './types/dscan';
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<'dscan' | 'mapper' | 'ore' | 'local' | 'killfeed' | 'eft'>('mapper');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'dscan' | 'mapper' | 'ore' | 'local' | 'killfeed' | 'eft'>('dashboard');
   const [audioAlertsEnabled, setAudioAlertsEnabled] = useState<boolean>(true);
   const [autoWatchEnabled, setAutoWatchEnabled] = useState<boolean>(true);
   const [activeScoutAlert, setActiveScoutAlert] = useState<ScoutAlertEvent | null>(null);
   const [copiedReport, setCopiedReport] = useState<boolean>(false);
   const [currentSystem, setCurrentSystem] = useState<string>('J103955');
   const [showHud, setShowHud] = useState<boolean>(true);
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    return (localStorage.getItem('synd_theme') as 'dark' | 'light') || 'dark';
+  });
+
+  const toggleTheme = () => {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    localStorage.setItem('synd_theme', next);
+  };
+
   const [jumpSigModal, setJumpSigModal] = useState<{
     isOpen: boolean;
     fromSystem: string;
@@ -176,7 +187,9 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#080b11] text-gray-200 flex flex-col font-sans">
+    <div className={`min-h-screen flex flex-col font-sans transition-colors duration-200 ${
+      theme === 'dark' ? 'bg-[#080b11] text-gray-200' : 'bg-slate-50 text-slate-900'
+    }`}>
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -185,6 +198,8 @@ export function App() {
         autoWatchEnabled={autoWatchEnabled}
         setAutoWatchEnabled={setAutoWatchEnabled}
         onSimulateWHEntry={handleSimulateWHEntry}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
 
       <main className={`flex-1 w-full ${
@@ -193,7 +208,7 @@ export function App() {
           : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6'
       }`}>
         {/* High-Level Wormhole Tactical Entry HUD (shown on non-mapper tabs or if toggled) */}
-        {showHud && activeTab !== 'mapper' && currentSystem.startsWith('J') && (
+        {showHud && activeTab !== 'mapper' && activeTab !== 'dashboard' && currentSystem.startsWith('J') && (
           <WormholeTacticalHUD
             systemName={currentSystem}
             onNavigateTab={(tab) => setActiveTab(tab)}
@@ -208,6 +223,12 @@ export function App() {
           />
         )}
 
+        {activeTab === 'dashboard' && (
+          <CommandDashboardView
+            onNavigateTab={(tab) => setActiveTab(tab)}
+            theme={theme}
+          />
+        )}
         {activeTab === 'dscan' && <DScanParserView onScanAnalyzed={handleScanAnalyzed} />}
         {activeTab === 'mapper' && <ChainMapperView />}
         {activeTab === 'ore' && <OreSiteEvaluatorView />}

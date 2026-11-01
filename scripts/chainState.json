@@ -7,9 +7,7 @@
       "security": 0.9,
       "statics": [],
       "structures": [],
-      "activePilots": [
-        "Syndra en Tilavine"
-      ],
+      "activePilots": [],
       "signatures": [],
       "lastUpdated": "23:14",
       "x": 650,
@@ -101,10 +99,19 @@
       "systemClass": "Highsec",
       "security": 0.6,
       "statics": [],
-      "structures": [],
+      "structures": [
+        {
+          "id": "struct-1793575119047-0.7551535169622378",
+          "name": "Erenta - Steinbruch",
+          "type": "Athanor",
+          "distance": "11.70 AU",
+          "scoutedBy": "You",
+          "timestamp": "23:18"
+        }
+      ],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "23:14",
+      "lastUpdated": "23:18",
       "x": 470,
       "y": 220
     },
@@ -117,7 +124,7 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "23:14",
+      "lastUpdated": "23:16",
       "x": 470,
       "y": 310
     },
@@ -129,12 +136,22 @@
       "statics": [
         "Lowsec"
       ],
-      "structures": [],
+      "structures": [
+        {
+          "id": "struct-1793575140501-0.26140152278448947",
+          "name": "Erenta - Steinbruch",
+          "type": "Athanor",
+          "distance": "11.70 AU",
+          "scoutedBy": "You",
+          "timestamp": "23:19"
+        }
+      ],
       "activePilots": [
-        "USS Hauler"
+        "USS Hauler",
+        "Syndra en Tilavine"
       ],
       "signatures": [],
-      "lastUpdated": "23:14",
+      "lastUpdated": "23:19",
       "x": 410,
       "y": 400
     },
@@ -148,8 +165,39 @@
       ],
       "structures": [],
       "activePilots": [],
-      "signatures": [],
-      "lastUpdated": "13:30",
+      "signatures": [
+        {
+          "id": "sig-1793575164470-0.5662660001408734",
+          "sigId": "FWE-105",
+          "type": "Anomaly",
+          "name": "Cosmic Signature",
+          "group": "Unknown",
+          "distance": "22.24 AU",
+          "signalPercent": 1,
+          "createdTime": "23:19"
+        },
+        {
+          "id": "sig-1793575164470-0.25796893589804537",
+          "sigId": "OXI-944",
+          "type": "Anomaly",
+          "name": "Cosmic Signature",
+          "group": "Unknown",
+          "distance": "8.55 AU",
+          "signalPercent": 7,
+          "createdTime": "23:19"
+        },
+        {
+          "id": "sig-1793575164470-0.19035177411937154",
+          "sigId": "BWL-935",
+          "type": "Anomaly",
+          "name": "Cosmic Signature",
+          "group": "Unknown",
+          "distance": "9.30 AU",
+          "signalPercent": 3,
+          "createdTime": "23:19"
+        }
+      ],
+      "lastUpdated": "23:19",
       "x": 410,
       "y": 490
     },
@@ -316,6 +364,136 @@
       "activePilots": [],
       "signatures": [],
       "lastUpdated": "23:14"
+    },
+    "Erenta": {
+      "id": "Erenta",
+      "name": "Erenta",
+      "systemClass": "Highsec",
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [
+        {
+          "id": "sig-1793575206473-0.14514712412745334",
+          "sigId": "TXL-018",
+          "type": "Combat",
+          "name": "Crimson Gauntlet",
+          "group": "Combat Site",
+          "distance": "10.88 AU",
+          "signalPercent": 100,
+          "createdTime": "23:20"
+        },
+        {
+          "id": "sig-1793575206473-0.3992243054749949",
+          "sigId": "GHB-472",
+          "type": "Combat",
+          "name": "Guristas Refuge",
+          "group": "Combat Site",
+          "distance": "9.09 AU",
+          "signalPercent": 100,
+          "createdTime": "23:20"
+        },
+        {
+          "id": "sig-1793575206473-0.6157946793997328",
+          "sigId": "FNB-737",
+          "type": "Combat",
+          "name": "Guristas Refuge",
+          "group": "Combat Site",
+          "distance": "33.18 AU",
+          "signalPercent": 100,
+          "createdTime": "23:20"
+        },
+        {
+          "id": "sig-1793575206473-0.41988241051330955",
+          "sigId": "ZYZ-437",
+          "type": "Combat",
+          "name": "Class 2 Hollow Outbreak",
+          "group": "Combat Site",
+          "distance": "34.84 AU",
+          "signalPercent": 100,
+          "createdTime": "23:20"
+        },
+        {
+          "id": "sig-1793575206473-0.7589375333670226",
+          "sigId": "WNZ-000",
+          "type": "Combat",
+          "name": "Guristas Refuge",
+          "group": "Combat Site",
+          "distance": "34.43 AU",
+          "signalPercent": 100,
+          "createdTime": "23:20"
+        },
+        {
+          "id": "sig-1793575206473-0.9119432843543345",
+          "sigId": "WPQ-804",
+          "type": "Combat",
+          "name": "Class 1 Hollow Outbreak",
+          "group": "Combat Site",
+          "distance": "12.63 AU",
+          "signalPercent": 100,
+          "createdTime": "23:20"
+        },
+        {
+          "id": "sig-1793575206473-0.9583580765433305",
+          "sigId": "GBY-680",
+          "type": "Combat",
+          "name": "Guristas Refuge",
+          "group": "Combat Site",
+          "distance": "24.70 AU",
+          "signalPercent": 100,
+          "createdTime": "23:20"
+        },
+        {
+          "id": "sig-1793575239466-0.13880039986621384",
+          "sigId": "FWE-105",
+          "type": "Anomaly",
+          "name": "Cosmic Signature",
+          "group": "Unknown",
+          "distance": "22.24 AU",
+          "signalPercent": 100,
+          "createdTime": "23:20"
+        },
+        {
+          "id": "sig-1793575239466-0.5964446404105292",
+          "sigId": "OXI-944",
+          "type": "Data",
+          "name": "Data Site",
+          "group": "Data Site",
+          "distance": "9.16 AU",
+          "signalPercent": 4,
+          "createdTime": "23:20"
+        },
+        {
+          "id": "sig-1793575239466-0.8244668350647575",
+          "sigId": "BWL-935",
+          "type": "Anomaly",
+          "name": "Cosmic Signature",
+          "group": "Unknown",
+          "distance": "9.07 AU",
+          "signalPercent": 9,
+          "createdTime": "23:20"
+        }
+      ],
+      "lastUpdated": "23:20"
+    },
+    "Wormhole System": {
+      "id": "Wormhole System",
+      "name": "Wormhole System",
+      "systemClass": "Highsec",
+      "statics": [],
+      "structures": [
+        {
+          "id": "struct-1793575119048-0.39073430361684003",
+          "name": "Erenta - Steinbruch",
+          "type": "Athanor",
+          "distance": "11.70 AU",
+          "scoutedBy": "You",
+          "timestamp": "23:18"
+        }
+      ],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "23:19"
     }
   },
   "connections": [
@@ -473,6 +651,14 @@
       "id": "conn-1793570499860",
       "from": "Urlen",
       "to": "Perimeter",
+      "wormholeType": "Stargate",
+      "massStatus": "stable",
+      "timeStatus": "stable"
+    },
+    {
+      "id": "conn-1793575053642",
+      "from": "Uemisaisen",
+      "to": "Erenta",
       "wormholeType": "Stargate",
       "massStatus": "stable",
       "timeStatus": "stable"

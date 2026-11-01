@@ -1,20 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Radar, Users, Flame, Cpu, Volume2, VolumeX, Clock, 
-  Radio, Network, Pickaxe, ExternalLink, KeyRound, LogOut, User
+  Radio, Network, Pickaxe, ExternalLink, KeyRound, LogOut, User,
+  LayoutDashboard, Sparkles, Sun, Moon
 } from 'lucide-react';
 import { authService, PilotProfile } from '../services/authService';
 import { mapperService } from '../services/mapperService';
 import { PilotLoginModal } from './PilotLoginModal';
 
 interface HeaderProps {
-  activeTab: 'dscan' | 'mapper' | 'ore' | 'local' | 'killfeed' | 'eft';
-  setActiveTab: (tab: 'dscan' | 'mapper' | 'ore' | 'local' | 'killfeed' | 'eft') => void;
+  activeTab: 'dashboard' | 'dscan' | 'mapper' | 'ore' | 'local' | 'killfeed' | 'eft';
+  setActiveTab: (tab: 'dashboard' | 'dscan' | 'mapper' | 'ore' | 'local' | 'killfeed' | 'eft') => void;
   audioAlertsEnabled: boolean;
   setAudioAlertsEnabled: (enabled: boolean) => void;
   autoWatchEnabled: boolean;
   setAutoWatchEnabled: (enabled: boolean) => void;
   onSimulateWHEntry: (systemName: string) => void;
+  theme?: 'dark' | 'light';
+  onToggleTheme?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -24,6 +27,8 @@ export const Header: React.FC<HeaderProps> = ({
   setAudioAlertsEnabled,
   autoWatchEnabled,
   setAutoWatchEnabled,
+  theme = 'dark',
+  onToggleTheme
 }) => {
   const [eveTime, setEveTime] = useState<string>('');
   const [currentPilot, setCurrentPilot] = useState<PilotProfile | null>(authService.getPilot());
@@ -71,22 +76,22 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Navigation Tabs */}
-          <nav className="hidden md:flex items-center gap-1 bg-black/40 p-1 rounded-lg border border-gray-800">
+          <nav className="hidden md:flex items-center gap-1 bg-black/40 p-1 rounded-2xl border border-gray-800">
             <button
-              onClick={() => setActiveTab('dscan')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                activeTab === 'dscan'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-[0_0_12px_rgba(6,182,212,0.2)]'
+              onClick={() => setActiveTab('dashboard')}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium transition-all ${
+                activeTab === 'dashboard'
+                  ? 'bg-gradient-to-r from-cyan-600 to-cyan-500 text-black font-bold shadow-[0_0_12px_rgba(6,182,212,0.3)]'
                   : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/40'
               }`}
             >
-              <Radar className="w-4 h-4" />
-              <span>D-Scan</span>
+              <LayoutDashboard className="w-4 h-4" />
+              <span>Overview</span>
             </button>
 
             <button
               onClick={() => setActiveTab('mapper')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium transition-all ${
                 activeTab === 'mapper'
                   ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-[0_0_12px_rgba(6,182,212,0.2)]'
                   : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/40'
@@ -94,6 +99,18 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Network className="w-4 h-4 text-cyan-400" />
               <span>Chain Mapper</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('dscan')}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium transition-all ${
+                activeTab === 'dscan'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-[0_0_12px_rgba(6,182,212,0.2)]'
+                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/40'
+              }`}
+            >
+              <Radar className="w-4 h-4" />
+              <span>D-Scan</span>
             </button>
 
             <button
@@ -180,6 +197,17 @@ export const Header: React.FC<HeaderProps> = ({
             >
               {audioAlertsEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
             </button>
+
+            {/* Theme Toggle (Light / Dark) */}
+            {onToggleTheme && (
+              <button
+                onClick={onToggleTheme}
+                title={theme === 'dark' ? 'Switch to Daylight / Clean Mode' : 'Switch to Tactical Night Mode'}
+                className="p-2 rounded-lg border text-xs font-mono flex items-center gap-1.5 transition-colors bg-gray-900 border-gray-800 text-amber-300 hover:text-amber-200"
+              >
+                {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4 text-cyan-400" />}
+              </button>
+            )}
 
             <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 bg-black/60 border border-cyan-950/80 rounded-lg text-cyan-400/90 font-mono text-xs">
               <Clock className="w-3.5 h-3.5 text-cyan-500" />
