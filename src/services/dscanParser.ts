@@ -186,7 +186,7 @@ export function parseDScan(rawText: string): DScanReport {
 
 // Generate formatted Discord markdown report
 export function generateDiscordReport(report: DScanReport): string {
-  const time = report.timestamp.toLocaleTimeString();
+  const time = report.timestamp.toISOString().slice(11, 19) + ' EVE';
   let text = `📡 **[SYND.NET INTEL] D-Scan Report (${time})**\n`;
   text += `⚠️ **Threat Level:** ${report.maxThreat.toUpperCase()} | **Total On Scan:** ${report.totalItems}\n`;
 

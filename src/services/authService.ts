@@ -126,7 +126,7 @@ class AuthService {
       avatarUrl,
       securityStatus: Math.round(secStatus * 10) / 10,
       loginMethod: 'esi_lookup',
-      lastLogin: new Date().toLocaleTimeString()
+      lastLogin: new Date().toISOString().slice(11, 19) + ' EVE'
     };
 
     this.currentPilot = profile;

@@ -37,7 +37,7 @@ export const Header: React.FC<HeaderProps> = ({
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
-      setEveTime(now.toUTCString().slice(17, 25));
+      setEveTime(now.toISOString().slice(11, 19));
     };
     updateTime();
     const interval = setInterval(updateTime, 1000);

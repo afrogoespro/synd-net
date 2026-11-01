@@ -96,6 +96,10 @@ loadState();
 
 let lastActiveSystem = 'J103955';
 
+function getEveTimeString() {
+  return new Date().toISOString().slice(11, 16);
+}
+
 // Connected SSE clients (browsers of you and your buddy)
 let sseClients = [];
 
@@ -183,14 +187,14 @@ const server = http.createServer((req, res) => {
                   type: ns.type,
                   distance: ns.distance || '-',
                   scoutedBy: update.pilotName || 'Buddy',
-                  timestamp: new Date().toLocaleTimeString()
+                  timestamp: getEveTimeString()
                 });
               }
             });
             existing.structures = currentStructs;
           }
 
-          existing.lastUpdated = new Date().toLocaleTimeString();
+          existing.lastUpdated = getEveTimeString();
           chainMap.systems[sysId] = existing;
 
           // If new connection from previous system
@@ -312,7 +316,7 @@ const server = http.createServer((req, res) => {
             structures: [],
             activePilots: [pilotName],
             signatures: [],
-            lastUpdated: new Date().toLocaleTimeString()
+            lastUpdated: getEveTimeString()
           };
         } else {
           chainMap.systems[cleanSys].activePilots = chainMap.systems[cleanSys].activePilots || [];
@@ -350,7 +354,7 @@ const server = http.createServer((req, res) => {
           structures: [],
           activePilots: [],
           signatures: [],
-          lastUpdated: new Date().toLocaleTimeString()
+          lastUpdated: getEveTimeString()
         }
       },
       connections: [],
@@ -443,14 +447,14 @@ function handleSystemTransition(newSys, fromSys) {
       structures: [],
       activePilots: [hostTag],
       signatures: [],
-      lastUpdated: new Date().toLocaleTimeString()
+      lastUpdated: getEveTimeString()
     };
   } else {
     chainMap.systems[newSys].activePilots = chainMap.systems[newSys].activePilots || [];
     if (!chainMap.systems[newSys].activePilots.includes(hostTag)) {
       chainMap.systems[newSys].activePilots.push(hostTag);
     }
-    chainMap.systems[newSys].lastUpdated = new Date().toLocaleTimeString();
+    chainMap.systems[newSys].lastUpdated = getEveTimeString();
   }
 
   // Connect previous system to new system

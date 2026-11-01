@@ -3,6 +3,10 @@ import { ChainMapState, WormholeNode, WormholeConnection, ScannedStructure } fro
 export type MapUpdateCallback = (state: ChainMapState) => void;
 export type JumpCallback = (jumpData: { systemName: string; fromSystem?: string; isWormhole?: boolean }) => void;
 
+function getEveTime(): string {
+  return new Date().toISOString().slice(11, 16);
+}
+
 const DEFAULT_SYSTEMS: Record<string, WormholeNode> = {
   'Jita': { id: 'Jita', name: 'Jita', systemClass: 'Highsec', security: 0.9, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 650, y: 40 },
   'Ikuchi': { id: 'Ikuchi', name: 'Ikuchi', systemClass: 'Highsec', security: 1.0, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 180, y: 130 },
@@ -152,7 +156,7 @@ class MapperService {
       structures: [],
       activePilots: ['You'],
       signatures: [],
-      lastUpdated: new Date().toLocaleTimeString()
+      lastUpdated: getEveTime()
     };
 
     structures.forEach(ns => {
@@ -166,12 +170,12 @@ class MapperService {
           type: ns.type,
           distance: ns.distance,
           scoutedBy: 'You',
-          timestamp: new Date().toLocaleTimeString()
+          timestamp: getEveTime()
         });
       }
     });
 
-    existing.lastUpdated = new Date().toLocaleTimeString();
+    existing.lastUpdated = getEveTime();
     this.state.systems[systemId] = existing;
     this.activeSystemId = systemId;
     this.notify();
@@ -212,7 +216,7 @@ class MapperService {
         structures: [],
         activePilots: ['You'],
         signatures: [],
-        lastUpdated: new Date().toLocaleTimeString()
+        lastUpdated: getEveTime()
       };
     }
 
@@ -334,7 +338,7 @@ class MapperService {
           structures: [],
           activePilots: ['You'],
           signatures: [],
-          lastUpdated: new Date().toLocaleTimeString()
+          lastUpdated: getEveTime()
         }
       },
       connections: [],

@@ -178,7 +178,7 @@ export function parseProbeScanner(rawText: string): ProbeScanReport {
   }, 0);
 
   return {
-    timestamp: new Date().toLocaleTimeString(),
+    timestamp: new Date().toISOString().slice(11, 19) + ' EVE',
     totalSites: items.length,
     oreAndGasSites,
     combatSites,

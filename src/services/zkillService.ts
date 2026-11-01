@@ -1,6 +1,18 @@
 import { PilotIntel } from '../types/intel';
 import { KillmailItem } from '../types/killmail';
 
+// Format timestamp strictly to EVE Time (UTC/GMT)
+export function formatEveTime(rawDate?: string | Date): string {
+  if (!rawDate) return 'Just now';
+  try {
+    const d = typeof rawDate === 'string' ? new Date(rawDate) : rawDate;
+    if (isNaN(d.getTime())) return 'Just now';
+    return d.toISOString().slice(11, 19);
+  } catch {
+    return 'Just now';
+  }
+}
+
 // In-memory cache to respect zKill and ESI rate limits
 const pilotCache = new Map<string, PilotIntel>();
 const nameCache = new Map<number, string>();
@@ -264,7 +276,7 @@ export async function fetchLiveRecentKills(limit: number = 15): Promise<Killmail
         'Revelation', 'Moros', 'Naglfar', 'Phoenix', 'Apostle', 'Ninazu', 'Lif', 'Minokawa', 'Dagon'
       ].some(cap => victimShipName.includes(cap));
 
-      const timeStr = k.killmail_time ? new Date(k.killmail_time).toTimeString().slice(0, 8) : 'Just now';
+      const timeStr = formatEveTime(k.killmail_time);
 
       return {
         killmailId: k.killmail_id,
@@ -389,7 +401,7 @@ export async function fetchLiveSystemKills(systemName: string, limit: number = 1
       return {
         id: `zkill-${k.killmail_id}`,
         killmailId: k.killmail_id,
-        killmailTime: new Date(k.killmail_time).toLocaleTimeString(),
+        killmailTime: formatEveTime(k.killmail_time),
         solarSystemName: cleanSys,
         solarSystemSecurity: -0.99,
         regionName: 'W-Space',
