@@ -27,6 +27,7 @@ export interface WormholeNode {
   security?: number;
   sigCode?: string;
   effect?: string;
+  region?: string;
   statics: string[];
   structures: ScannedStructure[];
   activePilots: string[];

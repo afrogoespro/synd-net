@@ -117,74 +117,74 @@
       "activePilots": [],
       "signatures": [
         {
-          "id": "sig-1793576625420-0.55374210080061",
+          "id": "sig-1793576969127-0.7556996329221188",
           "sigId": "AGU-956",
           "type": "Anomaly",
           "name": "Cosmic Signature",
           "group": "Unknown",
-          "distance": "4.18 AU",
+          "distance": "1.97 AU",
           "signalPercent": 100,
-          "createdTime": "23:43"
+          "createdTime": "23:49"
         },
         {
-          "id": "sig-1793576625420-0.07483205924241909",
+          "id": "sig-1793576969127-0.21642606568606326",
           "sigId": "GFG-368",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Unknown",
-          "distance": "4.87 AU",
+          "type": "Wormhole",
+          "name": "Unstable Wormhole",
+          "group": "Wormhole",
+          "distance": "4.14 AU",
           "signalPercent": 100,
-          "createdTime": "23:43"
+          "createdTime": "23:49"
         },
         {
-          "id": "sig-1793576625420-0.9337104003400741",
+          "id": "sig-1793576969127-0.2169586667544322",
           "sigId": "SOH-870",
           "type": "Anomaly",
           "name": "Cosmic Signature",
           "group": "Unknown",
-          "distance": "20.36 AU",
-          "signalPercent": 3,
-          "createdTime": "23:43"
+          "distance": "25.37 AU",
+          "signalPercent": 100,
+          "createdTime": "23:49"
         },
         {
-          "id": "sig-1793576625420-0.9152484192455627",
+          "id": "sig-1793576969127-0.4085267436469907",
           "sigId": "KZU-024",
           "type": "Anomaly",
           "name": "Cosmic Signature",
           "group": "Unknown",
-          "distance": "21.87 AU",
+          "distance": "22.50 AU",
           "signalPercent": 100,
-          "createdTime": "23:43"
+          "createdTime": "23:49"
         },
         {
-          "id": "sig-1793576625420-0.45342506804076865",
+          "id": "sig-1793576969127-0.8323968558922269",
           "sigId": "DYO-665",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Unknown",
-          "distance": "21.38 AU",
-          "signalPercent": 8,
-          "createdTime": "23:43"
+          "type": "Wormhole",
+          "name": "Unstable Wormhole",
+          "group": "Wormhole",
+          "distance": "20.95 AU",
+          "signalPercent": 100,
+          "createdTime": "23:49"
         },
         {
-          "id": "sig-1793576625420-0.3582450664429353",
+          "id": "sig-1793576969127-0.9928684054417443",
           "sigId": "KMG-280",
           "type": "Anomaly",
           "name": "Cosmic Signature",
           "group": "Unknown",
-          "distance": "21.71 AU",
-          "signalPercent": 2,
-          "createdTime": "23:43"
+          "distance": "25.37 AU",
+          "signalPercent": 100,
+          "createdTime": "23:49"
         },
         {
-          "id": "sig-1793576625420-0.9778472044215593",
+          "id": "sig-1793576969127-0.41748727995971",
           "sigId": "MGH-604",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Unknown",
-          "distance": "34.99 AU",
+          "type": "Relic",
+          "name": "Forgotten Perimeter Habitation Coils",
+          "group": "Relic Site",
+          "distance": "32.18 AU",
           "signalPercent": 100,
-          "createdTime": "23:43"
+          "createdTime": "23:49"
         },
         {
           "id": "sig-1793576625420-0.1761042393796175",
@@ -197,7 +197,7 @@
           "createdTime": "23:43"
         }
       ],
-      "lastUpdated": "23:47",
+      "lastUpdated": "23:49",
       "isCollapsed": false
     },
     "J103955": {
@@ -415,7 +415,7 @@
       "id": "conn-1793576872252",
       "from": "Sobaseki",
       "to": "Jita",
-      "wormholeType": "Wormhole",
+      "wormholeType": "Stargate",
       "massStatus": "stable",
       "timeStatus": "stable"
     }

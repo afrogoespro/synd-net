@@ -8,28 +8,28 @@ function getEveTime(): string {
 }
 
 const DEFAULT_SYSTEMS: Record<string, WormholeNode> = {
-  'Jita': { id: 'Jita', name: 'Jita', systemClass: 'Highsec', security: 0.9, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 650, y: 40 },
-  'Ikuchi': { id: 'Ikuchi', name: 'Ikuchi', systemClass: 'Highsec', security: 1.0, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 180, y: 130 },
-  'Ansila': { id: 'Ansila', name: 'Ansila', systemClass: 'Highsec', security: 0.9, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 180, y: 220 },
-  'Hykkota': { id: 'Hykkota', name: 'Hykkota', systemClass: 'Highsec', security: 0.8, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 180, y: 310 },
-  'J151141': { id: 'J151141', name: 'J151141', systemClass: 'C1', sigCode: 'YSO', statics: ['Highsec'], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 180, y: 400 },
-  'Muvolailen': { id: 'Muvolailen', name: 'Muvolailen', systemClass: 'Highsec', security: 0.7, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 330, y: 130 },
-  'Sobaseki': { id: 'Sobaseki', name: 'Sobaseki', systemClass: 'Highsec', security: 0.8, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 470, y: 130 },
-  'Isanamo': { id: 'Isanamo', name: 'Isanamo', systemClass: 'Highsec', security: 0.6, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 470, y: 220 },
-  'Uemisaisen': { id: 'Uemisaisen', name: 'Uemisaisen', systemClass: 'Highsec', security: 0.6, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 470, y: 310 },
-  'J103955': { id: 'J103955', name: 'J103955', systemClass: 'C3', sigCode: 'JVC', statics: ['Lowsec'], structures: [], activePilots: ['Syndra en Tilavine', 'USS Hauler'], signatures: [], lastUpdated: '22:45', x: 410, y: 400 },
-  'J142349': { id: 'J142349', name: 'J142349', systemClass: 'C5', sigCode: 'JPV', statics: ['C3'], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 410, y: 490 },
-  'New Caldari': { id: 'New Caldari', name: 'New Caldari', systemClass: 'Highsec', security: 1.0, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 740, y: 130 },
-  'Alikara': { id: 'Alikara', name: 'Alikara', systemClass: 'Highsec', security: 0.7, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 740, y: 220 },
-  'J101817': { id: 'J101817', name: 'J101817', systemClass: 'C1', sigCode: 'ISA', statics: ['Highsec'], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 880, y: 220 },
-  'J204842': { id: 'J204842', name: 'J204842', systemClass: 'C3', sigCode: 'XSX', statics: ['Lowsec'], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 740, y: 310 },
-  'J123947': { id: 'J123947', name: 'J123947', systemClass: 'C4', sigCode: 'RCO', statics: ['C3', 'C4'], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 620, y: 400 },
-  'J155214': { id: 'J155214', name: 'J155214', systemClass: 'C4', sigCode: 'MFD', statics: ['C3', 'C2'], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 790, y: 400 },
-  'Atlar': { id: 'Atlar', name: 'Atlar', systemClass: 'Lowsec', security: 0.4, sigCode: 'UCY', statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 740, y: 490 },
-  'Perimeter': { id: 'Perimeter', name: 'Perimeter', systemClass: 'Highsec', security: 1.0, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 990, y: 130 },
-  'Niyabainen': { id: 'Niyabainen', name: 'Niyabainen', systemClass: 'Highsec', security: 1.0, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 990, y: 220 },
-  'Maurasi': { id: 'Maurasi', name: 'Maurasi', systemClass: 'Highsec', security: 0.9, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 1120, y: 130 },
-  'Urlen': { id: 'Urlen', name: 'Urlen', systemClass: 'Highsec', security: 1.0, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 1120, y: 220 }
+  'Jita': { id: 'Jita', name: 'Jita', systemClass: 'Highsec', region: 'The Forge', security: 0.9, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 650, y: 40 },
+  'Ikuchi': { id: 'Ikuchi', name: 'Ikuchi', systemClass: 'Highsec', region: 'The Forge', security: 1.0, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 180, y: 130 },
+  'Ansila': { id: 'Ansila', name: 'Ansila', systemClass: 'Highsec', region: 'The Forge', security: 0.9, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 180, y: 220 },
+  'Hykkota': { id: 'Hykkota', name: 'Hykkota', systemClass: 'Highsec', region: 'The Forge', security: 0.8, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 180, y: 310 },
+  'J151141': { id: 'J151141', name: 'J151141', systemClass: 'C1', region: 'W-Space', sigCode: 'YSO', statics: ['Highsec'], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 180, y: 400 },
+  'Muvolailen': { id: 'Muvolailen', name: 'Muvolailen', systemClass: 'Highsec', region: 'The Citadel', security: 0.7, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 330, y: 130 },
+  'Sobaseki': { id: 'Sobaseki', name: 'Sobaseki', systemClass: 'Highsec', region: 'Lonetrek', security: 0.8, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 470, y: 130 },
+  'Isanamo': { id: 'Isanamo', name: 'Isanamo', systemClass: 'Highsec', region: 'Lonetrek', security: 0.6, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 470, y: 220 },
+  'Uemisaisen': { id: 'Uemisaisen', name: 'Uemisaisen', systemClass: 'Highsec', region: 'Lonetrek', security: 0.6, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 470, y: 310 },
+  'J103955': { id: 'J103955', name: 'J103955', systemClass: 'C3', region: 'W-Space', sigCode: 'JVC', statics: ['Lowsec'], structures: [], activePilots: ['Syndra en Tilavine', 'USS Hauler'], signatures: [], lastUpdated: '22:45', x: 410, y: 400 },
+  'J142349': { id: 'J142349', name: 'J142349', systemClass: 'C5', region: 'W-Space', sigCode: 'JPV', statics: ['C3'], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 410, y: 490 },
+  'New Caldari': { id: 'New Caldari', name: 'New Caldari', systemClass: 'Highsec', region: 'The Forge', security: 1.0, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 740, y: 130 },
+  'Alikara': { id: 'Alikara', name: 'Alikara', systemClass: 'Highsec', region: 'The Citadel', security: 0.7, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 740, y: 220 },
+  'J101817': { id: 'J101817', name: 'J101817', systemClass: 'C1', region: 'W-Space', sigCode: 'ISA', statics: ['Highsec'], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 880, y: 220 },
+  'J204842': { id: 'J204842', name: 'J204842', systemClass: 'C3', region: 'W-Space', sigCode: 'XSX', statics: ['Lowsec'], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 740, y: 310 },
+  'J123947': { id: 'J123947', name: 'J123947', systemClass: 'C4', region: 'W-Space', sigCode: 'RCO', statics: ['C3', 'C4'], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 620, y: 400 },
+  'J155214': { id: 'J155214', name: 'J155214', systemClass: 'C4', region: 'W-Space', sigCode: 'MFD', statics: ['C3', 'C2'], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 790, y: 400 },
+  'Atlar': { id: 'Atlar', name: 'Atlar', systemClass: 'Lowsec', region: 'Molden Heath', security: 0.4, sigCode: 'UCY', statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 740, y: 490 },
+  'Perimeter': { id: 'Perimeter', name: 'Perimeter', systemClass: 'Highsec', region: 'The Forge', security: 1.0, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 990, y: 130 },
+  'Niyabainen': { id: 'Niyabainen', name: 'Niyabainen', systemClass: 'Highsec', region: 'The Forge', security: 1.0, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 990, y: 220 },
+  'Maurasi': { id: 'Maurasi', name: 'Maurasi', systemClass: 'Highsec', region: 'The Forge', security: 0.9, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 1120, y: 130 },
+  'Urlen': { id: 'Urlen', name: 'Urlen', systemClass: 'Highsec', region: 'The Forge', security: 1.0, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 1120, y: 220 }
 };
 
 const DEFAULT_CONNECTIONS: WormholeConnection[] = [
@@ -468,9 +468,9 @@ class MapperService {
     }
 
     // Assign X, Y coordinates
-    const NODE_WIDTH = 130;
+    const NODE_WIDTH = 138;
     const HORIZONTAL_GAP = 28;
-    const VERTICAL_GAP = 92;
+    const VERTICAL_GAP = 98;
     const ROOT_CENTER_X = 650;
     const START_Y = 40;
 

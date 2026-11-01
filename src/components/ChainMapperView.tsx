@@ -261,36 +261,66 @@ export const ChainMapperView: React.FC = () => {
   };
 
   // Node dimensions
-  const NODE_W = 136;
-  const NODE_H = 56;
+  const NODE_W = 138;
+  const NODE_H = 62;
+
+  // GalaxyFinder System Class Color Mapping
+  // C1 (Sky Blue), C2 (Royal Blue), C3 (Lime Green), C4 (Amber), C5 (Magenta/Fuchsia), C6 (Crimson)
+  // Highsec (Green), Lowsec (Orange), Nullsec (Red)
+  const CLASS_CONFIG: Record<string, { color: string; label: string; bg: string }> = {
+    'Highsec': { color: '#22c55e', label: 'Highsec', bg: 'rgba(34, 197, 94, 0.12)' },
+    'Lowsec': { color: '#f97316', label: 'Lowsec', bg: 'rgba(249, 115, 22, 0.12)' },
+    'Nullsec': { color: '#ef4444', label: 'Nullsec', bg: 'rgba(239, 68, 68, 0.12)' },
+    'C1': { color: '#38bdf8', label: 'C1', bg: 'rgba(56, 189, 248, 0.12)' },      // Sky Blue
+    'C2': { color: '#818cf8', label: 'C2', bg: 'rgba(129, 140, 248, 0.12)' },    // Indigo / Royal Blue
+    'C3': { color: '#a3e635', label: 'C3', bg: 'rgba(163, 230, 53, 0.12)' },     // Lime Green (GalaxyFinder)
+    'C4': { color: '#f59e0b', label: 'C4', bg: 'rgba(245, 158, 11, 0.12)' },     // Amber / Warm Gold
+    'C5': { color: '#d946ef', label: 'C5', bg: 'rgba(217, 70, 239, 0.12)' },     // Vivid Magenta / Fuchsia
+    'C6': { color: '#f43f5e', label: 'C6', bg: 'rgba(244, 63, 94, 0.12)' },     // Crimson / Rose
+    'Thera': { color: '#14b8a6', label: 'Thera', bg: 'rgba(20, 184, 166, 0.12)' },
+    'Pochven': { color: '#dc2626', label: 'Pochven', bg: 'rgba(220, 38, 38, 0.12)' }
+  };
+
+  const getSystemClassColor = (sysClass: string): string => {
+    return CLASS_CONFIG[sysClass]?.color || '#38bdf8';
+  };
 
   // Format header security / class badge
   const renderSecurityOrClass = (node: WormholeNode) => {
+    const classColor = getSystemClassColor(node.systemClass);
+
     if (node.systemClass === 'Highsec') {
       const sec = node.security !== undefined ? node.security.toFixed(1) : '1.0';
-      return <span className={`font-bold text-xs ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>{sec}</span>;
+      return <span className="font-bold text-xs" style={{ color: classColor }}>{sec}</span>;
     }
     if (node.systemClass === 'Lowsec') {
       const sec = node.security !== undefined ? node.security.toFixed(1) : '0.4';
       return (
-        <span className={`font-bold text-xs flex items-center gap-1 ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
+        <span className="font-bold text-xs flex items-center gap-1" style={{ color: classColor }}>
           <span>{sec}</span>
           {node.sigCode && <span className={`text-[10px] ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>[{node.sigCode}]</span>}
         </span>
       );
     }
     if (node.systemClass === 'Nullsec') {
-      return <span className={`font-bold text-xs ${isDark ? 'text-red-400' : 'text-red-600'}`}>0.0</span>;
+      const sec = node.security !== undefined ? (node.security < 0 ? node.security.toFixed(1) : `-${node.security.toFixed(1)}`) : '-0.7';
+      return (
+        <span className="font-bold text-xs flex items-center gap-1" style={{ color: classColor }}>
+          <span>{sec}</span>
+          {node.sigCode && <span className={`text-[10px] ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>[{node.sigCode}]</span>}
+        </span>
+      );
     }
-    // Wormhole class (C1 - C6)
+
+    // Wormhole class (C1 - C6, Thera, Pochven)
     const isTarget = node.id === activeSystem?.id;
     return (
-      <span className={`font-bold text-xs flex items-center gap-1 ${isDark ? 'text-cyan-300' : 'text-sky-700'}`}>
-        {isTarget && <span className={isDark ? 'text-white text-[10px]' : 'text-sky-900 text-[10px]'}>⊙</span>}
-        <span className={isDark ? 'text-cyan-400' : 'text-sky-600 font-extrabold'}>{node.systemClass}</span>
+      <span className="font-bold text-xs flex items-center gap-1 leading-none">
+        {isTarget && <span className="text-white text-[10px]">⊙</span>}
+        <span className="font-extrabold tracking-tight" style={{ color: classColor }}>{node.systemClass}</span>
         {node.sigCode && <span className={`text-[10px] font-mono ${isDark ? 'text-cyan-200/90' : 'text-sky-800'}`}>[{node.sigCode}]</span>}
         {node.statics && node.statics.length > 0 && (
-          <span className={`text-[10px] font-mono ${isDark ? 'text-amber-300/90' : 'text-amber-600 font-bold'}`}>
+          <span className="text-[10px] font-mono text-amber-300 font-bold">
             {node.statics[0].startsWith('High') ? 'H' : node.statics[0].startsWith('Low') ? 'L' : node.statics[0]}
           </span>
         )}
@@ -565,17 +595,22 @@ export const ChainMapperView: React.FC = () => {
 
               const isStargate = conn.wormholeType === 'Stargate';
 
-              // Pathfinder Line Styles
-              let strokeColor = isStargate ? (isDark ? '#3b82f6' : '#2563eb') : (isDark ? '#38bdf8' : '#0284c7');
+              // User requirement:
+              // Known space (stargates) = green (#22c55e)
+              // Wormholes = purple (#c084fc)
+              let strokeColor = isStargate ? (isDark ? '#22c55e' : '#16a34a') : (isDark ? '#c084fc' : '#9333ea');
               let strokeDash: string | undefined = undefined;
 
               if (!isStargate) {
                 if (conn.massStatus === 'critical') {
-                  strokeColor = '#f97316';
+                  strokeColor = '#f97316'; // Orange / Red Critical
                   strokeDash = '4 3';
                 } else if (conn.massStatus === 'destab') {
-                  strokeColor = '#eab308';
+                  strokeColor = '#eab308'; // Amber Destabilized
                   strokeDash = '6 3';
+                } else if (conn.timeStatus === 'eol') {
+                  strokeColor = '#f43f5e'; // EOL Crimson/Pink
+                  strokeDash = '3 3';
                 }
               }
 
@@ -628,15 +663,15 @@ export const ChainMapperView: React.FC = () => {
                     }}
                   />
 
-                  {/* Terminal joint dots for Stargates */}
+                  {/* Terminal joint dots for Stargates (Green) */}
                   {isStargate && (
                     <>
-                      <circle cx={x1} cy={y1} r="2.5" fill="#60a5fa" />
-                      <circle cx={x2} cy={y2} r="2.5" fill="#60a5fa" />
+                      <circle cx={x1} cy={y1} r="2.5" fill={isDark ? '#22c55e' : '#16a34a'} />
+                      <circle cx={x2} cy={y2} r="2.5" fill={isDark ? '#22c55e' : '#16a34a'} />
                     </>
                   )}
 
-                  {/* Midpoint Label Tag for Wormholes (Clickable to edit sig / mass) */}
+                  {/* Midpoint Label Tag for Wormholes (Purple/Colored, clickable to edit characteristics) */}
                   {!isStargate && (
                     <g 
                       transform={`translate(${midX}, ${midY})`}
@@ -654,14 +689,14 @@ export const ChainMapperView: React.FC = () => {
                         height="18"
                         rx="4"
                         fill="#070c18"
-                        stroke={conn.timeStatus === 'eol' ? '#c084fc' : strokeColor}
+                        stroke={conn.timeStatus === 'eol' ? '#f43f5e' : strokeColor}
                         strokeWidth="1.2"
                         className="group-hover:fill-[#0e172a] group-hover:stroke-cyan-300 transition-all shadow-md"
                       />
                       <text
                         x="0"
                         y="3.5"
-                        fill={conn.timeStatus === 'eol' ? '#f0abfc' : conn.massStatus === 'critical' ? '#fdba74' : '#67e8f9'}
+                        fill={conn.timeStatus === 'eol' ? '#fda4af' : conn.massStatus === 'critical' ? '#fdba74' : conn.massStatus === 'destab' ? '#fde047' : '#e9d5ff'}
                         fontSize="9.5"
                         fontFamily="monospace"
                         fontWeight="bold"
@@ -710,10 +745,8 @@ export const ChainMapperView: React.FC = () => {
               const hasChildren = childrenConnections.length > 0;
 
               // Border colors based on system class
-              let borderColor = isDark ? '#1f293d' : '#cbd5e1';
-              if (node.systemClass === 'Highsec') borderColor = isDark ? '#10b98188' : '#059669';
-              else if (node.systemClass === 'Lowsec') borderColor = isDark ? '#f59e0b88' : '#d97706';
-              else if (node.systemClass.startsWith('C')) borderColor = isDark ? '#06b6d488' : '#0284c7';
+              const classColor = getSystemClassColor(node.systemClass);
+              const borderColor = isDark ? `${classColor}77` : classColor;
 
               return (
                 <div
@@ -802,15 +835,20 @@ export const ChainMapperView: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Bottom Row: System Name */}
-                    <div className="flex items-center justify-between">
+                    {/* Middle Row: System Name */}
+                    <div className="flex items-center justify-between leading-tight mt-0.5">
                       <span className={`text-xs font-bold tracking-wide truncate ${
                         isActivePlayer 
                           ? isDark ? 'text-white' : 'text-slate-950 font-black'
-                          : isDark ? 'text-gray-200' : 'text-slate-800'
+                          : isDark ? 'text-gray-100' : 'text-slate-900'
                       }`}>
                         {node.name}
                       </span>
+                    </div>
+
+                    {/* Bottom Row: Region / Constellation (GalaxyFinder style) */}
+                    <div className="text-[9.5px] text-gray-400 font-sans tracking-tight truncate leading-tight mt-0.5">
+                      {node.region || (node.systemClass.startsWith('C') ? 'W-Space' : 'Known Space')}
                     </div>
 
                     {/* Pilot Presence Badge (Purple Circle with number) + Hover Tooltip */}
