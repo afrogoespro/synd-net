@@ -8,6 +8,7 @@ import { mapperService } from '../services/mapperService';
 import { ChainMapState, WormholeNode, WormholeConnection } from '../types/mapper';
 import { authService, PilotProfile } from '../services/authService';
 import { PilotLoginModal } from './PilotLoginModal';
+import { SignaturePromptModal } from './SignaturePromptModal';
 
 export const ChainMapperView: React.FC = () => {
   const [mapState, setMapState] = useState<ChainMapState>(mapperService.getState());
@@ -30,6 +31,10 @@ export const ChainMapperView: React.FC = () => {
   const [currentPilot, setCurrentPilot] = useState<PilotProfile | null>(authService.getPilot());
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+
+  // Connection signature & status edit modal
+  const [selectedConnection, setSelectedConnection] = useState<WormholeConnection | null>(null);
+  const [isConnModalOpen, setIsConnModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const unsubAuth = authService.subscribe((pilot) => {
@@ -141,13 +146,26 @@ export const ChainMapperView: React.FC = () => {
 
   const handleAddConnection = async () => {
     if (!newSystemInput.trim()) return;
+    const cleanTo = newSystemInput.trim().toUpperCase();
+    const fromSys = selectedSystem?.id || 'J103955';
     await mapperService.addWormholeConnection(
-      selectedSystem?.id || 'J103955',
-      newSystemInput.trim(),
+      fromSys,
+      cleanTo,
       whTypeInput.trim()
     );
-    setSelectedSystemId(newSystemInput.trim().toUpperCase());
+    setSelectedSystemId(cleanTo);
     setNewSystemInput('');
+
+    // Immediately prompt for signature!
+    setSelectedConnection({
+      id: `conn-${fromSys}-${cleanTo}`,
+      from: fromSys,
+      to: cleanTo,
+      wormholeType: whTypeInput.trim() || 'Wormhole',
+      massStatus: 'stable',
+      timeStatus: 'stable'
+    });
+    setIsConnModalOpen(true);
   };
 
   const handleCopyBuddyLink = async () => {
@@ -304,8 +322,8 @@ export const ChainMapperView: React.FC = () => {
           className="absolute inset-0 origin-top-left pointer-events-none"
           style={{
             transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-            width: '2600px',
-            height: '1800px'
+            width: '4000px',
+            height: '3000px'
           }}
         >
           {/* SVG CONNECTION LINES LAYER */}
@@ -329,18 +347,53 @@ export const ChainMapperView: React.FC = () => {
               const y2 = toSys.y || 0;
 
               const midY = (y1 + y2) / 2;
+              const midX = (x1 + x2) / 2;
               const pathData = `M ${x1} ${y1} L ${x1} ${midY} L ${x2} ${midY} L ${x2} ${y2}`;
 
               const isStargate = conn.wormholeType === 'Stargate';
 
+              // Pathfinder Line Styles
+              let strokeColor = isStargate ? '#3b82f6' : '#38bdf8';
+              let strokeDash: string | undefined = undefined;
+
+              if (!isStargate) {
+                if (conn.massStatus === 'critical') {
+                  strokeColor = '#f97316';
+                  strokeDash = '4 3';
+                } else if (conn.massStatus === 'destab') {
+                  strokeColor = '#eab308';
+                  strokeDash = '6 3';
+                }
+              }
+
+              // Signature label (e.g. TC [ANF], [HMV], K162)
+              const sigLabel = conn.sigFrom 
+                ? (toSys.systemClass?.startsWith('C') ? `TC [${conn.sigFrom}]` : `[${conn.sigFrom}]`)
+                : (conn.wormholeType || 'WH');
+              const badgeWidth = Math.max(50, sigLabel.length * 7.5 + 16);
+
               return (
-                <g key={conn.id}>
+                <g key={conn.id} className="cursor-pointer group">
+                  {/* Invisible wide hit area for easy clicking */}
+                  <path
+                    d={pathData}
+                    fill="none"
+                    stroke="transparent"
+                    strokeWidth="18"
+                    className="pointer-events-auto cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedConnection(conn);
+                      setIsConnModalOpen(true);
+                    }}
+                  />
+
                   {/* Background shadow stroke */}
                   <path
                     d={pathData}
                     fill="none"
                     stroke="#000000"
-                    strokeWidth="4"
+                    strokeWidth="5"
                     strokeOpacity="0.8"
                   />
 
@@ -348,12 +401,18 @@ export const ChainMapperView: React.FC = () => {
                   <path
                     d={pathData}
                     fill="none"
-                    stroke={isStargate ? '#3b5998' : '#38bdf8'}
+                    stroke={strokeColor}
                     strokeWidth={isStargate ? '2.5' : '2'}
-                    strokeDasharray={isStargate ? undefined : '6 4'}
+                    strokeDasharray={strokeDash}
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    filter={isStargate ? undefined : 'url(#wh-glow)'}
+                    filter={!isStargate ? 'url(#wh-glow)' : undefined}
+                    className="transition-colors group-hover:stroke-cyan-300 pointer-events-auto cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedConnection(conn);
+                      setIsConnModalOpen(true);
+                    }}
                   />
 
                   {/* Terminal joint dots for Stargates */}
@@ -364,30 +423,38 @@ export const ChainMapperView: React.FC = () => {
                     </>
                   )}
 
-                  {/* Midpoint Label Tag for Wormholes (e.g. TC [ANF], [YSO], K162) */}
+                  {/* Midpoint Label Tag for Wormholes (Clickable to edit sig / mass) */}
                   {!isStargate && (
-                    <g transform={`translate(${(x1 + x2) / 2}, ${midY})`}>
+                    <g 
+                      transform={`translate(${midX}, ${midY})`}
+                      className="pointer-events-auto cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedConnection(conn);
+                        setIsConnModalOpen(true);
+                      }}
+                    >
                       <rect
-                        x="-24"
-                        y="-8"
-                        width="48"
-                        height="16"
-                        rx="3"
-                        fill="#0b101c"
-                        stroke="#06b6d4"
-                        strokeWidth="1"
-                        strokeOpacity="0.7"
+                        x={-badgeWidth / 2}
+                        y="-9"
+                        width={badgeWidth}
+                        height="18"
+                        rx="4"
+                        fill="#070c18"
+                        stroke={conn.timeStatus === 'eol' ? '#c084fc' : strokeColor}
+                        strokeWidth="1.2"
+                        className="group-hover:fill-[#0e172a] group-hover:stroke-cyan-300 transition-all shadow-md"
                       />
                       <text
                         x="0"
                         y="3.5"
-                        fill="#67e8f9"
-                        fontSize="9"
+                        fill={conn.timeStatus === 'eol' ? '#f0abfc' : conn.massStatus === 'critical' ? '#fdba74' : '#67e8f9'}
+                        fontSize="9.5"
                         fontFamily="monospace"
                         fontWeight="bold"
                         textAnchor="middle"
                       >
-                        {conn.sigFrom ? `[${conn.sigFrom}]` : (conn.wormholeType || 'WH')}
+                        {sigLabel}
                       </text>
                     </g>
                   )}
@@ -627,6 +694,61 @@ export const ChainMapperView: React.FC = () => {
                 )}
               </div>
 
+              {/* Connected Wormholes & Signatures */}
+              <div className="space-y-2 mb-3">
+                <div className="text-[11px] font-bold text-gray-300 uppercase flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Compass className="w-3.5 h-3.5 text-cyan-400" />
+                    Wormhole Connections
+                  </span>
+                </div>
+
+                {(() => {
+                  const conns = mapState.connections.filter(c => c.from === selectedSystem.id || c.to === selectedSystem.id);
+                  if (conns.length === 0) {
+                    return (
+                      <div className="p-2.5 text-center text-gray-500 bg-[#070b14] border border-gray-800/80 rounded-xl text-[11px]">
+                        No active connections.
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="space-y-1.5">
+                      {conns.map(c => {
+                        const otherSys = c.from === selectedSystem.id ? c.to : c.from;
+                        return (
+                          <div 
+                            key={c.id} 
+                            onClick={() => {
+                              setSelectedConnection(c);
+                              setIsConnModalOpen(true);
+                            }}
+                            className="p-2 rounded-xl bg-[#070b14] hover:bg-[#0c1424] border border-gray-800 hover:border-cyan-500/50 flex items-center justify-between cursor-pointer transition-all group"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="text-white font-bold text-xs">{otherSys}</span>
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-950/80 border border-cyan-700/60 text-cyan-300 font-mono">
+                                {c.sigFrom ? `[${c.sigFrom}]` : (c.wormholeType || 'WH')}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              {c.massStatus && c.massStatus !== 'stable' && (
+                                <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${
+                                  c.massStatus === 'critical' ? 'bg-red-950 text-red-300 border border-red-800' : 'bg-amber-950 text-amber-300 border border-amber-800'
+                                }`}>
+                                  {c.massStatus}
+                                </span>
+                              )}
+                              <span className="text-[10px] text-cyan-400 group-hover:underline">Edit</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </div>
+
               {/* Add New Child Wormhole Form */}
               <div className="bg-[#070b14] border border-gray-800/80 rounded-xl p-3">
                 <div className="text-[10px] text-gray-400 font-bold uppercase mb-2 flex items-center gap-1">
@@ -682,6 +804,24 @@ export const ChainMapperView: React.FC = () => {
             mapperService.setPilotLocation(profile.characterName, selectedSystem?.id || 'J103955');
           }}
         />
+
+        {/* Signature & Connection Editor Modal */}
+        {isConnModalOpen && selectedConnection && (
+          <SignaturePromptModal
+            isOpen={isConnModalOpen}
+            fromSystem={selectedConnection.from}
+            toSystem={selectedConnection.to}
+            initialSig={selectedConnection.sigFrom || ''}
+            initialType={selectedConnection.wormholeType || 'K162'}
+            initialMass={selectedConnection.massStatus || 'stable'}
+            initialTime={selectedConnection.timeStatus || 'stable'}
+            connectionId={selectedConnection.id}
+            onClose={() => {
+              setIsConnModalOpen(false);
+              setSelectedConnection(null);
+            }}
+          />
+        )}
       </div>
     </div>
   );

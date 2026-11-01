@@ -8,6 +8,7 @@ import { LiveKillfeedView } from './components/LiveKillfeedView';
 import { EFTInspectorView } from './components/EFTInspectorView';
 import { WormholeScoutPopup } from './components/WormholeScoutPopup';
 import { WormholeTacticalHUD } from './components/WormholeTacticalHUD';
+import { SignaturePromptModal } from './components/SignaturePromptModal';
 import { scoutWatcher, ScoutAlertEvent } from './services/scoutWatcher';
 import { mapperService } from './services/mapperService';
 import { DScanReport } from './types/dscan';
@@ -20,14 +21,27 @@ export function App() {
   const [copiedReport, setCopiedReport] = useState<boolean>(false);
   const [currentSystem, setCurrentSystem] = useState<string>('J103955');
   const [showHud, setShowHud] = useState<boolean>(true);
+  const [jumpSigModal, setJumpSigModal] = useState<{
+    isOpen: boolean;
+    fromSystem: string;
+    toSystem: string;
+  } | null>(null);
 
   // Subscribe to live character jumps from EVE log tailer
   useEffect(() => {
     const unsubJump = mapperService.onJump((jumpData) => {
       setCurrentSystem(jumpData.systemName);
-      if (jumpData.systemName.startsWith('J')) {
+      const isWh = jumpData.systemName.startsWith('J') || (jumpData.fromSystem && jumpData.fromSystem.startsWith('J')) || jumpData.isWormhole;
+      if (isWh) {
         setShowHud(true);
         playTacticalAlert('wh_entry');
+        if (jumpData.fromSystem && jumpData.fromSystem !== jumpData.systemName) {
+          setJumpSigModal({
+            isOpen: true,
+            fromSystem: jumpData.fromSystem,
+            toSystem: jumpData.systemName
+          });
+        }
       }
     });
 
@@ -100,6 +114,11 @@ export function App() {
 
   const handleSimulateWHEntry = (systemName: string) => {
     scoutWatcher.evaluateText(`${systemName}\nAstrahus\tAstrahus\t14.2 AU\nFortizar\tFortizar\t22 km`, 'system_detected');
+    setJumpSigModal({
+      isOpen: true,
+      fromSystem: currentSystem,
+      toSystem: systemName
+    });
   };
 
   const handleScanAnalyzed = (report: DScanReport) => {
@@ -179,6 +198,13 @@ export function App() {
             systemName={currentSystem}
             onNavigateTab={(tab) => setActiveTab(tab)}
             onDismiss={() => setShowHud(false)}
+            onLogSignature={() => {
+              setJumpSigModal({
+                isOpen: true,
+                fromSystem: 'Parent System',
+                toSystem: currentSystem
+              });
+            }}
           />
         )}
 
@@ -198,17 +224,29 @@ export function App() {
         copied={copiedReport}
       />
 
-      {/* Footer */}
-      <footer className="border-t border-gray-800/80 bg-[#06080d] py-6 text-center text-xs text-gray-500 font-mono">
-        <div className="max-w-7xl mx-auto px-4 space-y-2">
-          <p className="text-gray-400">
-            Synd.net // Multi-User Wormhole Chain Mapper &amp; Ore Intel Suite
-          </p>
-          <p className="text-[11px] text-gray-600">
-            EVE Online and the EVE logo are the registered trademarks of CCP hf. All rights are reserved worldwide.
-          </p>
-        </div>
-      </footer>
+      {/* Signature Prompt Modal on Wormhole Jump */}
+      {jumpSigModal && (
+        <SignaturePromptModal
+          isOpen={jumpSigModal.isOpen}
+          fromSystem={jumpSigModal.fromSystem}
+          toSystem={jumpSigModal.toSystem}
+          onClose={() => setJumpSigModal(null)}
+        />
+      )}
+
+      {/* Footer (hidden in mapper for 100% full-screen edge-to-edge canvas) */}
+      {activeTab !== 'mapper' && (
+        <footer className="border-t border-gray-800/80 bg-[#06080d] py-6 text-center text-xs text-gray-500 font-mono">
+          <div className="max-w-7xl mx-auto px-4 space-y-2">
+            <p className="text-gray-400">
+              Synd.net // Multi-User Wormhole Chain Mapper &amp; Ore Intel Suite
+            </p>
+            <p className="text-[11px] text-gray-600">
+              EVE Online and the EVE logo are the registered trademarks of CCP hf. All rights are reserved worldwide.
+            </p>
+          </div>
+        </footer>
+      )}
     </div>
   );
 }

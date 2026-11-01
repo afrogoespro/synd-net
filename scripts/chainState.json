@@ -9,7 +9,7 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "14:27:54",
+      "lastUpdated": "14:36:36",
       "x": 650,
       "y": 40
     },
@@ -89,7 +89,7 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "14:27:54",
+      "lastUpdated": "14:36:36",
       "x": 470,
       "y": 130
     },
@@ -102,7 +102,7 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "14:27:54",
+      "lastUpdated": "14:36:36",
       "x": 470,
       "y": 220
     },
@@ -115,7 +115,7 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "14:27:54",
+      "lastUpdated": "14:36:36",
       "x": 470,
       "y": 310
     },
@@ -129,10 +129,11 @@
       ],
       "structures": [],
       "activePilots": [
-        "Ennis Urbanski"
+        "Ennis Urbanski",
+        "Syndra en Tilavine"
       ],
       "signatures": [],
-      "lastUpdated": "14:27:54",
+      "lastUpdated": "14:36:36",
       "x": 410,
       "y": 400
     },
@@ -262,7 +263,7 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "14:27:54",
+      "lastUpdated": "14:36:36",
       "x": 990,
       "y": 130
     },
@@ -301,7 +302,7 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "14:27:54",
+      "lastUpdated": "14:36:36",
       "x": 1120,
       "y": 220
     },
@@ -313,7 +314,7 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "14:27:54"
+      "lastUpdated": "14:36:36"
     }
   },
   "connections": [

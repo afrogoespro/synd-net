@@ -1,7 +1,7 @@
 import { ChainMapState, WormholeNode, WormholeConnection, ScannedStructure } from '../types/mapper';
 
 export type MapUpdateCallback = (state: ChainMapState) => void;
-export type JumpCallback = (jumpData: { systemName: string; fromSystem?: string }) => void;
+export type JumpCallback = (jumpData: { systemName: string; fromSystem?: string; isWormhole?: boolean }) => void;
 
 const DEFAULT_SYSTEMS: Record<string, WormholeNode> = {
   'Jita': { id: 'Jita', name: 'Jita', systemClass: 'Highsec', security: 0.9, statics: [], structures: [], activePilots: [], signatures: [], lastUpdated: '13:30', x: 650, y: 40 },
@@ -243,6 +243,58 @@ class MapperService {
         body: JSON.stringify(payload)
       });
     } catch {}
+  }
+
+  // Update connection signature, WH type, mass status, and time status
+  public async updateConnection(data: {
+    connectionId?: string;
+    from: string;
+    to: string;
+    sigFrom?: string;
+    sigTo?: string;
+    wormholeType?: string;
+    massStatus?: 'stable' | 'destab' | 'critical';
+    timeStatus?: 'stable' | 'eol';
+  }) {
+    let conn = this.state.connections.find(c => 
+      (data.connectionId && c.id === data.connectionId) ||
+      (c.from === data.from && c.to === data.to) ||
+      (c.from === data.to && c.to === data.from)
+    );
+
+    if (!conn) {
+      conn = {
+        id: data.connectionId || `conn-${Date.now()}`,
+        from: data.from,
+        to: data.to,
+        wormholeType: data.wormholeType || 'Wormhole',
+        massStatus: data.massStatus || 'stable',
+        timeStatus: data.timeStatus || 'stable'
+      };
+      this.state.connections.push(conn);
+    }
+
+    if (data.sigFrom !== undefined) conn.sigFrom = data.sigFrom.trim().toUpperCase();
+    if (data.sigTo !== undefined) conn.sigTo = data.sigTo.trim().toUpperCase();
+    if (data.wormholeType !== undefined) conn.wormholeType = data.wormholeType.trim();
+    if (data.massStatus !== undefined) conn.massStatus = data.massStatus;
+    if (data.timeStatus !== undefined) conn.timeStatus = data.timeStatus;
+
+    if (data.to && this.state.systems[data.to] && data.sigFrom) {
+      this.state.systems[data.to].sigCode = data.sigFrom.trim().toUpperCase();
+    }
+
+    this.notify();
+
+    try {
+      await fetch('/api/map/connection/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+    } catch (e) {
+      console.warn("Failed to update connection:", e);
+    }
   }
 
   // Set a pilot's location (e.g. buddy sets their position to this system)

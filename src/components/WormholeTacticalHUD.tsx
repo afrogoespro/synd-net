@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Radio, Compass, ShieldAlert, Sparkles, AlertTriangle, 
-  Flame, Crosshair, ChevronDown, ChevronUp, X, Pickaxe, ExternalLink
+  Flame, Crosshair, ChevronDown, ChevronUp, X, Pickaxe, ExternalLink, Zap
 } from 'lucide-react';
 import { WormholeSystemInfo, getWormholeSystemMetadata } from '../data/wormholeDatabase';
 import { fetchLiveSystemKills } from '../services/zkillService';
@@ -11,12 +11,14 @@ interface WormholeTacticalHUDProps {
   systemName: string;
   onNavigateTab: (tab: 'dscan' | 'mapper' | 'ore' | 'killfeed') => void;
   onDismiss?: () => void;
+  onLogSignature?: () => void;
 }
 
 export const WormholeTacticalHUD: React.FC<WormholeTacticalHUDProps> = ({
   systemName,
   onNavigateTab,
-  onDismiss
+  onDismiss,
+  onLogSignature
 }) => {
   const [meta, setMeta] = useState<WormholeSystemInfo>(getWormholeSystemMetadata(systemName));
   const [expanded, setExpanded] = useState<boolean>(true);
@@ -94,6 +96,17 @@ export const WormholeTacticalHUD: React.FC<WormholeTacticalHUDProps> = ({
 
         {/* Quick Threat & Controls */}
         <div className="flex items-center gap-2 flex-wrap">
+          {onLogSignature && (
+            <button
+              onClick={onLogSignature}
+              className="px-2.5 py-1 rounded-lg bg-cyan-950/90 hover:bg-cyan-900 border border-cyan-400/60 text-cyan-200 font-bold text-xs flex items-center gap-1.5 shadow-[0_0_12px_rgba(6,182,212,0.3)] transition-all"
+              title="Record or update the signature ID you jumped through"
+            >
+              <Zap className="w-3.5 h-3.5 text-amber-400" />
+              <span>LOG SIG</span>
+            </button>
+          )}
+
           <div className={`px-2.5 py-1 rounded-lg border flex items-center gap-1.5 text-xs font-bold ${threatColor()}`}>
             <Flame className="w-3.5 h-3.5" />
             <span>THREAT: {threatLevel.toUpperCase()}</span>

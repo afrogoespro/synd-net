@@ -211,12 +211,70 @@ const server = http.createServer((req, res) => {
           }
 
           lastActiveSystem = sysId;
+          saveState();
           broadcastUpdate('MAP_UPDATE', chainMap);
           console.log(`[Shared Map] Updated ${sysId} with ${existing.structures.length} structures`);
         }
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true, chainMap }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // Update wormhole connection signature, type, mass status, time status
+  if (req.url === '/api/map/connection/update' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try {
+        const update = JSON.parse(body);
+        const { connectionId, from, to, sigFrom, sigTo, wormholeType, massStatus, timeStatus } = update;
+
+        let conn = null;
+        if (connectionId) {
+          conn = chainMap.connections.find(c => c.id === connectionId);
+        }
+        if (!conn && from && to) {
+          conn = chainMap.connections.find(
+            c => (c.from === from && c.to === to) || (c.from === to && c.to === from)
+          );
+        }
+
+        if (!conn && from && to) {
+          conn = {
+            id: `conn-${Date.now()}`,
+            from,
+            to,
+            wormholeType: wormholeType || 'Wormhole',
+            massStatus: massStatus || 'stable',
+            timeStatus: timeStatus || 'stable'
+          };
+          chainMap.connections.push(conn);
+        }
+
+        if (conn) {
+          if (sigFrom !== undefined) conn.sigFrom = sigFrom.trim().toUpperCase();
+          if (sigTo !== undefined) conn.sigTo = sigTo.trim().toUpperCase();
+          if (wormholeType !== undefined) conn.wormholeType = wormholeType.trim();
+          if (massStatus !== undefined) conn.massStatus = massStatus;
+          if (timeStatus !== undefined) conn.timeStatus = timeStatus;
+
+          // If toSystem exists, update its displayed sigCode
+          if (to && chainMap.systems[to] && sigFrom) {
+            chainMap.systems[to].sigCode = sigFrom.trim().toUpperCase();
+          }
+        }
+
+        saveState();
+        broadcastUpdate('MAP_UPDATE', chainMap);
+        console.log(`[Connection Updated] ${from} <-> ${to} | Sig: [${conn ? conn.sigFrom : ''}] | Mass: ${conn ? conn.massStatus : ''} | Time: ${conn ? conn.timeStatus : ''}`);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, connection: conn, chainMap }));
       } catch (err) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: err.message }));
@@ -395,9 +453,8 @@ function handleSystemTransition(newSys, fromSys) {
     chainMap.systems[newSys].lastUpdated = new Date().toLocaleTimeString();
   }
 
-  saveState();
-
   // Connect previous system to new system
+  let isWormhole = newSys.startsWith('J') || (previous && previous.startsWith('J'));
   if (previous && previous !== newSys) {
     const connExists = chainMap.connections.some(
       c => (c.from === previous && c.to === newSys) || (c.from === newSys && c.to === previous)
@@ -407,15 +464,21 @@ function handleSystemTransition(newSys, fromSys) {
         id: `conn-${Date.now()}`,
         from: previous,
         to: newSys,
-        wormholeType: newSys.startsWith('J') || previous.startsWith('J') ? 'Wormhole' : 'Stargate',
+        wormholeType: isWormhole ? 'Wormhole' : 'Stargate',
         massStatus: 'stable',
         timeStatus: 'stable'
       });
     }
   }
 
+  saveState();
+
   broadcastUpdate('MAP_UPDATE', chainMap);
-  broadcastUpdate('JUMP', { systemName: newSys, fromSystem: previous });
+  broadcastUpdate('JUMP', { 
+    systemName: newSys, 
+    fromSystem: previous,
+    isWormhole: isWormhole
+  });
 }
 
 // 1. Tail Local Chatlogs (Fires instantly on EVERY wormhole & gate jump)
