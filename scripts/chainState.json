@@ -7,9 +7,11 @@
       "security": 0.9,
       "statics": [],
       "structures": [],
-      "activePilots": [],
+      "activePilots": [
+        "Syndra en Tilavine"
+      ],
       "signatures": [],
-      "lastUpdated": "22:47",
+      "lastUpdated": "23:14",
       "x": 650,
       "y": 40
     },
@@ -89,7 +91,7 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "22:47",
+      "lastUpdated": "23:14",
       "x": 470,
       "y": 130
     },
@@ -102,7 +104,7 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "22:47",
+      "lastUpdated": "23:14",
       "x": 470,
       "y": 220
     },
@@ -115,7 +117,7 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "22:47",
+      "lastUpdated": "23:14",
       "x": 470,
       "y": 310
     },
@@ -129,11 +131,10 @@
       ],
       "structures": [],
       "activePilots": [
-        "USS Hauler",
-        "Syndra en Tilavine"
+        "USS Hauler"
       ],
       "signatures": [],
-      "lastUpdated": "22:47",
+      "lastUpdated": "23:14",
       "x": 410,
       "y": 400
     },
@@ -263,7 +264,7 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "22:47",
+      "lastUpdated": "23:14",
       "x": 990,
       "y": 130
     },
@@ -302,7 +303,7 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "22:47",
+      "lastUpdated": "23:14",
       "x": 1120,
       "y": 220
     },
@@ -314,7 +315,7 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "22:47"
+      "lastUpdated": "23:14"
     }
   },
   "connections": [

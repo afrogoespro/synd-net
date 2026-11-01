@@ -194,6 +194,11 @@ const server = http.createServer((req, res) => {
             existing.structures = currentStructs;
           }
 
+          // Merge signatures
+          if (update.signatures && Array.isArray(update.signatures)) {
+            existing.signatures = update.signatures;
+          }
+
           existing.lastUpdated = getEveTimeString();
           chainMap.systems[sysId] = existing;
 
@@ -287,6 +292,31 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Update signatures/anomalies for a system
+  if (req.url === '/api/map/signatures' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try {
+        const { systemId, signatures } = JSON.parse(body);
+        const cleanSys = (systemId || '').trim();
+        if (cleanSys && chainMap.systems[cleanSys]) {
+          chainMap.systems[cleanSys].signatures = signatures || [];
+          chainMap.systems[cleanSys].lastUpdated = getEveTimeString();
+          saveState();
+          broadcastUpdate('MAP_UPDATE', chainMap);
+          console.log(`[Signatures Updated] ${cleanSys} now has ${signatures.length} signatures/anomalies`);
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, chainMap }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
+
   // Update pilot location (e.g. buddy sets their location or moves)
   if (req.url === '/api/map/pilot' && req.method === 'POST') {
     let body = '';
@@ -329,6 +359,9 @@ const server = http.createServer((req, res) => {
         if (!chainMap.onlineBuddies.includes(pilotName)) {
           chainMap.onlineBuddies.push(pilotName);
         }
+
+        // Active pilot tracking
+        hostPilotName = pilotName;
 
         saveState();
         broadcastUpdate('MAP_UPDATE', chainMap);
@@ -408,10 +441,10 @@ function detectHostCharacterName() {
   return null;
 }
 
-const hostPilotName = detectHostCharacterName();
+let hostPilotName = detectHostCharacterName();
 console.log(`[Host Character Identified] Flying as: ${hostPilotName || 'Awaiting Pilot Sign In'}`);
 
-function handleSystemTransition(newSys, fromSys) {
+function handleSystemTransition(newSys, fromSys, customPilot) {
   if (!newSys) return;
   newSys = newSys.trim();
   if (newSys === lastActiveSystem) return;
@@ -433,12 +466,14 @@ function handleSystemTransition(newSys, fromSys) {
     else whClass = 'C2';
   }
 
+  const activePilot = customPilot || hostPilotName || 'Fleet Scout';
+
   // Remove host pilot from other systems so marker stays only on current system
   Object.values(chainMap.systems).forEach(sys => {
-    sys.activePilots = (sys.activePilots || []).filter(p => !p.includes(hostPilotName));
+    sys.activePilots = (sys.activePilots || []).filter(p => !p.includes(activePilot));
   });
 
-  const hostTag = `${hostPilotName}`;
+  const hostTag = `${activePilot}`;
   if (!chainMap.systems[newSys]) {
     chainMap.systems[newSys] = {
       id: newSys,

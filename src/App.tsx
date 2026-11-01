@@ -14,7 +14,7 @@ import { mapperService } from './services/mapperService';
 import { DScanReport } from './types/dscan';
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<'dscan' | 'mapper' | 'ore' | 'local' | 'killfeed' | 'eft'>('dscan');
+  const [activeTab, setActiveTab] = useState<'dscan' | 'mapper' | 'ore' | 'local' | 'killfeed' | 'eft'>('mapper');
   const [audioAlertsEnabled, setAudioAlertsEnabled] = useState<boolean>(true);
   const [autoWatchEnabled, setAutoWatchEnabled] = useState<boolean>(true);
   const [activeScoutAlert, setActiveScoutAlert] = useState<ScoutAlertEvent | null>(null);

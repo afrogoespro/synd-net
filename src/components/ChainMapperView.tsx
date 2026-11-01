@@ -1,14 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   Network, Compass, Building2, Users, Plus, Trash2, 
   Check, Share2, ZoomIn, ZoomOut, Maximize2, Crosshair,
-  User, MapPin, Eye, Radio, ExternalLink, Layers, Sparkles, KeyRound, LogOut
+  User, MapPin, Eye, Radio, ExternalLink, Layers, Sparkles, KeyRound, LogOut,
+  Sun, Moon, ChevronDown, ChevronRight
 } from 'lucide-react';
 import { mapperService } from '../services/mapperService';
-import { ChainMapState, WormholeNode, WormholeConnection } from '../types/mapper';
+import { ChainMapState, WormholeNode, WormholeConnection, WormholeSignature } from '../types/mapper';
 import { authService, PilotProfile } from '../services/authService';
 import { PilotLoginModal } from './PilotLoginModal';
 import { SignaturePromptModal } from './SignaturePromptModal';
+import { IntegratedIntelDeck } from './IntegratedIntelDeck';
 
 export const ChainMapperView: React.FC = () => {
   const [mapState, setMapState] = useState<ChainMapState>(mapperService.getState());
@@ -32,9 +34,46 @@ export const ChainMapperView: React.FC = () => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
+  // Theme state: dark (tactical night) vs light (clean daylight mode)
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    return (localStorage.getItem('synd_theme') as 'dark' | 'light') || 'dark';
+  });
+
+  const toggleTheme = () => {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    localStorage.setItem('synd_theme', next);
+  };
+
+  const isDark = theme === 'dark';
+
   // Connection signature & status edit modal
   const [selectedConnection, setSelectedConnection] = useState<WormholeConnection | null>(null);
   const [isConnModalOpen, setIsConnModalOpen] = useState<boolean>(false);
+
+  // Calculate hidden / collapsed descendant nodes
+  const hiddenNodeIds = useMemo(() => {
+    const hidden = new Set<string>();
+
+    function hideChildren(parentId: string) {
+      mapState.connections.forEach(conn => {
+        if (conn.from === parentId && conn.to !== parentId) {
+          if (!hidden.has(conn.to)) {
+            hidden.add(conn.to);
+            hideChildren(conn.to);
+          }
+        }
+      });
+    }
+
+    Object.values(mapState.systems).forEach(node => {
+      if (node.isCollapsed) {
+        hideChildren(node.id);
+      }
+    });
+
+    return hidden;
+  }, [mapState.systems, mapState.connections]);
 
   useEffect(() => {
     const unsubAuth = authService.subscribe((pilot) => {
@@ -188,29 +227,29 @@ export const ChainMapperView: React.FC = () => {
   const renderSecurityOrClass = (node: WormholeNode) => {
     if (node.systemClass === 'Highsec') {
       const sec = node.security !== undefined ? node.security.toFixed(1) : '1.0';
-      return <span className="text-emerald-400 font-bold text-xs">{sec}</span>;
+      return <span className={`font-bold text-xs ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>{sec}</span>;
     }
     if (node.systemClass === 'Lowsec') {
       const sec = node.security !== undefined ? node.security.toFixed(1) : '0.4';
       return (
-        <span className="text-amber-400 font-bold text-xs flex items-center gap-1">
+        <span className={`font-bold text-xs flex items-center gap-1 ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
           <span>{sec}</span>
-          {node.sigCode && <span className="text-[10px] text-gray-400">[{node.sigCode}]</span>}
+          {node.sigCode && <span className={`text-[10px] ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>[{node.sigCode}]</span>}
         </span>
       );
     }
     if (node.systemClass === 'Nullsec') {
-      return <span className="text-red-400 font-bold text-xs">0.0</span>;
+      return <span className={`font-bold text-xs ${isDark ? 'text-red-400' : 'text-red-600'}`}>0.0</span>;
     }
     // Wormhole class (C1 - C6)
     const isTarget = node.id === activeSystem?.id;
     return (
-      <span className="text-cyan-300 font-bold text-xs flex items-center gap-1">
-        {isTarget && <span className="text-white text-[10px]">⊙</span>}
-        <span className="text-cyan-400">{node.systemClass}</span>
-        {node.sigCode && <span className="text-[10px] text-cyan-200/90 font-mono">[{node.sigCode}]</span>}
+      <span className={`font-bold text-xs flex items-center gap-1 ${isDark ? 'text-cyan-300' : 'text-sky-700'}`}>
+        {isTarget && <span className={isDark ? 'text-white text-[10px]' : 'text-sky-900 text-[10px]'}>⊙</span>}
+        <span className={isDark ? 'text-cyan-400' : 'text-sky-600 font-extrabold'}>{node.systemClass}</span>
+        {node.sigCode && <span className={`text-[10px] font-mono ${isDark ? 'text-cyan-200/90' : 'text-sky-800'}`}>[{node.sigCode}]</span>}
         {node.statics && node.statics.length > 0 && (
-          <span className="text-[10px] text-amber-300/90 font-mono">
+          <span className={`text-[10px] font-mono ${isDark ? 'text-amber-300/90' : 'text-amber-600 font-bold'}`}>
             {node.statics[0].startsWith('High') ? 'H' : node.statics[0].startsWith('Low') ? 'L' : node.statics[0]}
           </span>
         )}
@@ -219,25 +258,33 @@ export const ChainMapperView: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col w-full h-full min-h-[calc(100vh-64px)] font-mono select-none overflow-hidden bg-[#04060c] relative">
+    <div className={`flex flex-col w-full h-full min-h-[calc(100vh-64px)] font-mono select-none overflow-hidden relative ${
+      isDark ? 'bg-[#04060c] text-gray-200' : 'bg-slate-100 text-slate-800'
+    }`}>
       
       {/* 1. TOP TITLE BAR (Tripwire / Pathfinder style) */}
-      <div className="bg-[#0b0f1a] border-b border-gray-800/80 px-4 py-2 flex items-center justify-between text-xs z-20 flex-wrap gap-2">
+      <div className={`border-b px-4 py-2 flex items-center justify-between text-xs z-20 flex-wrap gap-2 ${
+        isDark ? 'bg-[#0b0f1a] border-gray-800/80 text-gray-300' : 'bg-white border-slate-200 text-slate-800 shadow-sm'
+      }`}>
         <div className="flex items-center gap-3 flex-wrap">
           {/* Pilot Identity & EVE SSO Profile */}
-          <div className="flex items-center gap-2 text-white font-bold tracking-wide text-xs">
+          <div className={`flex items-center gap-2 font-bold tracking-wide text-xs ${isDark ? 'text-white' : 'text-slate-900'}`}>
             <span className="text-cyan-400 text-lg leading-none">≡</span>
 
             {currentPilot ? (
-              <div className="flex items-center gap-2 bg-[#080d1a] border border-cyan-500/50 rounded-xl px-2.5 py-1 shadow-[0_0_12px_rgba(6,182,212,0.2)]">
+              <div className={`flex items-center gap-2 rounded-xl px-2.5 py-1 border shadow-sm ${
+                isDark 
+                  ? 'bg-[#080d1a] border-cyan-500/50 shadow-[0_0_12px_rgba(6,182,212,0.2)] text-white' 
+                  : 'bg-sky-50 border-sky-300 text-slate-900'
+              }`}>
                 <img
                   src={currentPilot.avatarUrl}
                   alt={currentPilot.characterName}
                   className="w-5 h-5 rounded border border-cyan-400 object-cover"
                 />
-                <span className="text-white font-bold">{currentPilot.characterName}</span>
+                <span className="font-bold">{currentPilot.characterName}</span>
                 {currentPilot.corporationTicker && (
-                  <span className="text-[10px] text-cyan-300 hidden sm:inline">[{currentPilot.corporationTicker}]</span>
+                  <span className={`text-[10px] hidden sm:inline ${isDark ? 'text-cyan-300' : 'text-sky-700 font-semibold'}`}>[{currentPilot.corporationTicker}]</span>
                 )}
                 <button
                   onClick={() => {
@@ -313,16 +360,35 @@ export const ChainMapperView: React.FC = () => {
           <button
             onClick={() => setShowInspector(!showInspector)}
             className={`p-1.5 rounded border transition-colors ${
-              showInspector ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50' : 'bg-gray-900 text-gray-400 border-gray-800'
+              showInspector 
+                ? isDark ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50' : 'bg-sky-100 text-sky-800 border-sky-400'
+                : isDark ? 'bg-gray-900 text-gray-400 border-gray-800' : 'bg-slate-100 text-slate-600 border-slate-300'
             }`}
             title="Toggle System Inspector"
           >
             <Layers className="w-4 h-4" />
           </button>
 
+          {/* Theme Toggle (Light / Dark) */}
+          <button
+            onClick={toggleTheme}
+            className={`p-1.5 rounded border transition-colors ${
+              isDark 
+                ? 'bg-gray-900 hover:bg-gray-800 text-amber-300 border-gray-800 shadow-sm' 
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300 shadow-sm'
+            }`}
+            title={isDark ? 'Switch to Daylight / Clean Mode' : 'Switch to Tactical Night Mode'}
+          >
+            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
+
           <button
             onClick={toggleFullscreen}
-            className="p-1.5 rounded bg-gray-900 hover:bg-gray-800 text-gray-400 hover:text-white border border-gray-800 transition-colors"
+            className={`p-1.5 rounded border transition-colors ${
+              isDark 
+                ? 'bg-gray-900 hover:bg-gray-800 text-gray-400 hover:text-white border-gray-800' 
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-950 border-slate-300'
+            }`}
             title="Toggle Fullscreen"
           >
             <Maximize2 className="w-4 h-4" />
@@ -337,15 +403,21 @@ export const ChainMapperView: React.FC = () => {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onWheel={handleWheel}
-        className={`flex-1 relative overflow-hidden cursor-${isPanning ? 'grabbing' : 'grab'} bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900/40 via-[#05070d] to-[#020306]`}
+        className={`flex-1 relative overflow-hidden cursor-${isPanning ? 'grabbing' : 'grab'} ${
+          isDark 
+            ? 'bg-[#040711]' 
+            : 'bg-slate-100'
+        }`}
         style={{
-          backgroundImage: `
+          backgroundImage: isDark ? `
             radial-gradient(1px 1px at 20px 30px, #ffffff18, rgba(0,0,0,0)),
             radial-gradient(1px 1px at 40px 70px, #38bdf820, rgba(0,0,0,0)),
             radial-gradient(1px 1px at 90px 40px, #ffffff15, rgba(0,0,0,0)),
             radial-gradient(2px 2px at 160px 120px, #818cf820, rgba(0,0,0,0))
+          ` : `
+            radial-gradient(#94a3b840 1px, transparent 1px)
           `,
-          backgroundSize: '250px 250px'
+          backgroundSize: isDark ? '250px 250px' : '24px 24px'
         }}
       >
         {/* Transformable Canvas Layer */}
@@ -368,6 +440,8 @@ export const ChainMapperView: React.FC = () => {
             </defs>
 
             {mapState.connections.map((conn) => {
+              if (hiddenNodeIds.has(conn.from) || hiddenNodeIds.has(conn.to)) return null;
+
               const fromSys = mapState.systems[conn.from];
               const toSys = mapState.systems[conn.to];
               if (!fromSys || !toSys) return null;
@@ -384,7 +458,7 @@ export const ChainMapperView: React.FC = () => {
               const isStargate = conn.wormholeType === 'Stargate';
 
               // Pathfinder Line Styles
-              let strokeColor = isStargate ? '#3b82f6' : '#38bdf8';
+              let strokeColor = isStargate ? (isDark ? '#3b82f6' : '#2563eb') : (isDark ? '#38bdf8' : '#0284c7');
               let strokeDash: string | undefined = undefined;
 
               if (!isStargate) {
@@ -497,16 +571,20 @@ export const ChainMapperView: React.FC = () => {
           {/* HTML NODE CARDS LAYER */}
           <div className="absolute inset-0 pointer-events-auto">
             {Object.values(mapState.systems).map((node) => {
+              if (hiddenNodeIds.has(node.id)) return null;
+
               const isSelected = node.id === selectedSystem?.id;
               const isActivePlayer = node.id === activeSystem?.id;
               const pilotCount = node.activePilots ? node.activePilots.length : 0;
               const structCount = node.structures ? node.structures.length : 0;
+              const childrenConnections = mapState.connections.filter(c => c.from === node.id && c.to !== node.id);
+              const hasChildren = childrenConnections.length > 0;
 
               // Border colors based on system class
-              let borderColor = '#1f293d';
-              if (node.systemClass === 'Highsec') borderColor = '#10b98188';
-              else if (node.systemClass === 'Lowsec') borderColor = '#f59e0b88';
-              else if (node.systemClass.startsWith('C')) borderColor = '#06b6d488';
+              let borderColor = isDark ? '#1f293d' : '#cbd5e1';
+              if (node.systemClass === 'Highsec') borderColor = isDark ? '#10b98188' : '#059669';
+              else if (node.systemClass === 'Lowsec') borderColor = isDark ? '#f59e0b88' : '#d97706';
+              else if (node.systemClass.startsWith('C')) borderColor = isDark ? '#06b6d488' : '#0284c7';
 
               return (
                 <div
@@ -524,38 +602,74 @@ export const ChainMapperView: React.FC = () => {
                   <div
                     className={`w-full h-full rounded-md px-2.5 py-1.5 flex flex-col justify-between relative transition-all ${
                       isActivePlayer
-                        ? 'bg-[#0f172a] shadow-[0_0_20px_rgba(255,255,255,0.9),inset_0_0_10px_rgba(6,182,212,0.35)]'
+                        ? isDark
+                          ? 'bg-[#0f172a] shadow-[0_0_20px_rgba(255,255,255,0.9),inset_0_0_10px_rgba(6,182,212,0.35)]'
+                          : 'bg-white shadow-[0_0_16px_rgba(2,132,199,0.35)] ring-2 ring-sky-500'
                         : isSelected
-                        ? 'bg-[#11192d] shadow-[0_0_14px_rgba(6,182,212,0.3)]'
-                        : 'bg-[#0d121f] hover:bg-[#121929]'
+                        ? isDark
+                          ? 'bg-[#11192d] shadow-[0_0_14px_rgba(6,182,212,0.3)]'
+                          : 'bg-sky-50 shadow-md ring-1 ring-sky-400'
+                        : isDark
+                        ? 'bg-[#0d121f] hover:bg-[#121929]'
+                        : 'bg-white hover:bg-slate-50 shadow-sm border'
                     }`}
                     style={{
                       borderWidth: isActivePlayer ? '2px' : '1px',
-                      borderColor: isActivePlayer ? '#ffffff' : isSelected ? '#38bdf8' : borderColor
+                      borderColor: isActivePlayer ? (isDark ? '#ffffff' : '#0284c7') : isSelected ? '#38bdf8' : borderColor
                     }}
                   >
-                    {/* Top Row: Security or WH Class + Statics */}
+                    {/* Top Row: Security or WH Class + Statics + Fold Control */}
                     <div className="flex items-center justify-between leading-none">
                       {renderSecurityOrClass(node)}
                       
-                      {structCount > 0 && (
-                        <span className="text-[10px] text-amber-400 flex items-center gap-0.5">
-                          <Building2 className="w-2.5 h-2.5" />
-                          <span>{structCount}</span>
-                        </span>
-                      )}
+                      <div className="flex items-center gap-1">
+                        {structCount > 0 && (
+                          <span className={`text-[10px] flex items-center gap-0.5 ${isDark ? 'text-amber-400' : 'text-amber-600 font-semibold'}`}>
+                            <Building2 className="w-2.5 h-2.5" />
+                            <span>{structCount}</span>
+                          </span>
+                        )}
+
+                        {hasChildren && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              mapperService.toggleSystemCollapse(node.id);
+                            }}
+                            className={`p-0.5 rounded transition-all pointer-events-auto ${
+                              node.isCollapsed
+                                ? 'bg-amber-500/20 text-amber-500 hover:bg-amber-500/30 border border-amber-500/50 text-[9px] font-bold px-1 flex items-center gap-0.5 shadow-sm'
+                                : isDark
+                                ? 'hover:bg-cyan-950 text-gray-400 hover:text-cyan-300'
+                                : 'hover:bg-slate-200 text-slate-500 hover:text-slate-900'
+                            }`}
+                            title={node.isCollapsed ? 'Click to expand folded branch' : 'Click to compress / fold this branch'}
+                          >
+                            {node.isCollapsed ? (
+                              <>
+                                <ChevronRight className="w-2.5 h-2.5" />
+                                <span>+{childrenConnections.length}</span>
+                              </>
+                            ) : (
+                              <ChevronDown className="w-2.5 h-2.5" />
+                            )}
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     {/* Bottom Row: System Name */}
                     <div className="flex items-center justify-between">
                       <span className={`text-xs font-bold tracking-wide truncate ${
-                        isActivePlayer ? 'text-white' : 'text-gray-200'
+                        isActivePlayer 
+                          ? isDark ? 'text-white' : 'text-slate-950 font-black'
+                          : isDark ? 'text-gray-200' : 'text-slate-800'
                       }`}>
                         {node.name}
                       </span>
                     </div>
 
-                    {/* Pilot Presence Badge (Purple Circle with number, matching screenshot) */}
+                    {/* Pilot Presence Badge (Purple Circle with number) */}
                     {pilotCount > 0 && (
                       <div 
                         className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-purple-600 border border-purple-300 text-white font-bold text-[10px] flex items-center justify-center shadow-[0_0_10px_rgba(168,85,247,0.9)] animate-pulse"
@@ -576,11 +690,15 @@ export const ChainMapperView: React.FC = () => {
                             key={pIdx}
                             className={`px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1.5 shadow-lg border ${
                               isMe 
-                                ? 'bg-[#0e1629]/95 text-cyan-300 border-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.3)]' 
-                                : 'bg-[#1b102e]/95 text-purple-200 border-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.4)]'
+                                ? isDark
+                                  ? 'bg-[#0e1629]/95 text-cyan-300 border-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.3)]' 
+                                  : 'bg-sky-100 text-sky-900 border-sky-400 shadow-sm'
+                                : isDark
+                                  ? 'bg-[#1b102e]/95 text-purple-200 border-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.4)]'
+                                  : 'bg-purple-100 text-purple-900 border-purple-300 shadow-sm'
                             }`}
                           >
-                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isMe ? 'bg-cyan-400' : 'bg-emerald-400 animate-pulse'}`}></span>
+                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isMe ? 'bg-cyan-400' : 'bg-emerald-500 animate-pulse'}`}></span>
                             <span className="truncate">{pilotName}</span>
                           </div>
                         );
@@ -876,6 +994,23 @@ export const ChainMapperView: React.FC = () => {
           />
         )}
       </div>
+
+      {/* Integrated Bottom Intel Deck (D-Scan Radar, Probe Scanner / Signatures, Structures) */}
+      <IntegratedIntelDeck
+        selectedSystem={selectedSystem}
+        theme={theme}
+        onLinkWormhole={(sig) => {
+          const target = window.prompt(`Link Wormhole signature [${sig.sigId}] (${sig.name || 'Wormhole'}) to destination system:`, '');
+          if (target && target.trim()) {
+            mapperService.addSystemConnection(
+              selectedSystem.id,
+              target.trim(),
+              sig.name?.includes('K162') ? 'K162' : 'Wormhole',
+              sig.sigId
+            );
+          }
+        }}
+      />
     </div>
   );
 };

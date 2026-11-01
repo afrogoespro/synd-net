@@ -8,10 +8,16 @@ export interface ScannedStructure {
 }
 
 export interface WormholeSignature {
-  sigId: string; // e.g. "ABC-123"
-  type: 'Wormhole' | 'Relic' | 'Data' | 'Combat' | 'Gas' | 'Unknown';
+  id?: string;
+  sigId: string; // e.g. "ABC-123" or "AUC-104"
+  type: 'Wormhole' | 'Relic' | 'Data' | 'Combat' | 'Gas' | 'Ore' | 'Anomaly' | 'Unknown';
   name?: string;
+  group?: string;
   leadsTo?: string; // e.g. "J115405"
+  whType?: string; // e.g. "K162", "H296"
+  signalPercent?: number;
+  distance?: string;
+  createdTime?: string;
 }
 
 export interface WormholeNode {
@@ -25,6 +31,7 @@ export interface WormholeNode {
   structures: ScannedStructure[];
   activePilots: string[];
   signatures: WormholeSignature[];
+  isCollapsed?: boolean;
   notes?: string;
   lastUpdated: string;
   x?: number;

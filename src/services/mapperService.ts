@@ -1,4 +1,4 @@
-import { ChainMapState, WormholeNode, WormholeConnection, ScannedStructure } from '../types/mapper';
+import { ChainMapState, WormholeNode, WormholeConnection, ScannedStructure, WormholeSignature } from '../types/mapper';
 
 export type MapUpdateCallback = (state: ChainMapState) => void;
 export type JumpCallback = (jumpData: { systemName: string; fromSystem?: string; isWormhole?: boolean }) => void;
@@ -69,7 +69,21 @@ class MapperService {
   private eventSource: EventSource | null = null;
 
   constructor() {
+    this.fetchInitialState();
     this.connectStream();
+  }
+
+  private async fetchInitialState() {
+    try {
+      const res = await fetch('/api/map');
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.systems) {
+          this.state = data;
+          this.notify();
+        }
+      }
+    } catch {}
   }
 
   private connectStream() {
@@ -191,7 +205,7 @@ class MapperService {
   }
 
   // Manually add or connect a new wormhole system
-  public async addWormholeConnection(fromSystem: string, toSystem: string, wormholeType?: string) {
+  public async addWormholeConnection(fromSystem: string, toSystem: string, wormholeType?: string, sigFrom?: string) {
     if (!toSystem.trim()) return;
     const cleanTo = toSystem.trim().toUpperCase();
 
@@ -221,7 +235,7 @@ class MapperService {
     }
 
     if (fromSystem && fromSystem !== cleanTo) {
-      const exists = this.state.connections.some(
+      const exists = this.state.connections.find(
         c => (c.from === fromSystem && c.to === cleanTo) || (c.from === cleanTo && c.to === fromSystem)
       );
       if (!exists) {
@@ -230,9 +244,12 @@ class MapperService {
           from: fromSystem,
           to: cleanTo,
           wormholeType: wormholeType || 'Wormhole',
+          sigFrom: sigFrom ? sigFrom.trim().toUpperCase() : undefined,
           massStatus: 'stable',
           timeStatus: 'stable'
         });
+      } else if (sigFrom) {
+        exists.sigFrom = sigFrom.trim().toUpperCase();
       }
     }
 
@@ -248,6 +265,8 @@ class MapperService {
       });
     } catch {}
   }
+
+  public addSystemConnection = this.addWormholeConnection.bind(this);
 
   // Update connection signature, WH type, mass status, and time status
   public async updateConnection(data: {
@@ -325,6 +344,44 @@ class MapperService {
         body: JSON.stringify({ pilotName, systemName })
       });
     } catch {}
+  }
+
+  // Sync scanned signatures & anomalies to a system
+  public async syncSystemSignatures(systemId: string, signatures: WormholeSignature[]) {
+    if (!systemId) return;
+    const cleanSys = systemId.trim();
+    if (!this.state.systems[cleanSys]) {
+      this.state.systems[cleanSys] = {
+        id: cleanSys,
+        name: cleanSys,
+        systemClass: cleanSys.startsWith('J') ? 'C3' : 'Highsec',
+        statics: [],
+        structures: [],
+        activePilots: [],
+        signatures: [],
+        lastUpdated: getEveTime()
+      };
+    }
+
+    this.state.systems[cleanSys].signatures = signatures;
+    this.state.systems[cleanSys].lastUpdated = getEveTime();
+    this.notify();
+
+    try {
+      await fetch('/api/map/signatures', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ systemId: cleanSys, signatures })
+      });
+    } catch {}
+  }
+
+  // Toggle fold / collapse for a subchain node
+  public toggleSystemCollapse(systemId: string) {
+    if (this.state.systems[systemId]) {
+      this.state.systems[systemId].isCollapsed = !this.state.systems[systemId].isCollapsed;
+      this.notify();
+    }
   }
 
   public async clearMap() {
