@@ -6,6 +6,8 @@ import { mapperService } from '../services/mapperService';
 interface StructureTimerModalProps {
   isOpen: boolean;
   defaultSystem?: string;
+  initialName?: string;
+  initialStructureType?: StructureTimer['structureType'];
   availableSystems?: string[];
   onClose: () => void;
   onCreated?: (timer: StructureTimer) => void;
@@ -33,14 +35,16 @@ const PRIVACY_TYPES = ['Private', 'Corporation', 'Alliance', 'Public'] as const;
 export const StructureTimerModal: React.FC<StructureTimerModalProps> = ({
   isOpen,
   defaultSystem = 'Uemisaisen',
+  initialName = '',
+  initialStructureType = 'Astrahus',
   availableSystems = [],
   onClose,
   onCreated
 }) => {
-  const [name, setName] = useState<string>('');
+  const [name, setName] = useState<string>(initialName);
   const [location, setLocation] = useState<string>(defaultSystem);
   const [privacy, setPrivacy] = useState<'Private' | 'Corporation' | 'Alliance' | 'Public'>('Private');
-  const [structureType, setStructureType] = useState<StructureTimer['structureType']>('Astrahus');
+  const [structureType, setStructureType] = useState<StructureTimer['structureType']>(initialStructureType);
   const [timerType, setTimerType] = useState<StructureTimer['timerType']>('Armor');
   const [days, setDays] = useState<number>(0);
   const [hours, setHours] = useState<number>(0);
@@ -49,7 +53,9 @@ export const StructureTimerModal: React.FC<StructureTimerModalProps> = ({
 
   useEffect(() => {
     if (defaultSystem) setLocation(defaultSystem);
-  }, [defaultSystem, isOpen]);
+    if (initialName) setName(initialName);
+    if (initialStructureType) setStructureType(initialStructureType);
+  }, [defaultSystem, initialName, initialStructureType, isOpen]);
 
   if (!isOpen) return null;
 

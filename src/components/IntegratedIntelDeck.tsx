@@ -23,7 +23,7 @@ export const IntegratedIntelDeck: React.FC<IntegratedIntelDeckProps> = ({
   onLinkWormhole
 }) => {
   const isDark = theme === 'dark';
-  const [activeSubTab, setActiveSubTab] = useState<'dscan' | 'sigs' | 'structs'>('dscan');
+  const [activeSubTab, setActiveSubTab] = useState<'dscan' | 'sigs'>('dscan');
   const [deckHeight, setDeckHeight] = useState<'minimized' | 'compact' | 'full'>('minimized');
   
   // D-Scan State
@@ -65,7 +65,7 @@ export const IntegratedIntelDeck: React.FC<IntegratedIntelDeckProps> = ({
     const structs: ScannedStructure[] = parsed.items
       .filter(item => 
         item.shipInfo.role === 'Citadel / Upwell' ||
-        /astrahus|fortizar|raitaru|azbel|athanor|tatara|keepstar/i.test(item.itemType)
+        /astrahus|fortizar|keepstar|raitaru|azbel|sotiyo|athanor|tatara|customs office|control tower|starbase|mobile depot|ansiblex|pharolux|tenebrex/i.test(item.itemType)
       )
       .map(item => ({
         id: `struct-${Date.now()}-${Math.random()}`,
@@ -233,26 +233,6 @@ export const IntegratedIntelDeck: React.FC<IntegratedIntelDeckProps> = ({
               isDark ? 'bg-amber-900/60 text-amber-200' : 'bg-amber-200 text-amber-900'
             }`}>
               {sigCount}
-            </span>
-          </button>
-
-          <button
-            onClick={() => {
-              setActiveSubTab('structs');
-              if (deckHeight === 'minimized') setDeckHeight('compact');
-            }}
-            className={`px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
-              activeSubTab === 'structs'
-                ? isDark ? 'bg-purple-950 text-purple-300 border border-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.3)]' : 'bg-purple-100 text-purple-800 border border-purple-400 font-bold'
-                : isDark ? 'text-gray-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <Building2 className="w-3.5 h-3.5 text-purple-400" />
-            <span className="hidden sm:inline">Structures</span>
-            <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold ${
-              isDark ? 'bg-purple-900/60 text-purple-200' : 'bg-purple-200 text-purple-900'
-            }`}>
-              {structCount}
             </span>
           </button>
         </div>
@@ -578,41 +558,6 @@ export const IntegratedIntelDeck: React.FC<IntegratedIntelDeckProps> = ({
               )}
             </div>
           )}
-
-          {/* TAB 3: CITADELS & STRUCTURES */}
-          {activeSubTab === 'structs' && (
-            <div className="space-y-3">
-              {(!selectedSystem.structures || selectedSystem.structures.length === 0) ? (
-                <div className={`p-6 text-center text-xs rounded-xl border border-dashed ${
-                  isDark ? 'border-gray-800 text-gray-500' : 'border-slate-300 text-slate-500'
-                }`}>
-                  <Building2 className="w-6 h-6 mx-auto mb-2 text-purple-400/60" />
-                  <p className="font-sans">No citadels or starbases scouted in {selectedSystem.name} yet. D-Scan will automatically record any Astrahus, Fortizar, or Raitaru into this list.</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
-                  {selectedSystem.structures.map((st, idx) => (
-                    <div 
-                      key={idx}
-                      className={`p-3 rounded-xl border flex items-center justify-between ${
-                        isDark ? 'bg-[#090d18] border-purple-900/60' : 'bg-slate-50 border-slate-300'
-                      }`}
-                    >
-                      <div>
-                        <div className="text-xs font-bold text-white">{st.type}</div>
-                        <div className="text-[11px] text-gray-400 truncate max-w-[180px]">"{st.name}"</div>
-                        <div className="text-[9px] text-gray-500 mt-1">Scouted by {st.scoutedBy || 'Fleet'} @ {st.timestamp}</div>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-xs font-bold text-amber-400">{st.distance}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
         </div>
       )}
 

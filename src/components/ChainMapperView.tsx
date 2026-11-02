@@ -18,6 +18,25 @@ import { StructureTimerModal } from './StructureTimerModal';
 import { IntegratedIntelDeck } from './IntegratedIntelDeck';
 import { ShipFittingsModal } from './ShipFittingsModal';
 
+const getStructureInfo = (type: string) => {
+  const t = (type || '').toLowerCase();
+  if (t.includes('keepstar')) return { role: 'XL Citadel', typeId: 35834, badgeColor: 'text-rose-400 bg-rose-950/60 border-rose-600', cat: 'citadel', isUpwell: true };
+  if (t.includes('fortizar')) return { role: 'Large Citadel', typeId: 35833, badgeColor: 'text-amber-400 bg-amber-950/60 border-amber-600', cat: 'citadel', isUpwell: true };
+  if (t.includes('astrahus')) return { role: 'Medium Citadel', typeId: 35832, badgeColor: 'text-cyan-400 bg-cyan-950/60 border-cyan-600', cat: 'citadel', isUpwell: true };
+  if (t.includes('sotiyo')) return { role: 'XL Engineering', typeId: 35827, badgeColor: 'text-indigo-400 bg-indigo-950/60 border-indigo-600', cat: 'industry', isUpwell: true };
+  if (t.includes('azbel')) return { role: 'Large EC', typeId: 35826, badgeColor: 'text-blue-400 bg-blue-950/60 border-blue-600', cat: 'industry', isUpwell: true };
+  if (t.includes('raitaru')) return { role: 'Medium EC', typeId: 35825, badgeColor: 'text-sky-400 bg-sky-950/60 border-sky-600', cat: 'industry', isUpwell: true };
+  if (t.includes('tatara')) return { role: 'Large Refinery', typeId: 35836, badgeColor: 'text-orange-400 bg-orange-950/60 border-orange-600', cat: 'industry', isUpwell: true };
+  if (t.includes('athanor')) return { role: 'Medium Refinery', typeId: 35835, badgeColor: 'text-yellow-400 bg-yellow-950/60 border-yellow-600', cat: 'industry', isUpwell: true };
+  if (t.includes('customs office') || t.includes('poco')) return { role: 'Customs Office', typeId: 2233, badgeColor: 'text-emerald-400 bg-emerald-950/60 border-emerald-600', cat: 'poco', isUpwell: false };
+  if (t.includes('control tower') || t.includes('starbase')) return { role: 'Starbase POS', typeId: 12235, badgeColor: 'text-purple-400 bg-purple-950/60 border-purple-600', cat: 'poco', isUpwell: false };
+  if (t.includes('ansiblex')) return { role: 'Jump Gate', typeId: 35841, badgeColor: 'text-teal-400 bg-teal-950/60 border-teal-600', cat: 'citadel', isUpwell: true };
+  if (t.includes('pharolux')) return { role: 'Cyno Beacon', typeId: 35840, badgeColor: 'text-violet-400 bg-violet-950/60 border-violet-600', cat: 'citadel', isUpwell: true };
+  if (t.includes('tenebrex')) return { role: 'Cyno Jammer', typeId: 37534, badgeColor: 'text-red-400 bg-red-950/60 border-red-600', cat: 'citadel', isUpwell: true };
+  if (t.includes('depot') || t.includes('mobile')) return { role: 'Mobile Depot', typeId: 33474, badgeColor: 'text-slate-400 bg-slate-900 border-slate-700', cat: 'deployable', isUpwell: false };
+  return { role: 'Structure', typeId: 35832, badgeColor: 'text-slate-300 bg-slate-900 border-slate-700', cat: 'citadel', isUpwell: false };
+};
+
 export const ChainMapperView: React.FC = () => {
   const [mapState, setMapState] = useState<ChainMapState>(mapperService.getState());
   const [selectedSystemId, setSelectedSystemId] = useState<string>(() => {
@@ -30,6 +49,15 @@ export const ChainMapperView: React.FC = () => {
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
   const [showInspector, setShowInspector] = useState<boolean>(true);
   const [isFittingModalOpen, setIsFittingModalOpen] = useState<boolean>(false);
+
+  // In-Depth Structures Dossier State
+  const [structureFilter, setStructureFilter] = useState<'all' | 'citadel' | 'industry' | 'poco' | 'deployable'>('all');
+  const [isAddingStructure, setIsAddingStructure] = useState<boolean>(false);
+  const [newStructName, setNewStructName] = useState<string>('');
+  const [newStructType, setNewStructType] = useState<string>('Astrahus');
+  const [newStructDistance, setNewStructDistance] = useState<string>('1.0 AU');
+  const [copiedStructId, setCopiedStructId] = useState<string | null>(null);
+  const [timerModalPrefill, setTimerModalPrefill] = useState<{ name: string; type: StructureTimer['structureType'] } | null>(null);
   
   // Canvas Pan & Zoom State
   const [pan, setPan] = useState<{ x: number; y: number }>({ x: 40, y: 20 });
@@ -1397,8 +1425,13 @@ export const ChainMapperView: React.FC = () => {
         <StructureTimerModal
           isOpen={isTimerModalOpen}
           defaultSystem={selectedSystem?.name || 'Jita'}
+          initialName={timerModalPrefill?.name || ''}
+          initialStructureType={timerModalPrefill?.type || 'Astrahus'}
           availableSystems={Object.keys(mapState.systems)}
-          onClose={() => setIsTimerModalOpen(false)}
+          onClose={() => {
+            setIsTimerModalOpen(false);
+            setTimerModalPrefill(null);
+          }}
         />
 
         {/* Pilot Login Modal */}
@@ -1813,30 +1846,234 @@ export const ChainMapperView: React.FC = () => {
                 )}
               </div>
 
-              {/* Scanned Structures */}
-              <div className="space-y-2 mb-3">
-                <div className="text-[11px] font-bold text-gray-300 uppercase flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <Building2 className="w-3.5 h-3.5 text-amber-400" />
-                    Structures ({selectedSystem.structures?.length || 0})
-                  </span>
+              {/* IN-DEPTH TACTICAL STRUCTURES DOSSIER (On the side, just like zKillboard!) */}
+              <div className="mb-3 p-3 bg-[#0a0e1a]/95 border border-purple-900/40 rounded-2xl space-y-2.5 select-text">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-purple-300">
+                    <Building2 className="w-4 h-4 text-purple-400" />
+                    <span>Tactical Structures</span>
+                    <span className="text-[10px] px-1.5 py-0.2 rounded-full font-bold bg-purple-950/80 border border-purple-800 text-purple-300 ml-1">
+                      {selectedSystem.structures?.length || 0}
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={() => setIsAddingStructure(!isAddingStructure)}
+                    className="px-2 py-0.5 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-[10px] font-bold text-purple-300 flex items-center gap-1 transition-all"
+                  >
+                    <Plus className="w-3 h-3" />
+                    <span>Add</span>
+                  </button>
                 </div>
 
+                {/* Category Filter Pills */}
+                {selectedSystem.structures && selectedSystem.structures.length > 0 && (
+                  <div className="flex items-center gap-1 overflow-x-auto pb-1 text-[10px] custom-scrollbar">
+                    {[
+                      { id: 'all', label: 'All' },
+                      { id: 'citadel', label: 'Citadels' },
+                      { id: 'industry', label: 'Industry' },
+                      { id: 'poco', label: 'POCO/POS' },
+                      { id: 'deployable', label: 'Deployables' }
+                    ].map(f => {
+                      const count = f.id === 'all' 
+                        ? selectedSystem.structures.length 
+                        : selectedSystem.structures.filter(s => getStructureInfo(s.type).cat === f.id).length;
+                      if (f.id !== 'all' && count === 0) return null;
+                      return (
+                        <button
+                          key={f.id}
+                          onClick={() => setStructureFilter(f.id as any)}
+                          className={`px-2 py-0.5 rounded-md font-semibold transition-all whitespace-nowrap ${
+                            structureFilter === f.id 
+                              ? 'bg-purple-500 text-black shadow-sm font-bold' 
+                              : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'
+                          }`}
+                        >
+                          {f.label} ({count})
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Inline Add Structure Form */}
+                {isAddingStructure && (
+                  <div className="p-2.5 rounded-xl bg-black/60 border border-purple-800/60 space-y-2 text-xs">
+                    <div className="text-[10px] font-bold text-purple-300 uppercase tracking-wider">
+                      Log New Structure in {selectedSystem.name}
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Structure Name (e.g. Freeport Laboratory)..."
+                      value={newStructName}
+                      onChange={(e) => setNewStructName(e.target.value)}
+                      className="w-full bg-black/80 border border-gray-800 rounded px-2.5 py-1 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 font-mono"
+                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <select
+                        value={newStructType}
+                        onChange={(e) => setNewStructType(e.target.value)}
+                        className="bg-black/80 border border-gray-800 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-purple-500 font-mono"
+                      >
+                        <option value="Astrahus">Astrahus (Medium Citadel)</option>
+                        <option value="Fortizar">Fortizar (Large Citadel)</option>
+                        <option value="Keepstar">Keepstar (XL Citadel)</option>
+                        <option value="Raitaru">Raitaru (Engineering)</option>
+                        <option value="Azbel">Azbel (Large EC)</option>
+                        <option value="Sotiyo">Sotiyo (XL EC)</option>
+                        <option value="Athanor">Athanor (Refinery)</option>
+                        <option value="Tatara">Tatara (Large Refinery)</option>
+                        <option value="Customs Office">Customs Office (POCO)</option>
+                        <option value="Starbase (POS)">Starbase (POS)</option>
+                        <option value="Mobile Depot">Mobile Depot</option>
+                      </select>
+                      <input
+                        type="text"
+                        placeholder="Distance (e.g. 5.2 AU)"
+                        value={newStructDistance}
+                        onChange={(e) => setNewStructDistance(e.target.value)}
+                        className="bg-black/80 border border-gray-800 rounded px-2 py-1 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 font-mono"
+                      />
+                    </div>
+                    <div className="flex items-center justify-end gap-2 pt-1">
+                      <button
+                        onClick={() => setIsAddingStructure(false)}
+                        className="px-2.5 py-1 rounded text-[11px] text-gray-400 hover:text-white"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={async () => {
+                          if (!newStructName.trim()) return;
+                          await mapperService.addSingleStructure(selectedSystem.id, {
+                            name: newStructName.trim(),
+                            type: newStructType,
+                            distance: newStructDistance.trim() || 'Grid'
+                          });
+                          setNewStructName('');
+                          setIsAddingStructure(false);
+                        }}
+                        disabled={!newStructName.trim()}
+                        className="px-3 py-1 rounded bg-purple-600 hover:bg-purple-500 disabled:bg-gray-800 text-white font-bold text-xs transition-all shadow-sm"
+                      >
+                        Save Structure
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Structures List */}
                 {(!selectedSystem.structures || selectedSystem.structures.length === 0) ? (
                   <div className="p-3 text-center text-gray-500 bg-[#070b14] border border-gray-800/80 rounded-xl text-[11px] font-sans">
-                    No structures scanned. In-game D-Scan (<kbd className="px-1 rounded bg-gray-800 text-cyan-300">Ctrl+C</kbd>) populates this list automatically!
+                    <Building2 className="w-5 h-5 mx-auto mb-1.5 text-purple-400/50" />
+                    <div>No structures scouted in {selectedSystem.name} yet.</div>
+                    <div className="text-[10px] text-gray-600 mt-0.5">
+                      In-game D-Scan (<kbd className="px-1 rounded bg-gray-800 text-cyan-300">Ctrl+C</kbd>) automatically logs citadels and refineries!
+                    </div>
                   </div>
                 ) : (
-                  <div className="space-y-1.5 max-h-[160px] overflow-y-auto pr-1">
-                    {selectedSystem.structures.map((s) => (
-                      <div key={s.id} className="p-2.5 rounded bg-[#070b14] border border-gray-800 flex items-center justify-between">
-                        <div>
-                          <div className="font-bold text-white text-[11px]">{s.type}</div>
-                          <div className="text-gray-400 text-[10px] truncate max-w-[140px]">"{s.name}"</div>
-                        </div>
-                        <span className="text-amber-300 font-bold text-[11px]">{s.distance}</span>
-                      </div>
-                    ))}
+                  <div className="space-y-2 max-h-72 overflow-y-auto pr-1 custom-scrollbar">
+                    {selectedSystem.structures
+                      .filter(s => structureFilter === 'all' || getStructureInfo(s.type).cat === structureFilter)
+                      .map((s) => {
+                        const info = getStructureInfo(s.type);
+                        const isCopied = copiedStructId === s.id;
+                        return (
+                          <div 
+                            key={s.id} 
+                            className="p-2.5 rounded-xl bg-black/40 hover:bg-white/5 border border-white/5 hover:border-purple-500/40 transition-all space-y-1.5 group"
+                          >
+                            {/* Top row: Type Icon + Name + Distance */}
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex items-center gap-2 min-w-0 flex-1">
+                                <img
+                                  src={`https://images.evetech.net/types/${info.typeId}/render?size=64`}
+                                  alt={s.type}
+                                  className="w-7 h-7 rounded-lg border border-white/10 object-cover bg-black/80 shrink-0"
+                                  onError={(e) => {
+                                    (e.target as HTMLElement).style.display = 'none';
+                                  }}
+                                />
+                                <div className="min-w-0 flex-1 leading-tight">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="font-bold text-white text-[11.5px] truncate group-hover:text-purple-300">
+                                      {s.name}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-1.5 mt-0.5">
+                                    <span className={`text-[8.5px] px-1 py-0.2 rounded border font-bold uppercase ${info.badgeColor}`}>
+                                      {info.role}
+                                    </span>
+                                    <span className="text-[10px] text-gray-400">{s.type}</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="text-right shrink-0">
+                                <span className="text-amber-300 font-bold text-xs">{s.distance}</span>
+                              </div>
+                            </div>
+
+                            {/* Middle row: Tactical Profile & Tethering */}
+                            <div className="flex items-center justify-between text-[9.5px] pt-1 border-t border-white/5 text-gray-400 font-mono">
+                              <div className="flex items-center gap-1.5">
+                                {info.isUpwell ? (
+                                  <span className="text-emerald-400 flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                    Tethering Active
+                                  </span>
+                                ) : (
+                                  <span className="text-slate-400 flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
+                                    Anchored
+                                  </span>
+                                )}
+                                <span>•</span>
+                                <span>{s.scoutedBy || 'Fleet'} @ {s.timestamp}</span>
+                              </div>
+
+                              {/* Quick Actions */}
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => {
+                                    setTimerModalPrefill({
+                                      name: s.name,
+                                      type: (info.role.includes('Citadel') ? 'Astrahus' : info.role.includes('Refinery') ? 'Athanor' : 'Raitaru') as any
+                                    });
+                                    setIsTimerModalOpen(true);
+                                  }}
+                                  className="px-1.5 py-0.5 rounded bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-0.5 text-[9px] font-bold"
+                                  title="Add vulnerability timer for this structure"
+                                >
+                                  <Hourglass className="w-2.5 h-2.5 text-amber-400" />
+                                  <span>Timer</span>
+                                </button>
+
+                                <button
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(s.name);
+                                    setCopiedStructId(s.id);
+                                    setTimeout(() => setCopiedStructId(null), 1500);
+                                  }}
+                                  className="p-1 rounded bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white"
+                                  title="Copy structure name to clipboard"
+                                >
+                                  {isCopied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                                </button>
+
+                                <button
+                                  onClick={() => mapperService.deleteScannedStructure(selectedSystem.id, s.id)}
+                                  className="p-1 rounded bg-white/5 hover:bg-red-950/60 text-gray-400 hover:text-red-400"
+                                  title="Remove structure from list"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                   </div>
                 )}
               </div>

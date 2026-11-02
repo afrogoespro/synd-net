@@ -209,6 +209,27 @@ class MapperService {
     } catch {}
   }
 
+  public async addSingleStructure(systemId: string, structure: { name: string; type: string; distance: string }) {
+    return this.syncScannedStructures(systemId, [structure]);
+  }
+
+  public async deleteScannedStructure(systemId: string, structureId: string) {
+    if (!systemId || !this.state.systems[systemId]) return;
+    const current = this.state.systems[systemId].structures || [];
+    this.state.systems[systemId].structures = current.filter(s => s.id !== structureId && s.name !== structureId);
+    this.notify();
+    try {
+      await fetch('/api/map/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system: this.state.systems[systemId],
+          structures: this.state.systems[systemId].structures
+        })
+      });
+    } catch {}
+  }
+
   // Manually add or connect a new wormhole system
   public async addWormholeConnection(fromSystem: string, toSystem: string, wormholeType?: string, sigFrom?: string) {
     if (!toSystem.trim()) return;
