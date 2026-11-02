@@ -52,8 +52,22 @@ export interface WormholeConnection {
   isFrig?: boolean;
 }
 
+export interface StructureTimer {
+  id: string;
+  name: string;
+  systemName: string;
+  privacy: 'Private' | 'Corporation' | 'Alliance' | 'Public';
+  structureType: 'Astrahus' | 'Fortizar' | 'Keepstar' | 'Raitaru' | 'Azbel' | 'Sotiyo' | 'Athanor' | 'Tatara' | 'Ansiblex' | 'Customs Office (POCO)' | 'Starbase (POS)' | 'Other';
+  timerType: 'Shield' | 'Armor' | 'Hull' | 'Anchoring' | 'Unanchoring';
+  vulnerableTime: string; // ISO 8601 string or UTC timestamp
+  owner?: string;
+  createdBy?: string;
+  notes?: string;
+}
+
 export interface ChainMapState {
   systems: Record<string, WormholeNode>;
   connections: WormholeConnection[];
   onlineBuddies: string[];
+  timers?: StructureTimer[];
 }

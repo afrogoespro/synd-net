@@ -319,6 +319,51 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Add or update structure timer
+  if (req.url === '/api/map/timer/add' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try {
+        const timer = JSON.parse(body);
+        if (!chainMap.timers) chainMap.timers = [];
+        chainMap.timers = [timer, ...chainMap.timers.filter(t => t.id !== timer.id)];
+        saveState();
+        broadcastUpdate('MAP_UPDATE', chainMap);
+        console.log(`[Timer Added] ${timer.structureType} in ${timer.systemName} | ${timer.timerType} vulnerable at ${timer.vulnerableTime}`);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, timers: chainMap.timers }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // Delete structure timer
+  if (req.url === '/api/map/timer/delete' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try {
+        const { timerId } = JSON.parse(body);
+        if (chainMap.timers) {
+          chainMap.timers = chainMap.timers.filter(t => t.id !== timerId);
+          saveState();
+          broadcastUpdate('MAP_UPDATE', chainMap);
+          console.log(`[Timer Deleted] ID: ${timerId}`);
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, timers: chainMap.timers || [] }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
+
   // Update pilot location (e.g. buddy sets their location or moves)
   if (req.url === '/api/map/pilot' && req.method === 'POST') {
     let body = '';

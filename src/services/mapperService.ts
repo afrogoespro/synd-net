@@ -1,4 +1,4 @@
-import { ChainMapState, WormholeNode, WormholeConnection, ScannedStructure, WormholeSignature } from '../types/mapper';
+import { ChainMapState, WormholeNode, WormholeConnection, ScannedStructure, WormholeSignature, StructureTimer } from '../types/mapper';
 
 export type MapUpdateCallback = (state: ChainMapState) => void;
 export type JumpCallback = (jumpData: { systemName: string; fromSystem?: string; isWormhole?: boolean }) => void;
@@ -503,6 +503,40 @@ class MapperService {
       s.isCollapsed = shouldCollapse;
     });
     this.notify();
+  }
+
+  // Structure Timer Management
+  public addStructureTimer(timer: StructureTimer) {
+    if (!this.state.timers) this.state.timers = [];
+    this.state.timers = [timer, ...this.state.timers.filter(t => t.id !== timer.id)];
+    this.notify();
+
+    fetch('/api/map/timer/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(timer)
+    }).catch(() => {});
+  }
+
+  public deleteStructureTimer(timerId: string) {
+    if (!this.state.timers) return;
+    this.state.timers = this.state.timers.filter(t => t.id !== timerId);
+    this.notify();
+
+    fetch('/api/map/timer/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ timerId })
+    }).catch(() => {});
+  }
+
+  public getTimers(): StructureTimer[] {
+    return this.state.timers || [];
+  }
+
+  public getSystemTimers(systemName: string): StructureTimer[] {
+    const clean = systemName.trim().toUpperCase();
+    return (this.state.timers || []).filter(t => t.systemName.trim().toUpperCase() === clean);
   }
 
   public async clearMap() {

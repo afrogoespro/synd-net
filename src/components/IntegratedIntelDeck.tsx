@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Radar, Compass, Building2, Copy, Check, Trash2, Plus, 
   ChevronUp, ChevronDown, Minimize2, Maximize2, Shield, AlertTriangle, 
-  Flame, Radio, Search, ExternalLink, Zap, Layers, Sparkles
+  Flame, Radio, Search, ExternalLink, Zap, Layers, Sparkles, Skull
 } from 'lucide-react';
 import { parseDScan, generateDiscordReport } from '../services/dscanParser';
 import { DScanReport } from '../types/dscan';
@@ -10,6 +10,8 @@ import { parseProbeScanner } from '../services/probeScannerParser';
 import { WormholeNode, WormholeSignature, ScannedStructure } from '../types/mapper';
 import { mapperService } from '../services/mapperService';
 import { scoutWatcher } from '../services/scoutWatcher';
+import { fetchLiveSystemKills } from '../services/zkillService';
+import { KillmailItem } from '../types/killmail';
 
 interface IntegratedIntelDeckProps {
   selectedSystem: WormholeNode;
@@ -23,8 +25,14 @@ export const IntegratedIntelDeck: React.FC<IntegratedIntelDeckProps> = ({
   onLinkWormhole
 }) => {
   const isDark = theme === 'dark';
-  const [activeSubTab, setActiveSubTab] = useState<'dscan' | 'sigs' | 'structs'>('dscan');
+  const [activeSubTab, setActiveSubTab] = useState<'dscan' | 'sigs' | 'structs' | 'zkill'>('dscan');
   const [deckHeight, setDeckHeight] = useState<'minimized' | 'compact' | 'full'>('compact');
+
+  // zKillboard State
+  const [systemKills, setSystemKills] = useState<KillmailItem[]>([]);
+  const [zkillLoading, setZkillLoading] = useState<boolean>(false);
+  const [zkillThreat, setZkillThreat] = useState<'Quiet' | 'Low Risk' | 'Active Hunters' | 'Extreme Danger'>('Quiet');
+  const [zkill24hCount, setZkill24hCount] = useState<number>(0);
   
   // D-Scan State
   const [dscanInput, setDscanInput] = useState<string>('');
@@ -52,6 +60,23 @@ export const IntegratedIntelDeck: React.FC<IntegratedIntelDeckProps> = ({
     });
     return () => unsub();
   }, [selectedSystem.id]);
+
+  // Fetch zKillboard activity for selected system
+  useEffect(() => {
+    let isMounted = true;
+    setZkillLoading(true);
+    fetchLiveSystemKills(selectedSystem.name, 15).then(res => {
+      if (isMounted) {
+        setSystemKills(res.kills);
+        setZkillThreat(res.threatLevel);
+        setZkill24hCount(res.totalKills24h);
+        setZkillLoading(false);
+      }
+    }).catch(() => {
+      if (isMounted) setZkillLoading(false);
+    });
+    return () => { isMounted = false; };
+  }, [selectedSystem.name]);
 
   const handleParseDScan = (text: string) => {
     if (!text.trim()) return;
@@ -249,6 +274,28 @@ export const IntegratedIntelDeck: React.FC<IntegratedIntelDeckProps> = ({
               isDark ? 'bg-purple-900/60 text-purple-200' : 'bg-purple-200 text-purple-900'
             }`}>
               {structCount}
+            </span>
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveSubTab('zkill');
+              if (deckHeight === 'minimized') setDeckHeight('compact');
+            }}
+            className={`px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
+              activeSubTab === 'zkill'
+                ? isDark ? 'bg-red-950 text-red-300 border border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.3)]' : 'bg-red-100 text-red-800 border border-red-400 font-bold'
+                : isDark ? 'text-gray-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Skull className="w-3.5 h-3.5 text-red-400" />
+            <span className="hidden sm:inline">zKillboard</span>
+            <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold ${
+              zkill24hCount > 0
+                ? 'bg-red-500 text-white animate-pulse'
+                : isDark ? 'bg-gray-800 text-gray-400' : 'bg-slate-200 text-slate-700'
+            }`}>
+              {zkill24hCount}
             </span>
           </button>
         </div>
@@ -604,6 +651,129 @@ export const IntegratedIntelDeck: React.FC<IntegratedIntelDeckProps> = ({
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 4: ZKILLBOARD ACTIVITY & LOSSES */}
+          {activeSubTab === 'zkill' && (
+            <div className="space-y-3">
+              {/* Threat Banner */}
+              <div className={`p-3 rounded-xl border flex items-center justify-between flex-wrap gap-2 ${
+                zkillThreat === 'Extreme Danger'
+                  ? 'bg-red-950/80 border-red-500/80 text-red-200'
+                  : zkillThreat === 'Active Hunters'
+                  ? 'bg-amber-950/80 border-amber-500/80 text-amber-200'
+                  : zkillThreat === 'Low Risk'
+                  ? 'bg-sky-950/80 border-sky-500/80 text-sky-200'
+                  : 'bg-emerald-950/60 border-emerald-500/60 text-emerald-300'
+              }`}>
+                <div className="flex items-center gap-2">
+                  <Skull className="w-4 h-4 text-red-400" />
+                  <span className="text-xs font-bold uppercase tracking-wider">
+                    {selectedSystem.name} Threat: <span className="underline">{zkillThreat}</span>
+                  </span>
+                  <span className="text-[11px] opacity-80">
+                    ({zkill24hCount} {zkill24hCount === 1 ? 'kill' : 'kills'} in past 24h)
+                  </span>
+                </div>
+
+                <a
+                  href={`https://zkillboard.com/system/${selectedSystem.name}/`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-2.5 py-1 rounded bg-red-900/40 hover:bg-red-800/60 border border-red-500/50 text-[10px] font-bold text-white flex items-center gap-1 transition-all"
+                >
+                  <span>Open System on zKillboard</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+
+              {/* Kills List */}
+              {zkillLoading ? (
+                <div className="p-8 text-center text-xs text-gray-400 flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                  <span>Loading live zKillboard feed for {selectedSystem.name}...</span>
+                </div>
+              ) : systemKills.length === 0 ? (
+                <div className={`p-6 text-center text-xs rounded-xl border border-dashed ${
+                  isDark ? 'border-gray-800 text-gray-500' : 'border-slate-300 text-slate-500'
+                }`}>
+                  <Shield className="w-6 h-6 mx-auto mb-2 text-emerald-400/60" />
+                  <p className="font-sans">No recent kills recorded in {selectedSystem.name}. This system appears clear of recent combat activity.</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
+                  {systemKills.map((kill) => {
+                    const iskFormatted = kill.totalValue >= 1e9
+                      ? `${(kill.totalValue / 1e9).toFixed(2)}B ISK`
+                      : `${(kill.totalValue / 1e6).toFixed(1)}M ISK`;
+
+                    return (
+                      <a
+                        key={kill.killmailId}
+                        href={kill.zkillUrl || `https://zkillboard.com/kill/${kill.killmailId}/`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`p-2.5 rounded-xl border flex items-center justify-between gap-3 transition-all hover:scale-[1.005] group ${
+                          isDark 
+                            ? 'bg-[#090d18] hover:bg-[#0e1628] border-gray-800/80 hover:border-red-500/60' 
+                            : 'bg-white hover:bg-slate-50 border-slate-200 shadow-sm'
+                        }`}
+                      >
+                        {/* Victim Info */}
+                        <div className="flex items-center gap-3 min-w-0">
+                          {kill.victim.shipTypeId ? (
+                            <img
+                              src={`https://images.evetech.net/types/${kill.victim.shipTypeId}/render?size=64`}
+                              alt={kill.victim.shipTypeName}
+                              className="w-10 h-10 rounded border border-gray-800 object-cover bg-black/60 shrink-0"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded bg-red-950/60 border border-red-800 flex items-center justify-center shrink-0">
+                              <Skull className="w-5 h-5 text-red-400" />
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <div className="text-xs font-bold text-white group-hover:text-red-300 truncate">
+                              {kill.victim.shipTypeName}
+                              <span className="text-[10px] text-gray-400 font-normal ml-1.5">
+                                lost by <span className="text-gray-200 font-semibold">{kill.victim.characterName}</span>
+                              </span>
+                            </div>
+                            <div className="text-[10px] text-gray-400 truncate">
+                              {kill.victim.corporationName}
+                              {kill.victim.allianceName && <span className="text-gray-500"> [{kill.victim.allianceName}]</span>}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Attacker Final Blow & Value */}
+                        <div className="text-right shrink-0 flex items-center gap-4">
+                          <div className="hidden sm:block text-right">
+                            <div className="text-[11px] font-bold text-gray-300">
+                              {kill.finalBlow.characterName}
+                            </div>
+                            <div className="text-[10px] text-gray-400">
+                              {kill.finalBlow.shipTypeName || 'Unknown Ship'} ({kill.attackerCount} {kill.attackerCount === 1 ? 'pilot' : 'pilots'})
+                            </div>
+                          </div>
+
+                          <div className="text-right">
+                            <div className="text-xs font-bold text-amber-400">
+                              {iskFormatted}
+                            </div>
+                            <div className="text-[10px] text-gray-500 font-mono">
+                              {kill.killmailTime} EVE
+                            </div>
+                          </div>
+
+                          <ExternalLink className="w-3.5 h-3.5 text-gray-500 group-hover:text-red-400 transition-colors" />
+                        </div>
+                      </a>
+                    );
+                  })}
                 </div>
               )}
             </div>
