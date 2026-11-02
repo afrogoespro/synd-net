@@ -352,6 +352,28 @@ class MapperService {
     }
   }
 
+  // Delete a connection between systems
+  public async deleteConnection(connectionId?: string, from?: string, to?: string) {
+    if (connectionId) {
+      this.state.connections = this.state.connections.filter(c => c.id !== connectionId);
+    } else if (from && to) {
+      this.state.connections = this.state.connections.filter(
+        c => !((c.from === from && c.to === to) || (c.from === to && c.to === from))
+      );
+    }
+    this.notify();
+
+    try {
+      await fetch('/api/map/connection/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ connectionId, from, to })
+      });
+    } catch (e) {
+      console.warn("Failed to delete connection:", e);
+    }
+  }
+
   // Set a pilot's location (e.g. buddy sets their position to this system)
   public async setPilotLocation(pilotName: string, systemName: string, shipName?: string) {
     if (!pilotName || !systemName) return;

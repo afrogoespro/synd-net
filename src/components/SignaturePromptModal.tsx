@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Compass, Sparkles, X, Check, ArrowRight, ShieldAlert, Clock, Activity, Zap } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Compass, Sparkles, X, Check, ArrowRight, ShieldAlert, Clock, Activity, Zap, Trash2 } from 'lucide-react';
 import { mapperService } from '../services/mapperService';
 
 interface SignaturePromptModalProps {
@@ -106,9 +107,16 @@ export const SignaturePromptModal: React.FC<SignaturePromptModalProps> = ({
     onClose();
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in font-mono">
-      <div className="relative w-full max-w-lg bg-[#0a0f1d] border border-cyan-500/50 rounded-2xl shadow-[0_0_40px_rgba(6,182,212,0.25)] overflow-hidden">
+  const handleDeleteConnection = () => {
+    if (window.confirm(`Delete connection between ${fromSystem} and ${toSystem}?`)) {
+      mapperService.deleteConnection(connectionId, fromSystem, toSystem);
+      onClose();
+    }
+  };
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl animate-fade-in font-mono">
+      <div className="relative w-full max-w-lg bg-[#0a0f1d] border border-cyan-500/50 rounded-3xl shadow-[0_0_50px_rgba(6,182,212,0.3)] overflow-hidden">
         
         {/* Header Bar */}
         <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-cyan-950/80 via-[#0d162b] to-[#0a0f1d] border-b border-cyan-800/40">
@@ -119,9 +127,9 @@ export const SignaturePromptModal: React.FC<SignaturePromptModalProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest px-1.5 py-0.5 rounded bg-cyan-950/80 border border-cyan-600/40">
-                  TACTICAL WH ENTRY
+                  WORMHOLE CONNECTION
                 </span>
-                <span className="text-xs text-gray-400">LOG CONNECTION</span>
+                <span className="text-xs text-gray-400">ASSIGN FEATURES</span>
               </div>
               <h2 className="text-base font-bold text-white flex items-center gap-2 mt-0.5">
                 <span className="text-gray-300">{fromSystem}</span>
@@ -133,14 +141,62 @@ export const SignaturePromptModal: React.FC<SignaturePromptModalProps> = ({
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800/80 transition-colors"
+            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800/80 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content Body */}
-        <div className="p-6 space-y-5">
+        <div className="p-6 space-y-4">
+          
+          {/* HIGH-PRIORITY PROMINENT EOL QUICK TOGGLE */}
+          <div className="p-3.5 rounded-2xl bg-[#060a14] border border-white/10 flex items-center justify-between shadow-inner">
+            <div className="flex items-center gap-2.5">
+              <div className={`p-2 rounded-xl border ${timeStatus === 'eol' ? 'bg-rose-500/20 border-rose-500/50 text-rose-400 animate-pulse' : 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400'}`}>
+                <Clock className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span>Wormhole Life (EOL)</span>
+                  {timeStatus === 'eol' && (
+                    <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded bg-rose-500 text-white animate-pulse">
+                      EOL ACTIVE
+                    </span>
+                  )}
+                </span>
+                <p className="text-[10px] text-gray-400">
+                  {timeStatus === 'eol' ? 'Reaching End of Life (under 4 hours remaining)' : 'Stable lifetime (more than 4 hours remaining)'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1 bg-black/60 p-1 rounded-xl border border-white/10">
+              <button
+                type="button"
+                onClick={() => setTimeStatus('stable')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  timeStatus === 'stable'
+                    ? 'bg-cyan-500 text-black shadow-sm font-extrabold'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Stable
+              </button>
+              <button
+                type="button"
+                onClick={() => setTimeStatus('eol')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  timeStatus === 'eol'
+                    ? 'bg-rose-600 text-white shadow-[0_0_15px_rgba(244,63,94,0.6)] font-extrabold animate-pulse'
+                    : 'text-rose-400 hover:text-white hover:bg-rose-950/40'
+                }`}
+              >
+                🔥 EOL
+              </button>
+            </div>
+          </div>
+
           {/* Main Question */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-cyan-300 flex items-center gap-1.5">
@@ -349,25 +405,37 @@ export const SignaturePromptModal: React.FC<SignaturePromptModalProps> = ({
 
         {/* Footer Actions */}
         <div className="px-6 py-4 bg-[#070b16] border-t border-gray-800/80 flex items-center justify-between">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 rounded-xl text-xs text-gray-400 hover:text-white transition-colors"
-          >
-            Skip / Later
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-3 py-2 rounded-xl text-xs text-gray-400 hover:text-white transition-colors cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleDeleteConnection}
+              className="px-3 py-2 rounded-xl text-xs font-semibold text-rose-400 hover:text-white hover:bg-rose-950/60 border border-rose-900/40 hover:border-rose-500/50 flex items-center gap-1.5 transition-all cursor-pointer"
+              title="Delete this connection between systems"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Delete Connection</span>
+            </button>
+          </div>
 
           <button
             type="button"
             onClick={handleSave}
-            className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-black font-bold text-xs flex items-center gap-2 shadow-[0_0_18px_rgba(6,182,212,0.4)] transition-all"
+            className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-black font-bold text-xs flex items-center gap-2 shadow-[0_0_18px_rgba(6,182,212,0.4)] transition-all cursor-pointer"
           >
             <Check className="w-4 h-4 stroke-[3]" />
-            <span>SAVE CONNECTION [{sigInput || 'WH'}]</span>
+            <span>SAVE FEATURES [{sigInput || (wormholeType === 'Stargate' ? 'GATE' : 'WH')}]</span>
           </button>
         </div>
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

@@ -268,7 +268,7 @@ const server = http.createServer((req, res) => {
     req.on('end', () => {
       try {
         const update = JSON.parse(body);
-        const { connectionId, from, to, sigFrom, sigTo, wormholeType, massStatus, timeStatus } = update;
+        const { connectionId, from, to, sigFrom, sigTo, wormholeType, massStatus, timeStatus, tactical, isFrig } = update;
 
         let conn = null;
         if (connectionId) {
@@ -312,6 +312,34 @@ const server = http.createServer((req, res) => {
         console.log(`[Connection Updated] ${from} <-> ${to} | Sig: [${conn ? conn.sigFrom : ''}] | Mass: ${conn ? conn.massStatus : ''} | Time: ${conn ? conn.timeStatus : ''}`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true, connection: conn, chainMap }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // Delete a specific wormhole / stargate connection
+  if (req.url === '/api/map/connection/delete' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try {
+        const { connectionId, from, to } = JSON.parse(body);
+        const beforeLen = chainMap.connections.length;
+        if (connectionId) {
+          chainMap.connections = chainMap.connections.filter(c => c.id !== connectionId);
+        } else if (from && to) {
+          chainMap.connections = chainMap.connections.filter(
+            c => !((c.from === from && c.to === to) || (c.from === to && c.to === from))
+          );
+        }
+        saveState();
+        broadcastUpdate('MAP_UPDATE', chainMap);
+        console.log(`[Connection Deleted] Removed connection ${connectionId || (from + ' <-> ' + to)} (${beforeLen} -> ${chainMap.connections.length})`);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, chainMap }));
       } catch (err) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: err.message }));

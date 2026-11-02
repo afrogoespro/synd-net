@@ -937,48 +937,63 @@ export const ChainMapperView: React.FC = () => {
               const pathData = `M ${x1} ${y1} L ${x1} ${midY} L ${x2} ${midY} L ${x2} ${y2}`;
 
               const isStargate = conn.wormholeType === 'Stargate';
+              const isEOL = conn.timeStatus === 'eol';
+              const isCrit = conn.massStatus === 'critical';
+              const isDestab = conn.massStatus === 'destab';
 
               // User requirement:
               // Known space (stargates) = emerald green (#22c55e) solid
               // Wormholes = purple or individual class color
+              // EOL overrides = bright crimson (#f43f5e) dashed
+              // Critical mass = bright red (#ef4444)
               const destClass = toSys.systemClass;
               const whClassColor = getSystemClassColor(destClass);
               let strokeColor = isStargate ? '#22c55e' : whClassColor;
               let strokeDash: string | undefined = isStargate ? undefined : '6 3';
 
-              if (!isStargate) {
-                if (conn.massStatus === 'critical') {
-                  strokeColor = '#ef4444'; // Red Critical
-                  strokeDash = '4 3';
-                } else if (conn.massStatus === 'destab') {
-                  strokeColor = '#eab308'; // Amber Destabilized
-                  strokeDash = '6 3';
-                } else if (conn.timeStatus === 'eol') {
-                  strokeColor = '#f43f5e'; // EOL Crimson/Pink
-                  strokeDash = '3 3';
-                }
+              if (isEOL) {
+                strokeColor = '#f43f5e'; // EOL Crimson/Pink
+                strokeDash = '4 3';
+              } else if (isCrit) {
+                strokeColor = '#ef4444'; // Red Critical
+                strokeDash = '4 3';
+              } else if (isDestab) {
+                strokeColor = '#eab308'; // Amber Destabilized
+                strokeDash = '6 3';
               }
 
               // Signature label (e.g. TC [ANF], [HMV], K162)
               const sigLabel = conn.sigFrom 
                 ? (toSys.systemClass?.startsWith('C') ? `TC [${conn.sigFrom}]` : `[${conn.sigFrom}]`)
                 : (conn.wormholeType || 'WH');
-              const badgeWidth = Math.max(50, sigLabel.length * 7.5 + 16);
+              const badgeWidth = Math.max(50, sigLabel.length * 7.5 + (isEOL ? 36 : 16));
 
               return (
-                <g key={conn.id} className="cursor-pointer group">
-                  {/* Invisible wide hit area for easy clicking */}
+                <g key={conn.id} className="cursor-pointer group pointer-events-auto">
+                  {/* Invisible wide hit area (expanded to 28px) for effortless clicking on lines */}
                   <path
                     d={pathData}
                     fill="none"
                     stroke="transparent"
-                    strokeWidth="18"
+                    strokeWidth="28"
                     className="pointer-events-auto cursor-pointer"
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedConnection(conn);
                       setIsConnModalOpen(true);
                     }}
+                  >
+                    <title>{`Click to assign features: ${conn.from} ➔ ${conn.to} (${conn.wormholeType || 'Wormhole'}) [${isEOL ? 'EOL' : 'Stable'}]`}</title>
+                  </path>
+
+                  {/* Hover highlight glow */}
+                  <path
+                    d={pathData}
+                    fill="none"
+                    stroke={isEOL ? '#f43f5e' : '#38bdf8'}
+                    strokeWidth="7"
+                    strokeOpacity="0"
+                    className="transition-opacity group-hover:stroke-opacity-40 pointer-events-none"
                   />
 
                   {/* Background shadow stroke */}
@@ -988,6 +1003,7 @@ export const ChainMapperView: React.FC = () => {
                     stroke="#000000"
                     strokeWidth="5"
                     strokeOpacity="0.8"
+                    className="pointer-events-none"
                   />
 
                   {/* Main Connector Path */}
@@ -995,11 +1011,11 @@ export const ChainMapperView: React.FC = () => {
                     d={pathData}
                     fill="none"
                     stroke={strokeColor}
-                    strokeWidth={isStargate ? '2.5' : '2'}
+                    strokeWidth={isStargate && !isEOL ? '2.5' : '2'}
                     strokeDasharray={strokeDash}
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    filter={!isStargate ? 'url(#wh-glow)' : undefined}
+                    filter={!isStargate || isEOL ? 'url(#wh-glow)' : undefined}
                     className="transition-colors group-hover:stroke-cyan-300 pointer-events-auto cursor-pointer"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -1009,15 +1025,15 @@ export const ChainMapperView: React.FC = () => {
                   />
 
                   {/* Terminal joint dots for Stargates (Green) */}
-                  {isStargate && (
+                  {isStargate && !isEOL && (
                     <>
                       <circle cx={x1} cy={y1} r="2.5" fill={isDark ? '#22c55e' : '#16a34a'} />
                       <circle cx={x2} cy={y2} r="2.5" fill={isDark ? '#22c55e' : '#16a34a'} />
                     </>
                   )}
 
-                  {/* Midpoint Label Tag for Wormholes (Purple/Colored, clickable to edit characteristics) */}
-                  {!isStargate && (
+                  {/* Midpoint Label Tag (rendered on wormholes, or any connection marked EOL/Crit/custom) */}
+                  {(!isStargate || isEOL || isCrit || isDestab || conn.sigFrom) && (
                     <g 
                       transform={`translate(${midX}, ${midY})`}
                       className="pointer-events-auto cursor-pointer"
@@ -1034,20 +1050,20 @@ export const ChainMapperView: React.FC = () => {
                         height="18"
                         rx="4"
                         fill="#070c18"
-                        stroke={conn.timeStatus === 'eol' ? '#f43f5e' : strokeColor}
-                        strokeWidth="1.2"
-                        className="group-hover:fill-[#0e172a] group-hover:stroke-cyan-300 transition-all shadow-md"
+                        stroke={isEOL ? '#f43f5e' : strokeColor}
+                        strokeWidth={isEOL ? '1.8' : '1.2'}
+                        className={`group-hover:fill-[#0e172a] group-hover:stroke-cyan-300 transition-all shadow-md ${isEOL ? 'animate-pulse' : ''}`}
                       />
                       <text
                         x="0"
                         y="3.5"
-                        fill={conn.timeStatus === 'eol' ? '#fda4af' : conn.massStatus === 'critical' ? '#fdba74' : conn.massStatus === 'destab' ? '#fde047' : '#e9d5ff'}
+                        fill={isEOL ? '#fda4af' : isCrit ? '#fdba74' : isDestab ? '#fde047' : '#e9d5ff'}
                         fontSize="9.5"
                         fontFamily="monospace"
                         fontWeight="bold"
                         textAnchor="middle"
                       >
-                        {sigLabel}
+                        {isEOL ? `${sigLabel} [EOL]` : sigLabel}
                       </text>
 
                       {/* Tactical Tags: Camped, Bubbled, Frig Hole */}
@@ -1089,8 +1105,8 @@ export const ChainMapperView: React.FC = () => {
             />
           )}
 
-          {/* HTML NODE CARDS LAYER */}
-          <div className="absolute inset-0 pointer-events-auto">
+          {/* HTML NODE CARDS LAYER (pointer-events-none on container so clicks pass to SVG lines underneath) */}
+          <div className="absolute inset-0 pointer-events-none">
             {Object.values(mapState.systems).map((node) => {
               if (hiddenNodeIds.has(node.id)) return null;
 
@@ -1113,7 +1129,7 @@ export const ChainMapperView: React.FC = () => {
                 <div
                   key={node.id}
                   onMouseDown={(e) => handleNodeDragStart(e, node)}
-                  className="canvas-node absolute cursor-pointer transition-shadow"
+                  className="canvas-node absolute cursor-pointer transition-shadow pointer-events-auto"
                   style={{
                     left: `${node.x || 0}px`,
                     top: `${node.y || 0}px`,
