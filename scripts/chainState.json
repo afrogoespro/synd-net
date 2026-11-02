@@ -307,9 +307,11 @@
       "id": "conn-1793592643353",
       "from": "New Caldari",
       "to": "Jita",
-      "wormholeType": "Wormhole",
+      "wormholeType": "K162",
       "massStatus": "stable",
-      "timeStatus": "stable"
+      "timeStatus": "stable",
+      "tactical": "clear",
+      "isFrig": false
     }
   ],
   "onlineBuddies": [

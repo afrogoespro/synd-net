@@ -101,17 +101,14 @@ export const PilotLoginModal: React.FC<PilotLoginModalProps> = ({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999] overflow-y-auto bg-black/85 backdrop-blur-2xl animate-in fade-in duration-200 font-sans text-xs select-none"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-2xl animate-in fade-in duration-200 font-sans text-xs select-none"
       onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div 
-        className="min-h-full flex justify-center items-start sm:items-center py-12 px-4"
-        onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-md max-h-[92vh] flex flex-col bg-[#0d1424]/95 border border-white/10 rounded-3xl shadow-[0_0_60px_rgba(0,0,0,0.85)] overflow-hidden text-slate-200"
       >
-        <div 
-          onClick={(e) => e.stopPropagation()}
-          className="relative w-full max-w-md my-auto bg-[#0d1424]/95 border border-white/10 rounded-3xl shadow-[0_0_60px_rgba(0,0,0,0.85)] overflow-hidden text-slate-200 p-6 sm:p-7 space-y-5"
-        >
+        <div className="p-6 sm:p-7 space-y-5 overflow-y-auto">
           {/* Header Bar matching standard EVE SSO tools (Spyntel/Tripwire) */}
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
