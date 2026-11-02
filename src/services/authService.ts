@@ -40,8 +40,11 @@ export const EVE_SSO_SCOPES = [
   'esi-location.read_ship_type.v1',
   'esi-location.read_online.v1',
   'esi-ui.open_window.v1',
-  'esi-ui.write_waypoint.v1'
+  'esi-ui.write_waypoint.v1',
+  'esi-wallet.read_character_wallet.v1'
 ];
+
+export const WALLET_SCOPE = 'esi-wallet.read_character_wallet.v1';
 
 const STORAGE_KEY_PILOT = 'synd_pilot_auth_session';
 const STORAGE_KEY_TOKENS = 'synd_sso_tokens';
@@ -560,6 +563,42 @@ class AuthService {
     } catch (e) {
       console.error('Failed to set in-game waypoint:', e);
       return false;
+    }
+  }
+
+  /**
+   * Returns a non-expired SSO access token, refreshing it with the stored
+   * refresh token (PKCE public client) when it is within 60s of expiry.
+   */
+  public async getValidAccessToken(): Promise<string | null> {
+    if (!this.ssoTokens?.accessToken) return null;
+    if (this.ssoTokens.expiresAt - Date.now() > 60_000) return this.ssoTokens.accessToken;
+
+    const clientId = localStorage.getItem(STORAGE_KEY_CLIENT_ID);
+    if (!this.ssoTokens.refreshToken || !clientId) return this.ssoTokens.accessToken;
+
+    try {
+      const res = await fetch('https://login.eveonline.com/v2/oauth/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'refresh_token',
+          refresh_token: this.ssoTokens.refreshToken,
+          client_id: clientId
+        }).toString()
+      });
+      if (!res.ok) return this.ssoTokens.accessToken;
+      const data = await res.json();
+      this.ssoTokens = {
+        ...this.ssoTokens,
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token || this.ssoTokens.refreshToken,
+        expiresAt: Date.now() + (data.expires_in || 1200) * 1000
+      };
+      localStorage.setItem(STORAGE_KEY_TOKENS, JSON.stringify(this.ssoTokens));
+      return this.ssoTokens.accessToken;
+    } catch {
+      return this.ssoTokens.accessToken;
     }
   }
 

@@ -2,16 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { 
   Radar, Users, Flame, Cpu, Volume2, VolumeX, Clock, 
   Radio, Network, Pickaxe, ExternalLink, KeyRound, LogOut, User,
-  LayoutDashboard, Sparkles, Sun, Moon
+  LayoutDashboard, Sparkles, Sun, Moon, Wallet
 } from 'lucide-react';
+import { WalletPill } from './WalletView';
 import { authService, PilotProfile } from '../services/authService';
 import { mapperService } from '../services/mapperService';
 import { soundManager } from '../services/soundEffects';
 import { PilotLoginModal } from './PilotLoginModal';
 
 interface HeaderProps {
-  activeTab: 'dashboard' | 'dscan' | 'mapper' | 'ore' | 'local' | 'killfeed' | 'eft';
-  setActiveTab: (tab: 'dashboard' | 'dscan' | 'mapper' | 'ore' | 'local' | 'killfeed' | 'eft') => void;
+  activeTab: 'dashboard' | 'dscan' | 'mapper' | 'ore' | 'local' | 'killfeed' | 'eft' | 'wallet';
+  setActiveTab: (tab: 'dashboard' | 'dscan' | 'mapper' | 'ore' | 'local' | 'killfeed' | 'eft' | 'wallet') => void;
   audioAlertsEnabled: boolean;
   setAudioAlertsEnabled: (enabled: boolean) => void;
   autoWatchEnabled: boolean;
@@ -169,10 +170,25 @@ export const Header: React.FC<HeaderProps> = ({
               <Cpu className="w-3.5 h-3.5 text-indigo-400" />
               <span>Ship Fittings</span>
             </button>
+
+            <button
+              onClick={() => setActiveTab('wallet')}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                activeTab === 'wallet'
+                  ? isDark 
+                    ? 'bg-white/15 text-emerald-300 font-semibold shadow-sm' 
+                    : 'bg-white text-emerald-600 font-semibold shadow-sm border border-slate-200/60'
+                  : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Wallet className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Wallet</span>
+            </button>
           </nav>
 
           {/* Controls: Auto-Watch, Audio, Time, Theme, Profile */}
           <div className="flex items-center gap-2">
+            <WalletPill onClick={() => setActiveTab('wallet')} isDark={isDark} />
             <button
               onClick={() => setAutoWatchEnabled(!autoWatchEnabled)}
               title={autoWatchEnabled ? 'Auto-Watch is Active' : 'Click to enable Auto-Watch'}
@@ -321,6 +337,14 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
           >
             Ship Fittings
+          </button>
+          <button
+            onClick={() => setActiveTab('wallet')}
+            className={`px-3 py-1 rounded text-xs whitespace-nowrap font-medium ${
+              activeTab === 'wallet' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50' : 'text-gray-400'
+            }`}
+          >
+            Wallet
           </button>
         </div>
       </div>

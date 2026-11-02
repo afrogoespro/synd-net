@@ -7,6 +7,7 @@ import { OreSiteEvaluatorView } from './components/OreSiteEvaluatorView';
 import { LocalIntelView } from './components/LocalIntelView';
 import { LiveKillfeedView } from './components/LiveKillfeedView';
 import { EFTInspectorView } from './components/EFTInspectorView';
+import { WalletView } from './components/WalletView';
 import { WormholeScoutPopup } from './components/WormholeScoutPopup';
 import { WormholeTacticalHUD } from './components/WormholeTacticalHUD';
 import { SignaturePromptModal } from './components/SignaturePromptModal';
@@ -19,11 +20,11 @@ import { authService } from './services/authService';
 import { DScanReport } from './types/dscan';
 
 export function App() {
-  const [activeTab, setActiveTabState] = useState<'dashboard' | 'dscan' | 'mapper' | 'ore' | 'local' | 'killfeed' | 'eft'>(() => {
+  const [activeTab, setActiveTabState] = useState<'dashboard' | 'dscan' | 'mapper' | 'ore' | 'local' | 'killfeed' | 'eft' | 'wallet'>(() => {
     return (localStorage.getItem('synd_active_tab') as any) || 'mapper';
   });
 
-  const setActiveTab = (tab: 'dashboard' | 'dscan' | 'mapper' | 'ore' | 'local' | 'killfeed' | 'eft') => {
+  const setActiveTab = (tab: 'dashboard' | 'dscan' | 'mapper' | 'ore' | 'local' | 'killfeed' | 'eft' | 'wallet') => {
     setActiveTabState(tab);
     localStorage.setItem('synd_active_tab', tab);
   };
@@ -260,6 +261,7 @@ export function App() {
         {activeTab === 'local' && <LocalIntelView />}
         {activeTab === 'killfeed' && <LiveKillfeedView activeSystemName={currentSystem} />}
         {activeTab === 'eft' && <EFTInspectorView />}
+        {activeTab === 'wallet' && <WalletView />}
       </main>
 
       {/* Floating Apple-Style Music Player Popup with Volume Slider */}
