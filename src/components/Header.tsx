@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { authService, PilotProfile } from '../services/authService';
 import { mapperService } from '../services/mapperService';
+import { soundManager } from '../services/soundEffects';
 import { PilotLoginModal } from './PilotLoginModal';
 
 interface HeaderProps {
@@ -33,6 +34,11 @@ export const Header: React.FC<HeaderProps> = ({
   const [eveTime, setEveTime] = useState<string>('');
   const [currentPilot, setCurrentPilot] = useState<PilotProfile | null>(authService.getPilot());
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
+  const [audioState, setAudioState] = useState(soundManager.getState());
+
+  useEffect(() => {
+    return soundManager.subscribe(setAudioState);
+  }, []);
 
   useEffect(() => {
     return authService.subscribe((profile) => {
@@ -212,16 +218,24 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
             </button>
 
+            {/* Volume & Music Slider Pill (Default 50%) */}
             <button
-              onClick={() => setAudioAlertsEnabled(!audioAlertsEnabled)}
-              title={audioAlertsEnabled ? 'Disable Tactical Audio Alarms' : 'Enable Tactical Audio Alarms'}
-              className={`p-1.5 rounded-full border text-xs flex items-center transition-colors ${
-                audioAlertsEnabled
-                  ? isDark ? 'bg-white/5 border-white/10 text-amber-300' : 'bg-amber-50 border-amber-200 text-amber-700'
-                  : isDark ? 'bg-transparent border-transparent text-slate-500' : 'bg-transparent border-transparent text-slate-400'
+              onClick={() => soundManager.setPopupVisible(!audioState.isPopupVisible)}
+              title={`Music & Tactical Volume: ${Math.round(audioState.volume * 100)}% (Click for Volume Slider & Controls)`}
+              className={`px-2.5 py-1 rounded-full border text-xs flex items-center gap-1.5 transition-all ${
+                audioState.isPopupVisible
+                  ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40 shadow-sm'
+                  : isDark ? 'bg-white/5 border-white/10 text-slate-300 hover:text-white' : 'bg-slate-100 border-slate-200 text-slate-700'
               }`}
             >
-              {audioAlertsEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+              {audioState.volume === 0 ? (
+                <VolumeX className="w-3.5 h-3.5 text-slate-500" />
+              ) : (
+                <Volume2 className="w-3.5 h-3.5 text-cyan-400" />
+              )}
+              <span className="text-[11px] font-mono font-semibold tabular-nums">
+                {Math.round(audioState.volume * 100)}%
+              </span>
             </button>
 
             {/* Theme Toggle (Light / Dark) */}

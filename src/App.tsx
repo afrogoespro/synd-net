@@ -10,8 +10,10 @@ import { EFTInspectorView } from './components/EFTInspectorView';
 import { WormholeScoutPopup } from './components/WormholeScoutPopup';
 import { WormholeTacticalHUD } from './components/WormholeTacticalHUD';
 import { SignaturePromptModal } from './components/SignaturePromptModal';
+import { MusicPlayerPopup } from './components/MusicPlayerPopup';
 import { scoutWatcher, ScoutAlertEvent } from './services/scoutWatcher';
 import { mapperService } from './services/mapperService';
+import { soundManager } from './services/soundEffects';
 import { DScanReport } from './types/dscan';
 
 export function App() {
@@ -236,6 +238,9 @@ export function App() {
         {activeTab === 'killfeed' && <LiveKillfeedView activeSystemName={currentSystem} />}
         {activeTab === 'eft' && <EFTInspectorView />}
       </main>
+
+      {/* Floating Apple-Style Music Player Popup with Volume Slider */}
+      <MusicPlayerPopup theme={theme} />
 
       {/* Pop-up Wormhole Scout HUD Modal */}
       <WormholeScoutPopup
