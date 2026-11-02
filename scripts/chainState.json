@@ -7,12 +7,37 @@
       "region": "The Forge",
       "security": 0.9,
       "statics": [],
-      "structures": [],
+      "structures": [
+        {
+          "id": "struct-1793587807008-0.6647976318376484",
+          "name": "New Caldari - equip consume and factory rig",
+          "type": "Sotiyo",
+          "distance": "61,298 km",
+          "scoutedBy": "You",
+          "timestamp": "02:50"
+        },
+        {
+          "id": "struct-1793587807008-0.4197456939684765",
+          "name": "New Caldari - Freeport reseach invent manufact",
+          "type": "Raitaru",
+          "distance": "5.30 AU",
+          "scoutedBy": "You",
+          "timestamp": "02:50"
+        },
+        {
+          "id": "struct-1793587807008-0.5968766629390623",
+          "name": "New Caldari - Research & Manufacturing-T2 Rigs",
+          "type": "Raitaru",
+          "distance": "90,313 km",
+          "scoutedBy": "You",
+          "timestamp": "02:50"
+        }
+      ],
       "activePilots": [
         "Ennis Urbanski"
       ],
       "signatures": [],
-      "lastUpdated": "02:47",
+      "lastUpdated": "02:50",
       "x": 650,
       "y": 40
     },
@@ -98,7 +123,7 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "02:47",
+      "lastUpdated": "02:35",
       "x": 440,
       "y": 136
     },
@@ -112,7 +137,7 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "02:47",
+      "lastUpdated": "02:35",
       "x": 440,
       "y": 232
     },
@@ -126,7 +151,7 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "02:47",
+      "lastUpdated": "02:35",
       "x": 440,
       "y": 328
     },
@@ -500,7 +525,7 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "02:47",
+      "lastUpdated": "02:35",
       "x": 440,
       "y": 426
     },
@@ -512,7 +537,7 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "02:47",
+      "lastUpdated": "02:35",
       "x": 440,
       "y": 524
     },
@@ -524,7 +549,7 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "02:47",
+      "lastUpdated": "02:35",
       "x": 440,
       "y": 622
     },
@@ -539,7 +564,7 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "02:47",
+      "lastUpdated": "02:35",
       "x": 440,
       "y": 720
     },
@@ -553,7 +578,7 @@
         "Syndra en Tilavine"
       ],
       "signatures": [],
-      "lastUpdated": "02:47",
+      "lastUpdated": "02:35",
       "x": 440,
       "y": 720
     }

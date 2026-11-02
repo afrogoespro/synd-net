@@ -162,10 +162,16 @@ class AuthService {
    * Scopes: esi-location.read_location.v1, esi-location.read_ship_type.v1, esi-location.read_online.v1, esi-ui.write_waypoint.v1
    */
   public async initiateEveSSO(customClientId?: string) {
-    const clientId = customClientId || localStorage.getItem(STORAGE_KEY_CLIENT_ID) || 'b79c3bdf1d074b629c118e698885b54a'; // default or custom
-    if (customClientId) {
-      localStorage.setItem(STORAGE_KEY_CLIENT_ID, customClientId);
+    const envClientId = (import.meta as any).env?.VITE_EVE_CLIENT_ID;
+    const clientId = (customClientId || '').trim() || localStorage.getItem(STORAGE_KEY_CLIENT_ID) || (envClientId ? String(envClientId).trim() : '');
+
+    if (!clientId) {
+      throw new Error(
+        'EVE SSO requires a CCP Application Client ID. Please register a free app at developers.eveonline.com with your current URL as the Callback, or switch to "Pilot Lookup" for instant login.'
+      );
     }
+
+    localStorage.setItem(STORAGE_KEY_CLIENT_ID, clientId);
 
     const state = generateRandomString(24);
     const codeVerifier = generateRandomString(64);
@@ -197,7 +203,8 @@ class AuthService {
 
     const savedState = localStorage.getItem(STORAGE_KEY_STATE);
     const codeVerifier = localStorage.getItem(STORAGE_KEY_PKCE_VERIFIER);
-    const clientId = localStorage.getItem(STORAGE_KEY_CLIENT_ID) || 'b79c3bdf1d074b629c118e698885b54a';
+    const envClientId = (import.meta as any).env?.VITE_EVE_CLIENT_ID;
+    const clientId = localStorage.getItem(STORAGE_KEY_CLIENT_ID) || (envClientId ? String(envClientId).trim() : '');
 
     // Clean URL query parameters cleanly without page reload
     const cleanUrl = window.location.origin + window.location.pathname;
@@ -205,6 +212,11 @@ class AuthService {
 
     if (savedState && state !== savedState) {
       console.error('[EVE SSO] State verification mismatch');
+      return;
+    }
+
+    if (!clientId) {
+      console.error('[EVE SSO] Cannot complete OAuth callback: No Client ID found.');
       return;
     }
 
