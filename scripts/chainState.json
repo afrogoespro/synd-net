@@ -34,12 +34,59 @@
         }
       ],
       "activePilots": [
-        "Ennis Urbanski"
+        "Ennis Urbanski",
+        "Syndra en Tilavine"
       ],
       "signatures": [],
-      "lastUpdated": "04:10",
+      "lastUpdated": "04:46",
       "x": 578,
       "y": 50
+    },
+    "Uemisaisen": {
+      "id": "Uemisaisen",
+      "name": "Uemisaisen",
+      "systemClass": "Highsec",
+      "statics": [],
+      "structures": [],
+      "activePilots": [
+        "USS Hauler"
+      ],
+      "signatures": [],
+      "lastUpdated": "04:39"
+    },
+    "Ansila": {
+      "id": "Ansila",
+      "name": "Ansila",
+      "systemClass": "Highsec",
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "04:46",
+      "x": 576,
+      "y": 275
+    },
+    "Sotrentaira": {
+      "id": "Sotrentaira",
+      "name": "Sotrentaira",
+      "systemClass": "Highsec",
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "04:41"
+    },
+    "Hirtamon": {
+      "id": "Hirtamon",
+      "name": "Hirtamon",
+      "systemClass": "Highsec",
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "04:46",
+      "x": 577,
+      "y": 312
     },
     "Ikuchi": {
       "id": "Ikuchi",
@@ -47,20 +94,77 @@
       "systemClass": "Highsec",
       "statics": [],
       "structures": [],
-      "activePilots": [
-        "Syndra en Tilavine"
-      ],
+      "activePilots": [],
       "signatures": [],
-      "lastUpdated": "04:10",
-      "x": 576,
-      "y": 177
+      "lastUpdated": "04:46",
+      "x": 650,
+      "y": 140
+    },
+    "New Caldari": {
+      "id": "New Caldari",
+      "name": "New Caldari",
+      "systemClass": "Highsec",
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "04:46",
+      "x": 578,
+      "y": 148
+    },
+    "Josameto": {
+      "id": "Josameto",
+      "name": "Josameto",
+      "systemClass": "C2",
+      "statics": [
+        "C2",
+        "Highsec"
+      ],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "04:46",
+      "x": 578,
+      "y": 246
     }
   },
   "connections": [
     {
-      "id": "conn-1793592194205",
+      "id": "conn-1793594653578",
+      "from": "Ikuchi",
+      "to": "Jita",
+      "wormholeType": "Wormhole",
+      "massStatus": "stable",
+      "timeStatus": "stable"
+    },
+    {
+      "id": "conn-1793594784956",
+      "from": "Ikuchi",
+      "to": "Ansila",
+      "wormholeType": "Stargate",
+      "massStatus": "stable",
+      "timeStatus": "stable"
+    },
+    {
+      "id": "conn-1793594784957",
+      "from": "Ikuchi",
+      "to": "Hirtamon",
+      "wormholeType": "Stargate",
+      "massStatus": "stable",
+      "timeStatus": "stable"
+    },
+    {
+      "id": "conn-1793594784962",
       "from": "Jita",
-      "to": "Ikuchi",
+      "to": "New Caldari",
+      "wormholeType": "Wormhole",
+      "massStatus": "stable",
+      "timeStatus": "stable"
+    },
+    {
+      "id": "conn-1793594784962",
+      "from": "New Caldari",
+      "to": "Josameto",
       "wormholeType": "Wormhole",
       "massStatus": "stable",
       "timeStatus": "stable"

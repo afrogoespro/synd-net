@@ -186,12 +186,14 @@ export const ChainMapperView: React.FC = () => {
   // GalaxyFinder Center on System
   const centerOnSystem = (sysId: string) => {
     const target = mapState.systems[sysId];
-    if (target && containerRef.current && target.x !== undefined && target.y !== undefined) {
+    if (target && containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
       const w = Math.max(rect.width, 300);
       const h = Math.max(rect.height, 250);
-      const targetCenterX = target.x + NODE_W / 2;
-      const targetCenterY = target.y + NODE_H / 2;
+      const tx = target.x !== undefined ? target.x : 578;
+      const ty = target.y !== undefined ? target.y : 160;
+      const targetCenterX = tx + NODE_W / 2;
+      const targetCenterY = ty + NODE_H / 2;
       setPan({
         x: Math.round(w / 2 - targetCenterX * zoom),
         y: Math.round(h / 2 - targetCenterY * zoom)
@@ -707,7 +709,10 @@ export const ChainMapperView: React.FC = () => {
                 return (
                   <button
                     key={idx}
-                    onClick={() => setSelectedSystemId(p.systemName)}
+                    onClick={() => {
+                      setSelectedSystemId(p.systemName);
+                      centerOnSystem(p.systemName);
+                    }}
                     className={`px-2.5 py-0.5 rounded-full text-xs font-medium flex items-center gap-1.5 transition-all border ${
                       isMe 
                         ? isDark ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-200' : 'bg-cyan-50 border-cyan-300 text-cyan-900 font-semibold'
@@ -958,10 +963,10 @@ export const ChainMapperView: React.FC = () => {
               const toSys = mapState.systems[conn.to];
               if (!fromSys || !toSys) return null;
 
-              const x1 = (fromSys.x || 0) + NODE_W / 2;
-              const y1 = (fromSys.y || 0) + NODE_H;
-              const x2 = (toSys.x || 0) + NODE_W / 2;
-              const y2 = toSys.y || 0;
+              const x1 = (fromSys.x !== undefined ? fromSys.x : 578) + NODE_W / 2;
+              const y1 = (fromSys.y !== undefined ? fromSys.y : 160) + NODE_H;
+              const x2 = (toSys.x !== undefined ? toSys.x : 578) + NODE_W / 2;
+              const y2 = toSys.y !== undefined ? toSys.y : 160;
 
               const midY = (y1 + y2) / 2;
               const midX = (x1 + x2) / 2;
@@ -1139,7 +1144,7 @@ export const ChainMapperView: React.FC = () => {
 
           {/* HTML NODE CARDS LAYER (pointer-events-none on container so clicks pass to SVG lines underneath) */}
           <div className="absolute inset-0 pointer-events-none">
-            {Object.values(mapState.systems).map((node) => {
+            {Object.values(mapState.systems).map((node, nodeIdx) => {
               if (hiddenNodeIds.has(node.id)) return null;
 
               const isSelected = node.id === selectedSystem?.id;
@@ -1176,14 +1181,18 @@ export const ChainMapperView: React.FC = () => {
               const isNodeEOL = connectedConns.some(c => c.timeStatus === 'eol');
               const hasWHConn = connectedConns.some(c => c.wormholeType !== 'Stargate');
 
+              // Safe fallback coordinates so new systems are never placed off canvas at (0, 0)
+              const posX = node.x !== undefined ? node.x : (578 + ((nodeIdx % 3) - 1) * 190);
+              const posY = node.y !== undefined ? node.y : (160 + Math.floor(nodeIdx / 3) * 110);
+
               return (
                 <div
                   key={node.id}
                   onMouseDown={(e) => handleNodeDragStart(e, node)}
                   className="canvas-node absolute cursor-pointer transition-shadow pointer-events-auto"
                   style={{
-                    left: `${node.x || 0}px`,
-                    top: `${node.y || 0}px`,
+                    left: `${posX}px`,
+                    top: `${posY}px`,
                     width: `${NODE_W}px`,
                     height: `${NODE_H}px`
                   }}

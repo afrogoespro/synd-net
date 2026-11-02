@@ -461,27 +461,84 @@ const server = http.createServer((req, res) => {
         }
 
         const cleanSys = systemName.trim();
-        // Remove pilot from all systems first
-        Object.values(chainMap.systems).forEach(sys => {
+        // Track previous system for this pilot
+        let previousSys = null;
+        Object.entries(chainMap.systems).forEach(([sysId, sys]) => {
+          if ((sys.activePilots || []).some(p => p.startsWith(pilotName))) {
+            previousSys = sysId;
+          }
           sys.activePilots = (sys.activePilots || []).filter(p => !p.startsWith(pilotName));
         });
 
-        // Ensure system exists
+        // Classify system (Wormhole C1-C6, Highsec, Lowsec, Nullsec)
+        let whClass = 'Highsec';
+        if (cleanSys.startsWith('J')) {
+          const num = parseInt(cleanSys.replace(/\D/g, ''), 10) || 0;
+          if (num >= 100000 && num <= 119999) whClass = 'C1';
+          else if (num >= 120000 && num <= 139999) whClass = 'C2';
+          else if (num >= 140000 && num <= 159999) whClass = 'C3';
+          else if (num >= 160000 && num <= 179999) whClass = 'C4';
+          else if (num >= 180000 && num <= 199999) whClass = 'C5';
+          else if (num >= 200000 && num <= 219999) whClass = 'C6';
+          else whClass = 'C2';
+        }
+
+        // Determine coordinates
+        const prevNode = previousSys && chainMap.systems[previousSys];
+        let newX = 578;
+        let newY = 160;
+
+        if (prevNode && prevNode.x !== undefined && prevNode.y !== undefined) {
+          newX = prevNode.x;
+          newY = prevNode.y + 100;
+        } else {
+          const existingNodes = Object.values(chainMap.systems).filter(s => s.x !== undefined && s.y !== undefined);
+          if (existingNodes.length > 0) {
+            const rightmostX = Math.max(...existingNodes.map(s => s.x || 0));
+            newX = rightmostX + 190;
+            newY = 160;
+          }
+        }
+
+        // Ensure system exists with proper coordinates
         if (!chainMap.systems[cleanSys]) {
           chainMap.systems[cleanSys] = {
             id: cleanSys,
             name: cleanSys,
-            systemClass: cleanSys.startsWith('J') ? 'C2' : 'Highsec',
-            statics: [],
+            systemClass: whClass,
+            statics: whClass === 'C2' ? ['C2', 'Highsec'] : whClass === 'C3' ? ['Lowsec'] : [],
             structures: [],
             activePilots: [pilotName],
             signatures: [],
-            lastUpdated: getEveTimeString()
+            lastUpdated: getEveTimeString(),
+            x: newX,
+            y: newY
           };
         } else {
+          if (chainMap.systems[cleanSys].x === undefined) chainMap.systems[cleanSys].x = newX;
+          if (chainMap.systems[cleanSys].y === undefined) chainMap.systems[cleanSys].y = newY;
           chainMap.systems[cleanSys].activePilots = chainMap.systems[cleanSys].activePilots || [];
           if (!chainMap.systems[cleanSys].activePilots.includes(pilotName)) {
             chainMap.systems[cleanSys].activePilots.push(pilotName);
+          }
+          chainMap.systems[cleanSys].lastUpdated = getEveTimeString();
+        }
+
+        // Connect previous system to new system
+        if (previousSys && previousSys !== cleanSys) {
+          const connExists = chainMap.connections.some(
+            c => (c.from === previousSys && c.to === cleanSys) || (c.from === cleanSys && c.to === previousSys)
+          );
+          if (!connExists) {
+            const isWh = cleanSys.startsWith('J') || previousSys.startsWith('J');
+            chainMap.connections.push({
+              id: `conn-${Date.now()}`,
+              from: previousSys,
+              to: cleanSys,
+              wormholeType: isWh ? 'Wormhole' : 'Stargate',
+              massStatus: 'stable',
+              timeStatus: 'stable'
+            });
           }
         }
 
