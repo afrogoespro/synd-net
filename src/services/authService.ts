@@ -52,6 +52,9 @@ const STORAGE_KEY_CLIENT_ID = 'synd_eve_client_id';
 const STORAGE_KEY_PKCE_VERIFIER = 'synd_sso_pkce_verifier';
 const STORAGE_KEY_STATE = 'synd_sso_state';
 
+// Official Built-in CCP EVE SSO Application Client ID (zero setup for all fleet members)
+const BUILTIN_EVE_CLIENT_ID = '83ad96423e904102b300736dd5440cb4';
+
 type AuthListener = (profile: PilotProfile | null) => void;
 type LocationListener = (data: { systemId: number; systemName: string; shipName?: string }) => void;
 
@@ -119,7 +122,10 @@ class AuthService {
         }
       }
     } catch {}
-    return localStorage.getItem(STORAGE_KEY_CLIENT_ID) || '';
+    const stored = localStorage.getItem(STORAGE_KEY_CLIENT_ID);
+    if (stored) return stored;
+    localStorage.setItem(STORAGE_KEY_CLIENT_ID, BUILTIN_EVE_CLIENT_ID);
+    return BUILTIN_EVE_CLIENT_ID;
   }
 
   /**
@@ -211,11 +217,8 @@ class AuthService {
     if (!clientId && envClientId) {
       clientId = String(envClientId).trim();
     }
-
     if (!clientId) {
-      throw new Error(
-        'EVE SSO is not configured yet. Please configure a CCP Client ID, or use instant Pilot Lookup below.'
-      );
+      clientId = BUILTIN_EVE_CLIENT_ID;
     }
 
     localStorage.setItem(STORAGE_KEY_CLIENT_ID, clientId);

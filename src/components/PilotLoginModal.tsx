@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Shield, User, X, Check, ArrowRight, Loader2, KeyRound, Sparkles, Lock, ExternalLink, Copy, AlertCircle, Settings, ChevronDown, ChevronUp } from 'lucide-react';
+import { Shield, X, ArrowRight, Loader2, Lock, AlertCircle } from 'lucide-react';
 import { authService, PilotProfile } from '../services/authService';
 
 interface PilotLoginModalProps {
@@ -14,70 +14,22 @@ export const PilotLoginModal: React.FC<PilotLoginModalProps> = ({
   onClose,
   onSuccess
 }) => {
-  const [customClientId, setCustomClientId] = useState<string>(() => localStorage.getItem('synd_eve_client_id') || '');
-  const [hasSharedClientId, setHasSharedClientId] = useState<boolean>(false);
-  const [showHostSetup, setShowHostSetup] = useState<boolean>(false);
-  const [copiedCallback, setCopiedCallback] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isOpen) {
-      authService.loadSharedConfig().then((cid) => {
-        if (cid) {
-          setCustomClientId(cid);
-          setHasSharedClientId(true);
-        } else {
-          setShowHostSetup(true);
-        }
-      });
-    }
-  }, [isOpen]);
-
   if (!isOpen) return null;
-
-  const currentCallbackUrl = typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : '';
-
-  const handleCopyCallback = () => {
-    if (navigator.clipboard && currentCallbackUrl) {
-      navigator.clipboard.writeText(currentCallbackUrl);
-      setCopiedCallback(true);
-      setTimeout(() => setCopiedCallback(false), 2000);
-    }
-  };
 
   // Primary 1-Click EVE Online SSO: Takes user directly to CCP Character Selection (Authorize)
   const handleSSORedirect = async () => {
     setLoading(true);
     setError(null);
     try {
-      await authService.initiateEveSSO(customClientId.trim());
+      await authService.initiateEveSSO();
     } catch (err: any) {
-      setError(err.message || 'Failed to initiate EVE SSO redirect.');
-      setLoading(false);
-      setShowHostSetup(true);
-    }
-  };
-
-  // Host/Admin saves shared Client ID to server
-  const handleSaveHostClientId = async () => {
-    if (!customClientId.trim()) return;
-    setLoading(true);
-    setError(null);
-    try {
-      await authService.saveSharedClientId(customClientId.trim());
-      setHasSharedClientId(true);
-      setShowHostSetup(false);
-      setLoading(false);
-      // Immediately initiate SSO
-      await authService.initiateEveSSO(customClientId.trim());
-    } catch (err: any) {
-      setError(err.message || 'Failed to save CCP Client ID.');
+      setError(err.message || 'Failed to connect to EVE Online SSO.');
       setLoading(false);
     }
   };
-
-
 
   return createPortal(
     <div
@@ -86,9 +38,9 @@ export const PilotLoginModal: React.FC<PilotLoginModalProps> = ({
     >
       <div 
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-md max-h-[92vh] flex flex-col bg-[#0d1424]/95 border border-white/10 rounded-3xl shadow-[0_0_60px_rgba(0,0,0,0.85)] overflow-hidden text-slate-200"
+        className="relative w-full max-w-md bg-[#0d1424]/95 border border-white/10 rounded-3xl shadow-[0_0_60px_rgba(0,0,0,0.85)] overflow-hidden text-slate-200"
       >
-        <div className="p-6 sm:p-7 space-y-5 overflow-y-auto">
+        <div className="p-6 sm:p-7 space-y-6">
           {/* Header Bar matching standard EVE SSO tools (Spyntel/Tripwire) */}
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
@@ -117,17 +69,16 @@ export const PilotLoginModal: React.FC<PilotLoginModalProps> = ({
             Use your EVE Online account to authenticate, submit intelligence, and link your live location on the chain mapper.
           </p>
 
-          {/* PRIMARY ACTION: SIGN IN WITH EVE ONLINE (CCP SSO) */}
-          <div className="space-y-2">
+          {/* PRIMARY 1-CLICK SSO BUTTON */}
+          <div className="space-y-2.5 pt-1">
             <button
               type="button"
               onClick={handleSSORedirect}
               disabled={loading}
-              className="w-full py-3.5 px-5 rounded-2xl bg-[#142036] hover:bg-[#1b2b48] border border-cyan-500/40 hover:border-cyan-400 text-white font-bold text-sm flex items-center justify-between transition-all shadow-[0_4px_24px_rgba(0,0,0,0.5)] hover:shadow-[0_0_24px_rgba(6,182,212,0.35)] cursor-pointer group disabled:opacity-50"
+              className="w-full py-4 px-5 rounded-2xl bg-[#142036] hover:bg-[#1b2b48] border border-cyan-500/40 hover:border-cyan-400 text-white font-bold text-sm flex items-center justify-between transition-all shadow-[0_4px_24px_rgba(0,0,0,0.5)] hover:shadow-[0_0_24px_rgba(6,182,212,0.35)] cursor-pointer group disabled:opacity-50"
             >
               <div className="flex items-center gap-3">
-                {/* Official EVE Online Logo Typography */}
-                <span className="font-mono text-xs tracking-wider bg-black/50 px-2 py-0.5 rounded border border-white/10 text-cyan-300 font-extrabold">
+                <span className="font-mono text-xs tracking-wider bg-black/60 px-2 py-0.5 rounded border border-white/10 text-cyan-300 font-extrabold">
                   EVE
                 </span>
                 <span className="text-sm font-semibold tracking-wide text-white group-hover:text-cyan-200 transition-colors">
@@ -140,30 +91,12 @@ export const PilotLoginModal: React.FC<PilotLoginModalProps> = ({
                 <ArrowRight className="w-4 h-4 text-cyan-400 group-hover:translate-x-1 transition-transform" />
               )}
             </button>
-            <p className="text-[11px] text-slate-500 px-1 leading-normal">
+            <p className="text-[11px] text-slate-500 px-1 leading-normal text-center">
               EVE sign-in connects securely via CCP Games Official SSO to authorize character presence.
             </p>
           </div>
 
-          {/* Status / Guidance Banner */}
-          {hasSharedClientId ? (
-            <div className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[11px]">
-              <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-              <span>Fleet SSO is active and verified. Click above to authorize your pilot.</span>
-            </div>
-          ) : (
-            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-200 text-xs flex items-start gap-2.5">
-              <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-              <div className="space-y-1">
-                <div className="font-semibold text-white">CCP Client ID Required for Fleet SSO</div>
-                <div className="text-[11px] text-amber-300/90 leading-relaxed">
-                  To allow USS Hauler and all fleet members to log in with 1 click, the host needs to register a free application on <a href="https://developers.eveonline.com/applications" target="_blank" rel="noreferrer" className="underline text-cyan-300 font-medium">developers.eveonline.com</a> and paste the Client ID in Host Setup below.
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Error Banner */}
+          {/* Error Banner if any */}
           {error && (
             <div className="p-3 rounded-xl bg-red-950/70 border border-red-500/40 text-red-300 text-xs flex items-start gap-2">
               <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
@@ -171,84 +104,11 @@ export const PilotLoginModal: React.FC<PilotLoginModalProps> = ({
             </div>
           )}
 
-          {/* COLLAPSIBLE HOST/DEVELOPER SETUP */}
-          <div className="pt-1 border-t border-white/5">
-            <button
-              type="button"
-              onClick={() => setShowHostSetup(!showHostSetup)}
-              className="w-full flex items-center justify-between text-[11px] text-slate-400 hover:text-cyan-300 transition-colors py-1 cursor-pointer"
-            >
-              <span className="flex items-center gap-1.5">
-                <Settings className="w-3.5 h-3.5 text-slate-500" />
-                <span>{hasSharedClientId ? '⚙️ Host SSO Settings (Configured)' : '⚙️ Host SSO Setup (Set CCP Client ID)'}</span>
-              </span>
-              {showHostSetup ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-            </button>
-
-            {showHostSetup && (
-              <div className="mt-2.5 p-3 rounded-2xl bg-black/40 border border-white/5 space-y-2 text-[11px] animate-in fade-in duration-150">
-                <div className="text-slate-400 text-[10px] leading-relaxed">
-                  Enter your free CCP Application Client ID once. It is saved to the server so all fleet members (like USS Hauler) can use 1-click EVE SSO.
-                </div>
-
-                <div className="flex items-center justify-between pt-1">
-                  <span className="font-semibold text-slate-300">Your Callback URL:</span>
-                  <button
-                    type="button"
-                    onClick={handleCopyCallback}
-                    className="flex items-center gap-1 text-[10px] bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 px-2 py-0.5 rounded cursor-pointer transition-colors"
-                  >
-                    {copiedCallback ? (
-                      <>
-                        <Check className="w-3 h-3 text-emerald-400" />
-                        <span className="text-emerald-400">Copied!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3 h-3" />
-                        <span>Copy URL</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-                <div className="p-1.5 rounded bg-black/60 border border-white/5 font-mono text-[10px] text-slate-300 break-all select-all">
-                  {currentCallbackUrl}
-                </div>
-
-                <div className="pt-1">
-                  <label className="block text-[10px] font-semibold text-slate-300 mb-1">
-                    CCP Application Client ID:
-                  </label>
-                  <input
-                    type="text"
-                    value={customClientId}
-                    onChange={(e) => {
-                      setCustomClientId(e.target.value);
-                      setError(null);
-                    }}
-                    placeholder="Paste Client ID from developers.eveonline.com"
-                    className="w-full bg-black/60 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-400 font-mono"
-                  />
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleSaveHostClientId}
-                  disabled={loading || !customClientId.trim()}
-                  className="w-full mt-1 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-semibold text-xs transition-all disabled:opacity-50 cursor-pointer"
-                >
-                  Save &amp; Activate SSO for Fleet
-                </button>
-              </div>
-            )}
-          </div>
-
           {/* Footer Notice */}
-          <div className="text-center text-[10px] text-slate-500 flex items-center justify-center gap-1.5">
+          <div className="pt-2 border-t border-white/5 text-center text-[10px] text-slate-500 flex items-center justify-center gap-1.5">
             <Lock className="w-3 h-3 text-emerald-400" />
-            <span>Secure EVE Online SSO &bull; Local Memory Session Persistence</span>
+            <span>Secure EVE Online SSO &bull; Character presence synced automatically</span>
           </div>
-
         </div>
       </div>
     </div>,
