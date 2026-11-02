@@ -213,7 +213,7 @@ export function App() {
 
   return (
     <ErrorBoundary>
-      <div className={`min-h-screen flex flex-col font-sans transition-colors duration-200 ${
+      <div className={`h-screen flex flex-col font-sans transition-colors duration-200 overflow-hidden ${
         theme === 'dark' ? 'bg-[#080b11] text-gray-200' : 'bg-slate-50 text-slate-900'
       }`}>
       <Header
@@ -228,10 +228,10 @@ export function App() {
         onToggleTheme={toggleTheme}
       />
 
-      <main className={`flex-1 w-full ${
+      <main className={`flex-1 w-full min-h-0 ${
         activeTab === 'mapper' 
-          ? 'p-0 m-0 max-w-none h-[calc(100vh-64px)] overflow-hidden flex flex-col' 
-          : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6'
+          ? 'p-0 m-0 max-w-none h-full overflow-hidden flex flex-col' 
+          : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 overflow-y-auto'
       }`}>
         {/* High-Level Wormhole Tactical Entry HUD (shown on non-mapper tabs or if toggled) */}
         {showHud && activeTab !== 'mapper' && activeTab !== 'dashboard' && currentSystem.startsWith('J') && (

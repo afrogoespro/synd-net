@@ -484,7 +484,7 @@ export const ChainMapperView: React.FC = () => {
   };
 
   return (
-    <div className={`flex flex-col w-full h-full min-h-[calc(100vh-64px)] font-mono select-none overflow-hidden relative ${
+    <div className={`flex flex-col w-full h-full min-h-0 font-mono select-none overflow-hidden relative ${
       isDark ? 'bg-[#04060c] text-gray-200' : 'bg-slate-100 text-slate-800'
     }`}>
       

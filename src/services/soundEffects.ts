@@ -13,6 +13,7 @@ export interface AudioPlaybackState {
 }
 
 export const JACKPOT_GIFS = [
+  { id: 'donald_duck_money', name: 'Donald Duck Cash', url: '/gifs/donald_duck_money.gif' },
   { id: 'money_rain', name: 'Money Rain', url: 'https://media.giphy.com/media/67ThRZlYBvibtdF9UC/giphy.gif' },
   { id: 'vegas_jackpot', name: 'Vegas 777', url: 'https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif' },
   { id: 'dance_rave', name: 'Cyber Rave', url: 'https://media.giphy.com/media/blSTtZehjAZ8I/giphy.gif' },

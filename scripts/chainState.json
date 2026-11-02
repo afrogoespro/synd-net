@@ -125,7 +125,8 @@
       "signatures": [],
       "lastUpdated": "03:23",
       "x": 440,
-      "y": 136
+      "y": 136,
+      "isCollapsed": false
     },
     "Isanamo": {
       "id": "Isanamo",
