@@ -8,7 +8,8 @@
       "statics": [],
       "structures": [],
       "activePilots": [
-        "Ennis Urbanski"
+        "Ennis Urbanski",
+        "Syndra en Tilavine"
       ],
       "signatures": [
         {
@@ -142,7 +143,7 @@
           "createdTime": "01:58"
         }
       ],
-      "lastUpdated": "01:58",
+      "lastUpdated": "02:18",
       "x": 650,
       "y": 40
     },
@@ -300,7 +301,7 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "01:54",
+      "lastUpdated": "02:16",
       "x": 650,
       "y": 140
     },
@@ -311,8 +312,59 @@
       "statics": [],
       "structures": [],
       "activePilots": [],
-      "signatures": [],
-      "lastUpdated": "01:54",
+      "signatures": [
+        {
+          "id": "sig-1793585733874-0.8118542331658988",
+          "sigId": "TLD-985",
+          "type": "Combat",
+          "name": "Homefront Operation Site - Combat Site",
+          "group": "Combat Site",
+          "distance": "16.83 AU",
+          "signalPercent": 100,
+          "createdTime": "02:15"
+        },
+        {
+          "id": "sig-1793585733874-0.5324912705345188",
+          "sigId": "XEQ-144",
+          "type": "Combat",
+          "name": "Drone Assembly",
+          "group": "Combat Site",
+          "distance": "16.22 AU",
+          "signalPercent": 100,
+          "createdTime": "02:15"
+        },
+        {
+          "id": "sig-1793585733874-0.8013210085972655",
+          "sigId": "RKF-719",
+          "type": "Combat",
+          "name": "Criterion of Fitness",
+          "group": "Combat Site",
+          "distance": "18.06 AU",
+          "signalPercent": 100,
+          "createdTime": "02:15"
+        },
+        {
+          "id": "sig-1793585733874-0.799728412352072",
+          "sigId": "WWQ-074",
+          "type": "Combat",
+          "name": "Tetrimon Base",
+          "group": "Combat Site",
+          "distance": "14.77 AU",
+          "signalPercent": 100,
+          "createdTime": "02:15"
+        },
+        {
+          "id": "sig-1793585733874-0.712076351102399",
+          "sigId": "FEZ-130",
+          "type": "Combat",
+          "name": "Guristas Hideaway",
+          "group": "Combat Site",
+          "distance": "17.16 AU",
+          "signalPercent": 100,
+          "createdTime": "02:15"
+        }
+      ],
+      "lastUpdated": "02:15",
       "x": 650,
       "y": 238
     },
@@ -322,9 +374,7 @@
       "systemClass": "Highsec",
       "statics": [],
       "structures": [],
-      "activePilots": [
-        "Syndra en Tilavine"
-      ],
+      "activePilots": [],
       "signatures": [],
       "lastUpdated": "02:03",
       "x": 650,

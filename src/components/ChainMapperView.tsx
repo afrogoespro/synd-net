@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { mapperService } from '../services/mapperService';
 import { ChainMapState, WormholeNode, WormholeConnection, WormholeSignature, StructureTimer } from '../types/mapper';
+import { KillmailItem } from '../types/killmail';
 import { authService, PilotProfile } from '../services/authService';
 import { calculateTradeHubRoutes, findShortestRoute, WH_SYSTEM_EFFECTS, TradeHubRoute } from '../services/routeService';
 import { fetchLiveSystemKills } from '../services/zkillService';
@@ -62,6 +63,9 @@ export const ChainMapperView: React.FC = () => {
   // Structure Timer Modal & List State
   const [isTimerModalOpen, setIsTimerModalOpen] = useState<boolean>(false);
   const [systemThreatMap, setSystemThreatMap] = useState<Record<string, { kills24h: number; threat: string }>>({});
+  const [selectedSystemKills, setSelectedSystemKills] = useState<KillmailItem[]>([]);
+  const [selectedSystemKillsLoading, setSelectedSystemKillsLoading] = useState<boolean>(false);
+  const [floatingTab, setFloatingTab] = useState<'hubs' | 'timers' | 'zkill'>('zkill');
 
   // GalaxyFinder Follow-Me Mode
   const [followMe, setFollowMe] = useState<boolean>(true);
@@ -197,24 +201,44 @@ export const ChainMapperView: React.FC = () => {
     return { text, isPast: false, isUrgent };
   };
 
-  // Fetch zKill threat metrics for active player system and selected system
+  // Fetch zKill threat metrics and detailed kills for selected system
   useEffect(() => {
-    const targetSystems = Array.from(new Set([
-      selectedSystem?.name,
+    if (!selectedSystem?.name) return;
+    let isMounted = true;
+    setSelectedSystemKillsLoading(true);
+
+    fetchLiveSystemKills(selectedSystem.name, 12).then(res => {
+      if (isMounted) {
+        setSelectedSystemKills(res.kills);
+        setSelectedSystemKillsLoading(false);
+        setSystemThreatMap(prev => ({
+          ...prev,
+          [selectedSystem.name]: { kills24h: res.totalKills24h, threat: res.threatLevel }
+        }));
+      }
+    }).catch(() => {
+      if (isMounted) setSelectedSystemKillsLoading(false);
+    });
+
+    const otherSystems = Array.from(new Set([
       activeSystem?.name,
       'Jita',
       'Uemisaisen',
       'J103955'
-    ])).filter(Boolean) as string[];
+    ])).filter(s => s && s !== selectedSystem.name) as string[];
 
-    targetSystems.forEach(sys => {
+    otherSystems.forEach(sys => {
       fetchLiveSystemKills(sys, 5).then(res => {
-        setSystemThreatMap(prev => ({
-          ...prev,
-          [sys]: { kills24h: res.totalKills24h, threat: res.threatLevel }
-        }));
+        if (isMounted) {
+          setSystemThreatMap(prev => ({
+            ...prev,
+            [sys]: { kills24h: res.totalKills24h, threat: res.threatLevel }
+          }));
+        }
       }).catch(() => {});
     });
+
+    return () => { isMounted = false; };
   }, [selectedSystem?.name, activeSystem?.name]);
 
   // Pan canvas handlers
@@ -1215,39 +1239,100 @@ export const ChainMapperView: React.FC = () => {
                 )}
               </div>
 
-              {/* zKillboard Activity in Selected System */}
-              <div className="mb-3 p-3 bg-[#070b14] border border-red-900/40 rounded-xl space-y-2">
-                <div className="text-[10px] text-red-400 font-bold uppercase flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <Skull className="w-3.5 h-3.5" />
-                    <span>zKillboard Threat</span>
-                  </span>
-                  <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded uppercase ${
-                    systemThreatMap[selectedSystem.name]?.threat === 'Extreme Danger' ? 'bg-red-500 text-white animate-pulse' :
-                    systemThreatMap[selectedSystem.name]?.threat === 'Active Hunters' ? 'bg-amber-500 text-black' :
-                    systemThreatMap[selectedSystem.name]?.threat === 'Low Risk' ? 'bg-sky-500 text-white' :
-                    'bg-emerald-950 text-emerald-400 border border-emerald-800'
+              {/* zKillboard Activity in Selected System (Live Feed at a Glance) */}
+              <div className="mb-3 p-3 bg-[#0a0e1a]/95 border border-red-900/40 rounded-2xl space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-red-400">
+                    <Skull className="w-4 h-4 text-red-400" />
+                    <span>Live zKillboard Feed</span>
+                  </div>
+                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                    systemThreatMap[selectedSystem.name]?.threat === 'Extreme Danger' ? 'bg-red-500/20 text-red-300 border border-red-500/50 animate-pulse' :
+                    systemThreatMap[selectedSystem.name]?.threat === 'Active Hunters' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50' :
+                    systemThreatMap[selectedSystem.name]?.threat === 'Low Risk' ? 'bg-sky-500/20 text-sky-300 border border-sky-500/50' :
+                    'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
                   }`}>
                     {systemThreatMap[selectedSystem.name]?.threat || 'Quiet'}
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between text-[11px] text-gray-300">
-                  <span>Recent Kills (24h):</span>
-                  <span className="font-bold font-mono text-white">
-                    {systemThreatMap[selectedSystem.name]?.kills24h || 0}
+                <div className="flex items-center justify-between text-[11px] text-slate-400 pb-1 border-b border-white/5">
+                  <span className="font-sans">
+                    {systemThreatMap[selectedSystem.name]?.kills24h || 0} kills in 24h
                   </span>
+                  <a
+                    href={`https://zkillboard.com/system/${selectedSystem.name}/`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[10px] text-cyan-400 hover:text-cyan-300 flex items-center gap-1 font-semibold"
+                  >
+                    <span>View System</span>
+                    <ExternalLink className="w-2.5 h-2.5" />
+                  </a>
                 </div>
 
-                <a
-                  href={`https://zkillboard.com/system/${selectedSystem.name}/`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full py-1.5 rounded-lg bg-red-950/60 hover:bg-red-900/60 border border-red-700/50 text-[10px] font-bold text-red-200 flex items-center justify-center gap-1.5 transition-colors"
-                >
-                  <span>View {selectedSystem.name} on zKillboard</span>
-                  <ExternalLink className="w-3 h-3" />
-                </a>
+                {/* Kills List */}
+                {selectedSystemKillsLoading ? (
+                  <div className="py-4 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
+                    <div className="w-3.5 h-3.5 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                    <span>Checking live zKillboard...</span>
+                  </div>
+                ) : selectedSystemKills.length === 0 ? (
+                  <div className="py-3 text-center text-xs text-slate-500">
+                    <span className="text-emerald-400 font-semibold block text-[11px] mb-0.5">Quiet Space</span>
+                    0 kills in past 24h. No active hunter activity.
+                  </div>
+                ) : (
+                  <div className="space-y-1.5 max-h-60 overflow-y-auto pr-1">
+                    {selectedSystemKills.map(kill => {
+                      const iskFormatted = kill.totalValue >= 1e9
+                        ? `${(kill.totalValue / 1e9).toFixed(2)}B ISK`
+                        : `${(kill.totalValue / 1e6).toFixed(1)}M ISK`;
+
+                      return (
+                        <a
+                          key={kill.killmailId}
+                          href={kill.zkillUrl || `https://zkillboard.com/kill/${kill.killmailId}/`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-2 rounded-xl bg-black/40 hover:bg-white/5 border border-white/5 hover:border-red-500/50 flex items-center justify-between gap-2 transition-all group"
+                        >
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
+                            {kill.victim.shipTypeId ? (
+                              <img
+                                src={`https://images.evetech.net/types/${kill.victim.shipTypeId}/render?size=64`}
+                                alt={kill.victim.shipTypeName}
+                                className="w-7 h-7 rounded-lg border border-white/10 object-cover bg-black/80 shrink-0"
+                              />
+                            ) : (
+                              <div className="w-7 h-7 rounded-lg bg-red-950/60 border border-red-800 flex items-center justify-center shrink-0">
+                                <Skull className="w-3.5 h-3.5 text-red-400" />
+                              </div>
+                            )}
+                            <div className="min-w-0 flex-1 leading-tight">
+                              <div className="text-[11px] font-bold text-white group-hover:text-red-300 truncate">
+                                {kill.victim.shipTypeName}
+                              </div>
+                              <div className="text-[9.5px] text-slate-400 truncate">
+                                <span className="text-red-400 mr-0.5">⚔️</span>
+                                {kill.finalBlow.characterName} ({kill.finalBlow.shipTypeName || 'Ship'})
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="text-right shrink-0 leading-tight">
+                            <div className="text-[10.5px] font-bold text-amber-400 tabular-nums">
+                              {iskFormatted}
+                            </div>
+                            <div className="text-[9px] text-slate-500 font-mono">
+                              {kill.killmailTime.slice(0, 5)} EVE
+                            </div>
+                          </div>
+                        </a>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* Node Actions: Fold / Compress & Delete */}
@@ -1500,24 +1585,57 @@ export const ChainMapperView: React.FC = () => {
           </div>
         )}
 
-        {/* Floating GalaxyFinder Timers & Jumps (Bottom-Right Apple Frosted Glass Panel) */}
+        {/* Floating GalaxyFinder Hubs, Timers & zKill Feed (Bottom-Right Apple Frosted Glass Panel) */}
         {!showInspector && (
-          <div className={`canvas-control absolute bottom-4 right-4 z-20 w-72 backdrop-blur-2xl border rounded-2xl shadow-2xl overflow-hidden font-sans text-xs transition-all ${
-            isDark ? 'bg-[#090d16]/85 border-white/10 text-slate-200' : 'bg-white/90 border-slate-200 text-slate-800'
+          <div className={`canvas-control absolute bottom-4 right-4 z-20 w-80 backdrop-blur-2xl border rounded-2xl shadow-2xl overflow-hidden font-sans text-xs transition-all ${
+            isDark ? 'bg-[#090d16]/90 border-white/10 text-slate-200' : 'bg-white/95 border-slate-200 text-slate-800'
           }`}>
-            {/* Trade Hub Jump Table (SHORTEST | SECURE Segmented Control) */}
-            <div className={`p-3 border-b ${isDark ? 'border-white/5 bg-white/5' : 'border-slate-100 bg-slate-50/50'}`}>
-              <div className="flex items-center justify-between pb-2 mb-1">
-                <div className={`flex items-center p-0.5 rounded-full border text-[10px] font-medium ${
-                  isDark ? 'bg-black/40 border-white/10' : 'bg-slate-200/60 border-slate-300'
-                }`}>
-                  <span className={`px-2 py-0.5 rounded-full ${isDark ? 'bg-cyan-500/20 text-cyan-300 font-semibold' : 'bg-white text-slate-900 font-semibold shadow-sm'}`}>Shortest</span>
-                  <span className="px-2 py-0.5 text-slate-400">Secure</span>
-                </div>
-                <span className="text-[10px] text-slate-400 font-medium">{selectedSystem?.name || 'Jita'}</span>
+            {/* Top 3-Way Tab Switcher */}
+            <div className={`p-2 border-b flex items-center justify-between ${isDark ? 'border-white/5 bg-white/5' : 'border-slate-100 bg-slate-50'}`}>
+              <div className={`flex items-center p-0.5 rounded-full border text-[10px] font-medium ${
+                isDark ? 'bg-black/40 border-white/10' : 'bg-slate-200/60 border-slate-300'
+              }`}>
+                <button
+                  onClick={() => setFloatingTab('hubs')}
+                  className={`px-2 py-0.5 rounded-full transition-all ${
+                    floatingTab === 'hubs' 
+                      ? isDark ? 'bg-cyan-500/20 text-cyan-300 font-semibold shadow-sm' : 'bg-white text-slate-900 font-semibold shadow-sm' 
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Hubs
+                </button>
+                <button
+                  onClick={() => setFloatingTab('timers')}
+                  className={`px-2 py-0.5 rounded-full transition-all ${
+                    floatingTab === 'timers' 
+                      ? isDark ? 'bg-amber-500/20 text-amber-300 font-semibold shadow-sm' : 'bg-white text-slate-900 font-semibold shadow-sm' 
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Timers ({(mapState.timers || []).length})
+                </button>
+                <button
+                  onClick={() => setFloatingTab('zkill')}
+                  className={`px-2 py-0.5 rounded-full transition-all flex items-center gap-1 ${
+                    floatingTab === 'zkill' 
+                      ? isDark ? 'bg-red-500/20 text-red-300 font-semibold shadow-sm' : 'bg-white text-red-700 font-semibold shadow-sm' 
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <Skull className="w-2.5 h-2.5 text-red-400" />
+                  <span>zKill ({selectedSystemKills.length})</span>
+                </button>
               </div>
 
-              <div className="space-y-1">
+              <span className="text-[10px] text-slate-400 font-medium truncate max-w-[80px]">
+                {selectedSystem?.name || 'Jita'}
+              </span>
+            </div>
+
+            {/* TAB 1: TRADE HUBS */}
+            {floatingTab === 'hubs' && (
+              <div className="p-3 space-y-1">
                 {tradeHubRoutes.map(hub => {
                   const hasPath = hub.jumps !== null;
                   return (
@@ -1543,94 +1661,180 @@ export const ChainMapperView: React.FC = () => {
                   );
                 })}
               </div>
-            </div>
+            )}
 
-            {/* Timers Section (Exact GalaxyFinder style from screenshot) */}
-            <div className="p-3">
-              <div className="flex items-center justify-between pb-2 border-b border-white/5">
-                <div className="flex items-center gap-1.5 text-xs font-semibold">
-                  <Hourglass className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Timers</span>
-                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                    isDark ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30' : 'bg-amber-100 text-amber-800'
-                  }`}>
-                    {(mapState.timers || []).length}
-                  </span>
-                </div>
-
-                <button
-                  onClick={() => setIsTimerModalOpen(true)}
-                  className="p-1 rounded-full bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 transition-colors"
-                  title="Create Structure Timer"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              {/* Timer List */}
-              {(!mapState.timers || mapState.timers.length === 0) ? (
-                <div className="py-2.5 text-center text-slate-400 text-[10px] font-medium">
-                  No active structure timers.
+            {/* TAB 2: TIMERS */}
+            {floatingTab === 'timers' && (
+              <div className="p-3">
+                <div className="flex items-center justify-between pb-2 border-b border-white/5">
+                  <span className="text-xs font-semibold text-slate-300">Structure Timers</span>
                   <button
                     onClick={() => setIsTimerModalOpen(true)}
-                    className="block mx-auto mt-1 text-cyan-400 hover:underline text-[10px] font-semibold"
+                    className="p-1 rounded-full bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 transition-colors"
+                    title="Create Structure Timer"
                   >
-                    + Add Timer
+                    <Plus className="w-3.5 h-3.5" />
                   </button>
                 </div>
-              ) : (
-                <div className="mt-1.5 space-y-1.5 max-h-[160px] overflow-y-auto pr-1">
-                  {mapState.timers.map(timer => {
-                    const rem = formatTimeRemaining(timer.vulnerableTime);
-                    const stageColor = timer.timerType === 'Hull' ? 'text-red-400 border-red-500/40 bg-red-950/40' :
-                                       timer.timerType === 'Armor' ? 'text-amber-400 border-amber-500/40 bg-amber-950/40' :
-                                       'text-blue-400 border-blue-500/40 bg-blue-950/40';
 
-                    return (
-                      <div 
-                        key={timer.id}
-                        className={`p-2 rounded-xl border transition-all flex items-center justify-between ${
-                          isDark ? 'bg-white/5 border-white/5 hover:border-cyan-500/40' : 'bg-slate-50 border-slate-200'
-                        }`}
+                <div className="pt-2">
+                  {(!mapState.timers || mapState.timers.length === 0) ? (
+                    <div className="py-3 text-center text-slate-400 text-[10px] font-medium">
+                      No active timers in chain.
+                      <button
+                        onClick={() => setIsTimerModalOpen(true)}
+                        className="block mx-auto mt-1 text-cyan-400 hover:underline text-[10px] font-semibold"
                       >
-                        <div 
-                          className="cursor-pointer min-w-0 flex-1 pr-1.5"
-                          onClick={() => {
-                            setSelectedSystemId(timer.systemName);
-                            centerOnSystem(timer.systemName);
-                          }}
-                        >
-                          <div className="flex items-center gap-1.5 leading-tight">
-                            <span className="font-semibold text-xs truncate">{timer.name}</span>
-                            <span className={`text-[8.5px] px-1 py-0.2 rounded border font-bold uppercase ${stageColor}`}>
-                              {timer.timerType}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1.5 text-[9.5px] text-slate-400 mt-0.5">
-                            <span className="font-semibold text-cyan-400">{timer.systemName}</span>
-                            <span>•</span>
-                            <span className={rem.isUrgent ? 'text-red-400 font-semibold animate-pulse' : 'text-amber-300'}>
-                              {rem.text}
-                            </span>
-                          </div>
-                        </div>
+                        + Add Timer
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                      {mapState.timers.map(timer => {
+                        const rem = formatTimeRemaining(timer.vulnerableTime);
+                        const stageColor = timer.timerType === 'Hull' ? 'text-red-400 border-red-500/40 bg-red-950/40' :
+                                           timer.timerType === 'Armor' ? 'text-amber-400 border-amber-500/40 bg-amber-950/40' :
+                                           'text-blue-400 border-blue-500/40 bg-blue-950/40';
 
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            mapperService.deleteStructureTimer(timer.id);
-                          }}
-                          className="p-1 rounded-full text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                          title="Delete timer"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
-                    );
-                  })}
+                        return (
+                          <div 
+                            key={timer.id}
+                            className={`p-2 rounded-xl border transition-all flex items-center justify-between ${
+                              isDark ? 'bg-white/5 border-white/5 hover:border-cyan-500/40' : 'bg-slate-50 border-slate-200'
+                            }`}
+                          >
+                            <div 
+                              className="cursor-pointer min-w-0 flex-1 pr-1.5"
+                              onClick={() => {
+                                setSelectedSystemId(timer.systemName);
+                                centerOnSystem(timer.systemName);
+                              }}
+                            >
+                              <div className="flex items-center gap-1.5 leading-tight">
+                                <span className="font-semibold text-xs truncate">{timer.name}</span>
+                                <span className={`text-[8.5px] px-1 py-0.2 rounded border font-bold uppercase ${stageColor}`}>
+                                  {timer.timerType}
+                                </span>
+                              </div>
+                              <div className="text-[10px] text-slate-400 font-sans mt-0.5">
+                                {timer.systemName} • {timer.structureType}
+                              </div>
+                            </div>
+
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                mapperService.deleteStructureTimer(timer.id);
+                              }}
+                              className="p-1 rounded-full text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                              title="Delete timer"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
+
+            {/* TAB 3: LIVE ZKILLBOARD FEED AT A GLANCE */}
+            {floatingTab === 'zkill' && (
+              <div className="p-3">
+                <div className="flex items-center justify-between pb-2 border-b border-white/5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-semibold text-slate-200">
+                      {selectedSystem?.name || 'System'}
+                    </span>
+                    <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full uppercase ${
+                      systemThreatMap[selectedSystem.name]?.threat === 'Extreme Danger' ? 'bg-red-500/20 text-red-300 border border-red-500/50 animate-pulse' :
+                      systemThreatMap[selectedSystem.name]?.threat === 'Active Hunters' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50' :
+                      systemThreatMap[selectedSystem.name]?.threat === 'Low Risk' ? 'bg-sky-500/20 text-sky-300 border border-sky-500/50' :
+                      'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                    }`}>
+                      {systemThreatMap[selectedSystem.name]?.threat || 'Quiet'}
+                    </span>
+                  </div>
+
+                  <a
+                    href={`https://zkillboard.com/system/${selectedSystem.name}/`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[10px] text-cyan-400 hover:text-cyan-300 flex items-center gap-0.5"
+                    title="Open on zKillboard"
+                  >
+                    <span>zKill</span>
+                    <ExternalLink className="w-2.5 h-2.5" />
+                  </a>
+                </div>
+
+                <div className="pt-2">
+                  {selectedSystemKillsLoading ? (
+                    <div className="py-4 text-center text-xs text-slate-400 flex items-center justify-center gap-1.5">
+                      <div className="w-3 h-3 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                      <span>Updating zKill...</span>
+                    </div>
+                  ) : selectedSystemKills.length === 0 ? (
+                    <div className="py-4 text-center text-xs text-slate-500">
+                      <span className="text-emerald-400 font-semibold block text-[11px] mb-0.5">Quiet Space</span>
+                      0 kills in past 24h. Safe to jump.
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                      {selectedSystemKills.map(kill => {
+                        const iskFormatted = kill.totalValue >= 1e9
+                          ? `${(kill.totalValue / 1e9).toFixed(2)}B ISK`
+                          : `${(kill.totalValue / 1e6).toFixed(1)}M ISK`;
+
+                        return (
+                          <a
+                            key={kill.killmailId}
+                            href={kill.zkillUrl || `https://zkillboard.com/kill/${kill.killmailId}/`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2 rounded-xl bg-black/40 hover:bg-white/5 border border-white/5 hover:border-red-500/50 flex items-center justify-between gap-2 transition-all group"
+                          >
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                              {kill.victim.shipTypeId ? (
+                                <img
+                                  src={`https://images.evetech.net/types/${kill.victim.shipTypeId}/render?size=64`}
+                                  alt={kill.victim.shipTypeName}
+                                  className="w-7 h-7 rounded-lg border border-white/10 object-cover bg-black/80 shrink-0"
+                                />
+                              ) : (
+                                <div className="w-7 h-7 rounded-lg bg-red-950/60 border border-red-800 flex items-center justify-center shrink-0">
+                                  <Skull className="w-3.5 h-3.5 text-red-400" />
+                                </div>
+                              )}
+                              <div className="min-w-0 flex-1 leading-tight">
+                                <div className="text-[11px] font-bold text-white group-hover:text-red-300 truncate">
+                                  {kill.victim.shipTypeName}
+                                </div>
+                                <div className="text-[9.5px] text-slate-400 truncate">
+                                  <span className="text-red-400 mr-0.5">⚔️</span>
+                                  {kill.finalBlow.characterName}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="text-right shrink-0 leading-tight">
+                              <div className="text-[10.5px] font-bold text-amber-400 tabular-nums">
+                                {iskFormatted}
+                              </div>
+                              <div className="text-[9px] text-slate-500 font-mono">
+                                {kill.killmailTime.slice(0, 5)} EVE
+                              </div>
+                            </div>
+                          </a>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

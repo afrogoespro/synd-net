@@ -690,7 +690,7 @@ export const IntegratedIntelDeck: React.FC<IntegratedIntelDeckProps> = ({
                 </a>
               </div>
 
-              {/* Kills List */}
+              {/* Kills List (High-Density Multi-Column Responsive Cards - Everything at a Glance) */}
               {zkillLoading ? (
                 <div className="p-8 text-center text-xs text-gray-400 flex items-center justify-center gap-2">
                   <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
@@ -704,7 +704,7 @@ export const IntegratedIntelDeck: React.FC<IntegratedIntelDeckProps> = ({
                   <p className="font-sans">No recent kills recorded in {selectedSystem.name}. This system appears clear of recent combat activity.</p>
                 </div>
               ) : (
-                <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-2 max-h-[280px] overflow-y-auto pr-1">
                   {systemKills.map((kill) => {
                     const iskFormatted = kill.totalValue >= 1e9
                       ? `${(kill.totalValue / 1e9).toFixed(2)}B ISK`
@@ -716,60 +716,49 @@ export const IntegratedIntelDeck: React.FC<IntegratedIntelDeckProps> = ({
                         href={kill.zkillUrl || `https://zkillboard.com/kill/${kill.killmailId}/`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={`p-2.5 rounded-xl border flex items-center justify-between gap-3 transition-all hover:scale-[1.005] group ${
+                        className={`p-2.5 rounded-xl border flex items-center justify-between gap-2.5 transition-all hover:scale-[1.01] group ${
                           isDark 
                             ? 'bg-[#090d18] hover:bg-[#0e1628] border-gray-800/80 hover:border-red-500/60' 
                             : 'bg-white hover:bg-slate-50 border-slate-200 shadow-sm'
                         }`}
                       >
-                        {/* Victim Info */}
-                        <div className="flex items-center gap-3 min-w-0">
+                        {/* Victim Info with Ship Thumbnail */}
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
                           {kill.victim.shipTypeId ? (
                             <img
                               src={`https://images.evetech.net/types/${kill.victim.shipTypeId}/render?size=64`}
                               alt={kill.victim.shipTypeName}
-                              className="w-10 h-10 rounded border border-gray-800 object-cover bg-black/60 shrink-0"
+                              className="w-9 h-9 rounded-lg border border-gray-800 object-cover bg-black/60 shrink-0"
                             />
                           ) : (
-                            <div className="w-10 h-10 rounded bg-red-950/60 border border-red-800 flex items-center justify-center shrink-0">
-                              <Skull className="w-5 h-5 text-red-400" />
+                            <div className="w-9 h-9 rounded-lg bg-red-950/60 border border-red-800 flex items-center justify-center shrink-0">
+                              <Skull className="w-4 h-4 text-red-400" />
                             </div>
                           )}
-                          <div className="min-w-0">
+                          <div className="min-w-0 flex-1 leading-tight">
                             <div className="text-xs font-bold text-white group-hover:text-red-300 truncate">
                               {kill.victim.shipTypeName}
-                              <span className="text-[10px] text-gray-400 font-normal ml-1.5">
-                                lost by <span className="text-gray-200 font-semibold">{kill.victim.characterName}</span>
+                              <span className="text-[10px] text-gray-400 font-normal ml-1">
+                                ({kill.victim.characterName})
                               </span>
                             </div>
-                            <div className="text-[10px] text-gray-400 truncate">
-                              {kill.victim.corporationName}
-                              {kill.victim.allianceName && <span className="text-gray-500"> [{kill.victim.allianceName}]</span>}
+                            <div className="text-[10px] text-gray-400 truncate mt-0.5 flex items-center gap-1">
+                              <span className="text-red-400 font-semibold">⚔️</span>
+                              <span className="text-gray-300 font-medium">{kill.finalBlow.characterName}</span>
+                              <span className="text-gray-500">[{kill.finalBlow.shipTypeName || 'Ship'}]</span>
                             </div>
                           </div>
                         </div>
 
-                        {/* Attacker Final Blow & Value */}
-                        <div className="text-right shrink-0 flex items-center gap-4">
-                          <div className="hidden sm:block text-right">
-                            <div className="text-[11px] font-bold text-gray-300">
-                              {kill.finalBlow.characterName}
-                            </div>
-                            <div className="text-[10px] text-gray-400">
-                              {kill.finalBlow.shipTypeName || 'Unknown Ship'} ({kill.attackerCount} {kill.attackerCount === 1 ? 'pilot' : 'pilots'})
-                            </div>
+                        {/* ISK Value & Time */}
+                        <div className="text-right shrink-0 leading-tight">
+                          <div className="text-xs font-bold text-amber-400 tabular-nums">
+                            {iskFormatted}
                           </div>
-
-                          <div className="text-right">
-                            <div className="text-xs font-bold text-amber-400">
-                              {iskFormatted}
-                            </div>
-                            <div className="text-[10px] text-gray-500 font-mono">
-                              {kill.killmailTime} EVE
-                            </div>
+                          <div className="text-[10px] text-gray-500 font-mono mt-0.5 flex items-center justify-end gap-1">
+                            <span>{kill.killmailTime} EVE</span>
+                            <ExternalLink className="w-2.5 h-2.5 text-gray-600 group-hover:text-red-400 transition-colors" />
                           </div>
-
-                          <ExternalLink className="w-3.5 h-3.5 text-gray-500 group-hover:text-red-400 transition-colors" />
                         </div>
                       </a>
                     );
