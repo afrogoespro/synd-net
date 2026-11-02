@@ -18,7 +18,11 @@ import { IntegratedIntelDeck } from './IntegratedIntelDeck';
 
 export const ChainMapperView: React.FC = () => {
   const [mapState, setMapState] = useState<ChainMapState>(mapperService.getState());
-  const [selectedSystemId, setSelectedSystemId] = useState<string>('J103955');
+  const [selectedSystemId, setSelectedSystemId] = useState<string>(() => {
+    const state = mapperService.getState();
+    const active = Object.values(state.systems).find(s => s.activePilots && s.activePilots.length > 0);
+    return active?.id || Object.keys(state.systems)[0] || 'Jita';
+  });
   const [newSystemInput, setNewSystemInput] = useState<string>('');
   const [whTypeInput, setWhTypeInput] = useState<string>('K162');
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
@@ -89,9 +93,6 @@ export const ChainMapperView: React.FC = () => {
   useEffect(() => {
     const unsubAuth = authService.subscribe((pilot) => {
       setCurrentPilot(pilot);
-      if (pilot) {
-        mapperService.setPilotLocation(pilot.characterName, selectedSystemId);
-      }
     });
 
     const unsubMap = mapperService.subscribe((state) => {
@@ -118,7 +119,7 @@ export const ChainMapperView: React.FC = () => {
   // Active player system
   const activeSystem = Object.values(mapState.systems).find(s => 
     s.activePilots && currentPilot && s.activePilots.some(p => p.toLowerCase().includes(currentPilot.characterName.toLowerCase()))
-  ) || mapState.systems['J103955'] || selectedSystem;
+  ) || Object.values(mapState.systems).find(s => s.activePilots && s.activePilots.length > 0) || selectedSystem || Object.values(mapState.systems)[0];
 
   // Extract all active pilots across the chain
   const allActivePilots = Object.entries(mapState.systems).flatMap(([sysName, s]) => 
@@ -128,11 +129,13 @@ export const ChainMapperView: React.FC = () => {
   // GalaxyFinder Center on System
   const centerOnSystem = (sysId: string) => {
     const target = mapState.systems[sysId];
-    if (target && target.x !== undefined && target.y !== undefined && containerRef.current) {
+    if (target && containerRef.current) {
+      const targetX = target.x !== undefined ? target.x : 650;
+      const targetY = target.y !== undefined ? target.y : 140;
       const rect = containerRef.current.getBoundingClientRect();
       setPan({
-        x: Math.round(rect.width / 2 - target.x * zoom - 68),
-        y: Math.round(rect.height / 2 - target.y * zoom - 28)
+        x: Math.round(rect.width / 2 - targetX * zoom - 68),
+        y: Math.round(rect.height / 2 - targetY * zoom - 28)
       });
     }
   };
@@ -144,11 +147,24 @@ export const ChainMapperView: React.FC = () => {
       if (followMe) {
         setTimeout(() => {
           centerOnSystem(jump.systemName);
-        }, 80);
+        }, 100);
       }
     });
     return () => unsubJump();
   }, [followMe, zoom, mapState.systems]);
+
+  const prevActiveSysId = useRef<string | null>(null);
+  useEffect(() => {
+    if (activeSystem && activeSystem.id !== prevActiveSysId.current) {
+      prevActiveSysId.current = activeSystem.id;
+      setSelectedSystemId(activeSystem.id);
+      if (followMe) {
+        setTimeout(() => {
+          centerOnSystem(activeSystem.id);
+        }, 100);
+      }
+    }
+  }, [activeSystem?.id, followMe]);
 
   // Route to Jita from active pilot location
   const jitaRoute = useMemo(() => {

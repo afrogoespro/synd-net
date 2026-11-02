@@ -572,14 +572,20 @@ function detectHostCharacterName() {
 let hostPilotName = detectHostCharacterName();
 console.log(`[Host Character Identified] Flying as: ${hostPilotName || 'Awaiting Pilot Sign In'}`);
 
+const pilotLastSystem = new Map(); // pilotName -> lastSystemName
+
 function handleSystemTransition(newSys, fromSys, customPilot) {
   if (!newSys) return;
   newSys = newSys.trim();
-  if (newSys === lastActiveSystem) return;
 
-  const previous = fromSys || lastActiveSystem;
-  console.log(`\n🚀 [EVE LOCATION FOLLOWER] Character jump detected: ${previous} ➔ ${newSys}`);
-  lastActiveSystem = newSys;
+  const activePilot = customPilot || hostPilotName || 'Fleet Scout';
+  const lastSysForPilot = pilotLastSystem.get(activePilot);
+
+  if (newSys === lastSysForPilot) return;
+  pilotLastSystem.set(activePilot, newSys);
+
+  const previous = fromSys || lastSysForPilot;
+  console.log(`\n🚀 [EVE LOCATION FOLLOWER] Character jump detected: ${activePilot} in ${previous || 'Space'} ➔ ${newSys}`);
 
   // Classify system (Wormhole C1-C6, Highsec, Lowsec, Nullsec)
   let whClass = 'Highsec';
@@ -594,14 +600,16 @@ function handleSystemTransition(newSys, fromSys, customPilot) {
     else whClass = 'C2';
   }
 
-  const activePilot = customPilot || hostPilotName || 'Fleet Scout';
-
   // Remove host pilot from other systems so marker stays only on current system
   Object.values(chainMap.systems).forEach(sys => {
     sys.activePilots = (sys.activePilots || []).filter(p => !p.includes(activePilot));
   });
 
   const hostTag = `${activePilot}`;
+  const prevNode = previous && chainMap.systems[previous];
+  const newX = prevNode && prevNode.x !== undefined ? prevNode.x : 650;
+  const newY = prevNode && prevNode.y !== undefined ? prevNode.y + 98 : 140;
+
   if (!chainMap.systems[newSys]) {
     chainMap.systems[newSys] = {
       id: newSys,
@@ -611,9 +619,13 @@ function handleSystemTransition(newSys, fromSys, customPilot) {
       structures: [],
       activePilots: [hostTag],
       signatures: [],
-      lastUpdated: getEveTimeString()
+      lastUpdated: getEveTimeString(),
+      x: newX,
+      y: newY
     };
   } else {
+    if (chainMap.systems[newSys].x === undefined) chainMap.systems[newSys].x = newX;
+    if (chainMap.systems[newSys].y === undefined) chainMap.systems[newSys].y = newY;
     chainMap.systems[newSys].activePilots = chainMap.systems[newSys].activePilots || [];
     if (!chainMap.systems[newSys].activePilots.includes(hostTag)) {
       chainMap.systems[newSys].activePilots.push(hostTag);
@@ -686,15 +698,20 @@ function pollActiveChatlogs() {
     try {
       const stat = fs.statSync(file);
       if (!trackedChatFiles.has(file)) {
-        // Read recent jumps from end of file on startup
-        const startOffset = Math.max(0, stat.size - 4000);
+        // Read recent jumps from end of file on startup (even offset for utf16le)
+        let startOffset = Math.max(0, stat.size - 4000);
+        if (startOffset % 2 !== 0) startOffset--;
         trackedChatFiles.set(file, startOffset);
       }
 
-      const prevSize = trackedChatFiles.get(file);
+      let prevSize = trackedChatFiles.get(file);
+      if (stat.size < prevSize) {
+        prevSize = 0;
+      }
       if (stat.size > prevSize) {
         trackedChatFiles.set(file, stat.size);
-        const buf = Buffer.alloc(stat.size - prevSize);
+        const readLen = stat.size - prevSize;
+        const buf = Buffer.alloc(readLen);
         const fd = fs.openSync(file, 'r');
         fs.readSync(fd, buf, 0, buf.length, prevSize);
         fs.closeSync(fd);

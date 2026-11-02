@@ -92,204 +92,56 @@
           "createdTime": "23:44"
         }
       ],
-      "lastUpdated": "23:47",
+      "lastUpdated": "01:54",
       "x": 650,
       "y": 40
     },
-    "J124526": {
-      "id": "J124526",
-      "name": "J124526",
-      "systemClass": "C2",
-      "statics": [
-        "C2",
-        "Highsec"
-      ],
-      "structures": [
-        {
-          "id": "struct-1793576434983-0.4791314416561461",
-          "name": "J124526 - Acropolis",
-          "type": "Fortizar",
-          "distance": "0.70 AU",
-          "scoutedBy": "You",
-          "timestamp": "23:40"
-        }
-      ],
-      "activePilots": [],
-      "signatures": [
-        {
-          "id": "sig-1793576969127-0.7556996329221188",
-          "sigId": "AGU-956",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Unknown",
-          "distance": "1.97 AU",
-          "signalPercent": 100,
-          "createdTime": "23:49"
-        },
-        {
-          "id": "sig-1793576969127-0.21642606568606326",
-          "sigId": "GFG-368",
-          "type": "Wormhole",
-          "name": "Unstable Wormhole",
-          "group": "Wormhole",
-          "distance": "4.14 AU",
-          "signalPercent": 100,
-          "createdTime": "23:49"
-        },
-        {
-          "id": "sig-1793576969127-0.2169586667544322",
-          "sigId": "SOH-870",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Unknown",
-          "distance": "25.37 AU",
-          "signalPercent": 100,
-          "createdTime": "23:49"
-        },
-        {
-          "id": "sig-1793576969127-0.4085267436469907",
-          "sigId": "KZU-024",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Unknown",
-          "distance": "22.50 AU",
-          "signalPercent": 100,
-          "createdTime": "23:49"
-        },
-        {
-          "id": "sig-1793576969127-0.8323968558922269",
-          "sigId": "DYO-665",
-          "type": "Wormhole",
-          "name": "Unstable Wormhole",
-          "group": "Wormhole",
-          "distance": "20.95 AU",
-          "signalPercent": 100,
-          "createdTime": "23:49"
-        },
-        {
-          "id": "sig-1793576969127-0.9928684054417443",
-          "sigId": "KMG-280",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Unknown",
-          "distance": "25.37 AU",
-          "signalPercent": 100,
-          "createdTime": "23:49"
-        },
-        {
-          "id": "sig-1793576969127-0.41748727995971",
-          "sigId": "MGH-604",
-          "type": "Relic",
-          "name": "Forgotten Perimeter Habitation Coils",
-          "group": "Relic Site",
-          "distance": "32.18 AU",
-          "signalPercent": 100,
-          "createdTime": "23:49"
-        },
-        {
-          "id": "sig-1793576625420-0.1761042393796175",
-          "sigId": "ZWL-335",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Unknown",
-          "distance": "26.09 AU",
-          "signalPercent": 100,
-          "createdTime": "23:43"
-        }
-      ],
-      "lastUpdated": "23:49",
-      "isCollapsed": false
-    },
-    "J103955": {
-      "id": "J103955",
-      "name": "J103955",
-      "systemClass": "C2",
+    "Ajanen": {
+      "id": "Ajanen",
+      "name": "Ajanen",
+      "systemClass": "Highsec",
       "statics": [],
       "structures": [],
       "activePilots": [],
       "signatures": [
         {
-          "id": "sig-1793576768137-0.7352464443714875",
-          "sigId": "ZWL-335",
-          "type": "Gas",
-          "name": "Gas Site",
-          "group": "Gas Site",
-          "distance": "11.30 AU",
-          "signalPercent": 6,
-          "createdTime": "23:46"
-        },
-        {
-          "id": "sig-1793576768137-0.7744185192681461",
-          "sigId": "DYO-665",
-          "type": "Wormhole",
-          "name": "Unstable Wormhole",
-          "group": "Wormhole",
-          "distance": "2.793 m",
-          "signalPercent": 100,
-          "createdTime": "23:46"
-        },
-        {
-          "id": "sig-1793576768137-0.39644295296866416",
-          "sigId": "AGU-956",
+          "id": "sig-1793584021087-0.6929138506487483",
+          "sigId": "FPO-527",
           "type": "Anomaly",
           "name": "Cosmic Signature",
           "group": "Unknown",
-          "distance": "17.23 AU",
+          "distance": "3.00 AU",
           "signalPercent": 100,
-          "createdTime": "23:46"
+          "createdTime": "01:47"
         },
         {
-          "id": "sig-1793576768137-0.54082081963316",
-          "sigId": "GFG-368",
+          "id": "sig-1793584021087-0.0875027835344977",
+          "sigId": "SEG-558",
           "type": "Anomaly",
           "name": "Cosmic Signature",
           "group": "Unknown",
-          "distance": "18.35 AU",
+          "distance": "1.68 AU",
           "signalPercent": 100,
-          "createdTime": "23:46"
-        },
-        {
-          "id": "sig-1793576768137-0.6644196279561411",
-          "sigId": "SOH-870",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Unknown",
-          "distance": "2.08 AU",
-          "signalPercent": 100,
-          "createdTime": "23:46"
-        },
-        {
-          "id": "sig-1793576768137-0.09705843848050011",
-          "sigId": "KZU-024",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Unknown",
-          "distance": "4.21 AU",
-          "signalPercent": 100,
-          "createdTime": "23:46"
-        },
-        {
-          "id": "sig-1793576768137-0.4930890902509587",
-          "sigId": "KMG-280",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Unknown",
-          "distance": "4.92 AU",
-          "signalPercent": 100,
-          "createdTime": "23:46"
-        },
-        {
-          "id": "sig-1793576768137-0.18325659455051546",
-          "sigId": "MGH-604",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Unknown",
-          "distance": "8.87 AU",
-          "signalPercent": 100,
-          "createdTime": "23:46"
+          "createdTime": "01:47"
         }
       ],
-      "lastUpdated": "23:46"
+      "lastUpdated": "01:54",
+      "x": 650,
+      "y": 630
+    },
+    "Kuoka": {
+      "id": "Kuoka",
+      "name": "Kuoka",
+      "systemClass": "Highsec",
+      "statics": [],
+      "structures": [],
+      "activePilots": [
+        "Syndra en Tilavine"
+      ],
+      "signatures": [],
+      "lastUpdated": "01:54",
+      "x": 650,
+      "y": 532
     },
     "Sobaseki": {
       "id": "Sobaseki",
@@ -299,7 +151,9 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "23:47"
+      "lastUpdated": "01:54",
+      "x": 650,
+      "y": 140
     },
     "Isanamo": {
       "id": "Isanamo",
@@ -309,7 +163,9 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "23:47"
+      "lastUpdated": "01:54",
+      "x": 650,
+      "y": 238
     },
     "Uemisaisen": {
       "id": "Uemisaisen",
@@ -319,7 +175,9 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "23:47"
+      "lastUpdated": "01:54",
+      "x": 650,
+      "y": 336
     },
     "Erenta": {
       "id": "Erenta",
@@ -329,50 +187,37 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "23:47"
+      "lastUpdated": "01:54",
+      "x": 650,
+      "y": 434
     },
-    "Kuoka": {
-      "id": "Kuoka",
-      "name": "Kuoka",
-      "systemClass": "Highsec",
-      "statics": [],
+    "J124526": {
+      "id": "J124526",
+      "name": "J124526",
+      "systemClass": "C2",
+      "statics": [
+        "C2",
+        "Highsec"
+      ],
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "23:47"
-    },
-    "Ajanen": {
-      "id": "Ajanen",
-      "name": "Ajanen",
-      "systemClass": "Highsec",
-      "statics": [],
-      "structures": [],
-      "activePilots": [
-        "Syndra en Tilavine"
-      ],
-      "signatures": [],
-      "lastUpdated": "23:47"
+      "lastUpdated": "01:54",
+      "x": 650,
+      "y": 728
     }
   },
   "connections": [
     {
-      "id": "conn-1793576381906",
+      "id": "conn-1793584042443",
       "from": "Ajanen",
-      "to": "J124526",
-      "wormholeType": "K162",
-      "massStatus": "destab",
-      "timeStatus": "stable"
-    },
-    {
-      "id": "conn-1793576872242",
-      "from": "J103955",
-      "to": "Sobaseki",
-      "wormholeType": "Wormhole",
+      "to": "Kuoka",
+      "wormholeType": "Stargate",
       "massStatus": "stable",
       "timeStatus": "stable"
     },
     {
-      "id": "conn-1793576872243",
+      "id": "conn-1793584447531",
       "from": "Sobaseki",
       "to": "Isanamo",
       "wormholeType": "Stargate",
@@ -380,7 +225,7 @@
       "timeStatus": "stable"
     },
     {
-      "id": "conn-1793576872244",
+      "id": "conn-1793584447532",
       "from": "Isanamo",
       "to": "Uemisaisen",
       "wormholeType": "Stargate",
@@ -388,7 +233,7 @@
       "timeStatus": "stable"
     },
     {
-      "id": "conn-1793576872245",
+      "id": "conn-1793584447532",
       "from": "Uemisaisen",
       "to": "Erenta",
       "wormholeType": "Stargate",
@@ -396,7 +241,7 @@
       "timeStatus": "stable"
     },
     {
-      "id": "conn-1793576872245",
+      "id": "conn-1793584447533",
       "from": "Erenta",
       "to": "Kuoka",
       "wormholeType": "Stargate",
@@ -404,18 +249,18 @@
       "timeStatus": "stable"
     },
     {
-      "id": "conn-1793576872246",
-      "from": "Kuoka",
-      "to": "Ajanen",
-      "wormholeType": "Stargate",
+      "id": "conn-1793584447535",
+      "from": "Ajanen",
+      "to": "J124526",
+      "wormholeType": "Wormhole",
       "massStatus": "stable",
       "timeStatus": "stable"
     },
     {
-      "id": "conn-1793576872252",
+      "id": "conn-1793584447540",
       "from": "Sobaseki",
       "to": "Jita",
-      "wormholeType": "Stargate",
+      "wormholeType": "Wormhole",
       "massStatus": "stable",
       "timeStatus": "stable"
     }
