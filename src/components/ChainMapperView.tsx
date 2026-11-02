@@ -17,6 +17,7 @@ import { SignaturePromptModal } from './SignaturePromptModal';
 import { StructureTimerModal } from './StructureTimerModal';
 import { IntegratedIntelDeck } from './IntegratedIntelDeck';
 import { ShipFittingsModal } from './ShipFittingsModal';
+import { getWormholeSystemMetadata } from '../data/wormholeDatabase';
 
 const getStructureInfo = (type: string) => {
   const t = (type || '').toLowerCase();
@@ -575,9 +576,9 @@ export const ChainMapperView: React.FC = () => {
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
-  // Node dimensions
-  const NODE_W = 138;
-  const NODE_H = 62;
+  // Node dimensions (ample space for Statics C2 C3, EOL badges & WH Effects)
+  const NODE_W = 158;
+  const NODE_H = 70;
 
   // GalaxyFinder System Class Color Mapping
   // C1 (Sky Blue), C2 (Royal Blue), C3 (Lime Green), C4 (Amber), C5 (Magenta/Fuchsia), C6 (Crimson)
@@ -634,11 +635,6 @@ export const ChainMapperView: React.FC = () => {
         {isTarget && <span className="text-white text-[10px]">⊙</span>}
         <span className="font-extrabold tracking-tight" style={{ color: classColor }}>{node.systemClass}</span>
         {node.sigCode && <span className={`text-[10px] font-mono ${isDark ? 'text-cyan-200/90' : 'text-sky-800'}`}>[{node.sigCode}]</span>}
-        {node.statics && node.statics.length > 0 && (
-          <span className="text-[10px] font-mono text-amber-300 font-bold">
-            {node.statics[0].startsWith('High') ? 'H' : node.statics[0].startsWith('Low') ? 'L' : node.statics[0]}
-          </span>
-        )}
       </span>
     );
   };
@@ -943,6 +939,16 @@ export const ChainMapperView: React.FC = () => {
                 <feGaussianBlur stdDeviation="2" result="blur" />
                 <feComposite in="SourceGraphic" in2="blur" operator="over" />
               </filter>
+              {/* EOL Glowing Red Pulse Filter */}
+              <filter id="eol-glow" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur stdDeviation="3.5" result="blur" />
+                <feFlood floodColor="#ef4444" floodOpacity="0.85" result="glowColor" />
+                <feComposite in="glowColor" in2="blur" operator="in" result="glow" />
+                <feMerge>
+                  <feMergeNode in="glow" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
             </defs>
 
             {mapState.connections.map((conn) => {
@@ -969,29 +975,30 @@ export const ChainMapperView: React.FC = () => {
               // User requirement:
               // Known space (stargates) = emerald green (#22c55e) solid
               // Wormholes = purple or individual class color
-              // EOL overrides = bright crimson (#f43f5e) dashed
-              // Critical mass = bright red (#ef4444)
+              // EOL overrides = bright crimson red (#ef4444) dashed with slight pulse & broken chain
+              // Critical mass = orange/red (#f97316)
               const destClass = toSys.systemClass;
               const whClassColor = getSystemClassColor(destClass);
               let strokeColor = isStargate ? '#22c55e' : whClassColor;
               let strokeDash: string | undefined = isStargate ? undefined : '6 3';
 
               if (isEOL) {
-                strokeColor = '#f43f5e'; // EOL Crimson/Pink
-                strokeDash = '4 3';
+                strokeColor = '#ef4444'; // EOL Bright Red
+                strokeDash = '5 3';
               } else if (isCrit) {
-                strokeColor = '#ef4444'; // Red Critical
+                strokeColor = '#f97316'; // Orange Critical
                 strokeDash = '4 3';
               } else if (isDestab) {
                 strokeColor = '#eab308'; // Amber Destabilized
                 strokeDash = '6 3';
               }
 
-              // Signature label (e.g. TC [ANF], [HMV], K162)
+              // Signature label with lifetime badge (<4h EOL / >4h Stable)
               const sigLabel = conn.sigFrom 
                 ? (toSys.systemClass?.startsWith('C') ? `TC [${conn.sigFrom}]` : `[${conn.sigFrom}]`)
                 : (conn.wormholeType || 'WH');
-              const badgeWidth = Math.max(50, sigLabel.length * 7.5 + (isEOL ? 36 : 16));
+              const badgeText = isEOL ? `💔 ${sigLabel} [<4h EOL]` : (!isStargate ? `${sigLabel} [>4h]` : sigLabel);
+              const badgeWidth = Math.max(54, badgeText.length * 7.2 + (isEOL ? 18 : 12));
 
               return (
                 <g key={conn.id} className="cursor-pointer group pointer-events-auto">
@@ -1008,14 +1015,14 @@ export const ChainMapperView: React.FC = () => {
                       setIsConnModalOpen(true);
                     }}
                   >
-                    <title>{`Click to assign features: ${conn.from} ➔ ${conn.to} (${conn.wormholeType || 'Wormhole'}) [${isEOL ? 'EOL' : 'Stable'}]`}</title>
+                    <title>{`Click to assign features: ${conn.from} ➔ ${conn.to} (${conn.wormholeType || 'Wormhole'}) [${isEOL ? 'EOL <4h' : 'Stable >4h'}]`}</title>
                   </path>
 
                   {/* Hover highlight glow */}
                   <path
                     d={pathData}
                     fill="none"
-                    stroke={isEOL ? '#f43f5e' : '#38bdf8'}
+                    stroke={isEOL ? '#ef4444' : '#38bdf8'}
                     strokeWidth="7"
                     strokeOpacity="0"
                     className="transition-opacity group-hover:stroke-opacity-40 pointer-events-none"
@@ -1036,12 +1043,12 @@ export const ChainMapperView: React.FC = () => {
                     d={pathData}
                     fill="none"
                     stroke={strokeColor}
-                    strokeWidth={isStargate && !isEOL ? '2.5' : '2'}
+                    strokeWidth={isEOL ? '2.5' : isStargate ? '2.5' : '2'}
                     strokeDasharray={strokeDash}
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    filter={!isStargate || isEOL ? 'url(#wh-glow)' : undefined}
-                    className="transition-colors group-hover:stroke-cyan-300 pointer-events-auto cursor-pointer"
+                    filter={isEOL ? 'url(#eol-glow)' : (!isStargate ? 'url(#wh-glow)' : undefined)}
+                    className={`transition-colors group-hover:stroke-cyan-300 pointer-events-auto cursor-pointer ${isEOL ? 'eol-pulse-line' : ''}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedConnection(conn);
@@ -1070,25 +1077,25 @@ export const ChainMapperView: React.FC = () => {
                     >
                       <rect
                         x={-badgeWidth / 2}
-                        y="-9"
+                        y="-10"
                         width={badgeWidth}
-                        height="18"
-                        rx="4"
+                        height="20"
+                        rx="5"
                         fill="#070c18"
-                        stroke={isEOL ? '#f43f5e' : strokeColor}
-                        strokeWidth={isEOL ? '1.8' : '1.2'}
+                        stroke={isEOL ? '#ef4444' : strokeColor}
+                        strokeWidth={isEOL ? '2' : '1.2'}
                         className={`group-hover:fill-[#0e172a] group-hover:stroke-cyan-300 transition-all shadow-md ${isEOL ? 'animate-pulse' : ''}`}
                       />
                       <text
                         x="0"
-                        y="3.5"
-                        fill={isEOL ? '#fda4af' : isCrit ? '#fdba74' : isDestab ? '#fde047' : '#e9d5ff'}
+                        y="4"
+                        fill={isEOL ? '#fca5a5' : isCrit ? '#fdba74' : isDestab ? '#fde047' : '#e9d5ff'}
                         fontSize="9.5"
                         fontFamily="monospace"
                         fontWeight="bold"
                         textAnchor="middle"
                       >
-                        {isEOL ? `${sigLabel} [EOL]` : sigLabel}
+                        {badgeText}
                       </text>
 
                       {/* Tactical Tags: Camped, Bubbled, Frig Hole */}
@@ -1150,6 +1157,25 @@ export const ChainMapperView: React.FC = () => {
               const classColor = getSystemClassColor(node.systemClass);
               const borderColor = isDark ? `${classColor}77` : classColor;
 
+              const isWormhole = node.systemClass?.startsWith('C') || node.name.startsWith('J') || node.systemClass === 'Thera';
+              const whMeta = isWormhole ? getWormholeSystemMetadata(node.name) : null;
+              const nodeStatics = (node.statics && node.statics.length > 0) ? node.statics : (whMeta?.statics || []);
+              const cleanStatics = nodeStatics.map(s => {
+                if (s.startsWith('High') || s.includes('B274') || s.includes('E175')) return 'H';
+                if (s.startsWith('Low') || s.includes('H296')) return 'L';
+                if (s.startsWith('Null') || s.includes('K162')) return 'N';
+                const m = s.match(/(C[1-6]|Thera|Pochven)/i);
+                return m ? m[1].toUpperCase() : s.slice(0, 3).toUpperCase();
+              });
+
+              const nodeEffect = node.effect || whMeta?.effect;
+              const hasWhEffect = nodeEffect && nodeEffect !== 'No Effect' && nodeEffect !== 'None';
+              const effectMeta = hasWhEffect && WH_SYSTEM_EFFECTS[nodeEffect] ? WH_SYSTEM_EFFECTS[nodeEffect] : null;
+
+              const connectedConns = mapState.connections.filter(c => c.from === node.id || c.to === node.id);
+              const isNodeEOL = connectedConns.some(c => c.timeStatus === 'eol');
+              const hasWHConn = connectedConns.some(c => c.wormholeType !== 'Stargate');
+
               return (
                 <div
                   key={node.id}
@@ -1192,11 +1218,30 @@ export const ChainMapperView: React.FC = () => {
                         <Check className="w-3.5 h-3.5 stroke-[3.5]" />
                       </div>
                     )}
-                    {/* Top Row: Security or WH Class + Statics + Fold Control */}
+                    {/* Top Row: Security or WH Class + Statics (User requested: "Statics \n C2 C3") + Fold/Status Control */}
                     <div className="flex items-center justify-between leading-none">
                       {renderSecurityOrClass(node)}
                       
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1.5">
+                        {/* Dedicated Statics Display in Upper Right (User Diagram: Statics C2 C3) */}
+                        {isWormhole && cleanStatics.length > 0 && (
+                          <div className="flex items-center gap-0.5">
+                            <span className="text-[7.5px] font-mono uppercase text-slate-400 font-bold tracking-tight mr-0.5">Statics:</span>
+                            {cleanStatics.map((st, sIdx) => {
+                              const stColor = st.startsWith('C') ? getSystemClassColor(st) : st === 'H' ? '#22c55e' : st === 'L' ? '#f97316' : '#ef4444';
+                              return (
+                                <span 
+                                  key={sIdx} 
+                                  className="text-[8.5px] font-bold font-mono px-1 py-0.2 rounded border bg-black/40"
+                                  style={{ color: stColor, borderColor: stColor + '55' }}
+                                >
+                                  {st}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        )}
+
                         {nodeTimers.length > 0 && (
                           <span 
                             className="text-[9px] flex items-center gap-0.5 px-1.5 py-0.5 rounded-full font-bold bg-amber-500/15 border border-amber-500/40 text-amber-300 shadow-sm animate-pulse"
@@ -1267,8 +1312,8 @@ export const ChainMapperView: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Middle Row: System Name */}
-                    <div className="flex items-center justify-between leading-tight mt-0.5">
+                    {/* Middle Row: System Name on left, Lifetime Notification on right (<4h or >4h) */}
+                    <div className="flex items-center justify-between leading-tight mt-1">
                       <span className={`text-xs font-bold tracking-tight truncate ${
                         isActivePlayer 
                           ? isDark ? 'text-white' : 'text-slate-950 font-black'
@@ -1276,11 +1321,46 @@ export const ChainMapperView: React.FC = () => {
                       }`}>
                         {node.name}
                       </span>
+
+                      {/* Lifetime Notification (<4h EOL with red pulse vs >4h Stable) */}
+                      {(isWormhole || hasWHConn) && (
+                        isNodeEOL ? (
+                          <span 
+                            className="px-1.5 py-0.5 rounded text-[8px] font-mono font-bold bg-rose-950/90 text-rose-300 border border-rose-500/60 shadow-[0_0_8px_rgba(244,63,94,0.5)] flex items-center gap-0.5 animate-pulse"
+                            title="End of Life connection: <4 hours remaining"
+                          >
+                            <span>💔 &lt;4h</span>
+                          </span>
+                        ) : (
+                          <span 
+                            className="px-1.5 py-0.5 rounded text-[8px] font-mono font-semibold bg-emerald-950/30 text-emerald-400/80 border border-emerald-500/25 flex items-center gap-0.5"
+                            title="Stable connection: >4 hours remaining"
+                          >
+                            <span>&gt;4h</span>
+                          </span>
+                        )
+                      )}
                     </div>
 
-                    {/* Bottom Row: Region / Constellation (GalaxyFinder style) */}
-                    <div className="text-[9.5px] text-slate-400 font-sans tracking-normal truncate leading-tight mt-0.5">
-                      {node.region || (node.systemClass.startsWith('C') ? 'W-Space' : 'Known Space')}
+                    {/* Bottom Row: WH Effect (never 'W-Space') or K-Space Region */}
+                    <div className="text-[9.5px] font-sans tracking-normal truncate leading-tight mt-1">
+                      {isWormhole ? (
+                        hasWhEffect ? (
+                          <span 
+                            className="font-bold tracking-tight" 
+                            style={{ color: effectMeta?.color || '#06b6d4' }}
+                            title={effectMeta?.desc || nodeEffect}
+                          >
+                            {effectMeta?.effect || nodeEffect}
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 font-mono text-[9px]">
+                            Effect: <span className="text-slate-400 font-bold">None</span>
+                          </span>
+                        )
+                      ) : (
+                        <span className="text-slate-400 truncate">{node.region || 'Known Space'}</span>
+                      )}
                     </div>
 
                     {/* Pilot Presence Badge (Purple Circle with number) + Hover Tooltip */}

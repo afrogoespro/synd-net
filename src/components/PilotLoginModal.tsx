@@ -14,14 +14,12 @@ export const PilotLoginModal: React.FC<PilotLoginModalProps> = ({
   onClose,
   onSuccess
 }) => {
-  const [characterName, setCharacterName] = useState<string>('');
   const [customClientId, setCustomClientId] = useState<string>(() => localStorage.getItem('synd_eve_client_id') || '');
   const [hasSharedClientId, setHasSharedClientId] = useState<boolean>(false);
   const [showHostSetup, setShowHostSetup] = useState<boolean>(false);
   const [copiedCallback, setCopiedCallback] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [previewProfile, setPreviewProfile] = useState<PilotProfile | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -29,6 +27,8 @@ export const PilotLoginModal: React.FC<PilotLoginModalProps> = ({
         if (cid) {
           setCustomClientId(cid);
           setHasSharedClientId(true);
+        } else {
+          setShowHostSetup(true);
         }
       });
     }
@@ -77,27 +77,7 @@ export const PilotLoginModal: React.FC<PilotLoginModalProps> = ({
     }
   };
 
-  // Fast Zero-Config Character Name Lookup
-  const handleNameLogin = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!characterName.trim()) return;
 
-    setLoading(true);
-    setError(null);
-
-    try {
-      const profile = await authService.loginWithCharacterName(characterName.trim());
-      setPreviewProfile(profile);
-      setTimeout(() => {
-        onSuccess(profile);
-        onClose();
-      }, 700);
-    } catch (err: any) {
-      setError(err.message || 'Pilot lookup failed. Please verify the exact character name.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return createPortal(
     <div
@@ -165,59 +145,19 @@ export const PilotLoginModal: React.FC<PilotLoginModalProps> = ({
             </p>
           </div>
 
-          {/* DIVIDER */}
-          <div className="relative flex items-center justify-center my-2">
-            <div className="w-full border-t border-white/10" />
-            <span className="absolute bg-[#0d1424] px-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-              or instant pilot lookup
-            </span>
-          </div>
-
-          {/* INSTANT ZERO-CONFIG PILOT LOOKUP */}
-          <form onSubmit={handleNameLogin} className="space-y-3">
-            <div>
-              <label className="block text-[11px] font-semibold text-slate-300 mb-1.5">
-                Character Name:
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={characterName}
-                  onChange={(e) => {
-                    setCharacterName(e.target.value);
-                    setError(null);
-                  }}
-                  placeholder="e.g. USS Hauler or Syndra en Tilavine"
-                  className="w-full bg-white/5 border border-white/10 focus:border-cyan-400 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none"
-                />
-                <User className="w-4 h-4 text-slate-500 absolute right-3 top-3 pointer-events-none" />
-              </div>
+          {/* Status / Guidance Banner */}
+          {hasSharedClientId ? (
+            <div className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[11px]">
+              <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <span>Fleet SSO is active and verified. Click above to authorize your pilot.</span>
             </div>
-
-            <button
-              type="submit"
-              disabled={loading || !characterName.trim()}
-              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-black font-semibold text-xs flex items-center justify-center gap-2 transition-all disabled:opacity-50 cursor-pointer shadow-md shadow-emerald-500/20"
-            >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Sign In &amp; Link Pilot</span>}
-            </button>
-          </form>
-
-          {/* Success Preview */}
-          {previewProfile && (
-            <div className="p-3 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 flex items-center gap-3 animate-in zoom-in-95">
-              <img
-                src={previewProfile.avatarUrl}
-                alt={previewProfile.characterName}
-                className="w-10 h-10 rounded-full border border-emerald-400 object-cover"
-              />
-              <div className="min-w-0">
-                <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                  <span>{previewProfile.characterName}</span>
-                  <Check className="w-3.5 h-3.5 text-emerald-400" />
-                </div>
-                <div className="text-[10px] text-emerald-300">
-                  {previewProfile.corporationName} [{previewProfile.corporationTicker}]
+          ) : (
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-200 text-xs flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <div className="font-semibold text-white">CCP Client ID Required for Fleet SSO</div>
+                <div className="text-[11px] text-amber-300/90 leading-relaxed">
+                  To allow USS Hauler and all fleet members to log in with 1 click, the host needs to register a free application on <a href="https://developers.eveonline.com/applications" target="_blank" rel="noreferrer" className="underline text-cyan-300 font-medium">developers.eveonline.com</a> and paste the Client ID in Host Setup below.
                 </div>
               </div>
             </div>

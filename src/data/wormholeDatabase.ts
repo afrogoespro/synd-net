@@ -82,10 +82,81 @@ const KNOWN_WORMHOLES: Record<string, WormholeSystemInfo> = {
   'J142349': {
     systemName: 'J142349',
     wormholeClass: 'C5',
-    securityStatus: '-0.99 (W-Space)',
+    securityStatus: '-0.99',
     effect: 'Red Giant',
     statics: ['C3 (H900)'],
     bookmarkCode: 'JPV'
+  },
+  'J111543': {
+    systemName: 'J111543',
+    wormholeClass: 'C5',
+    securityStatus: '-0.99',
+    effect: 'No Effect',
+    statics: ['C4'],
+    bookmarkCode: 'JCW'
+  },
+  'J133210': {
+    systemName: 'J133210',
+    wormholeClass: 'C2',
+    securityStatus: '-0.99',
+    effect: 'No Effect',
+    statics: ['C2', 'C3'],
+    bookmarkCode: 'WMI'
+  },
+  'J124526': {
+    systemName: 'J124526',
+    wormholeClass: 'C2',
+    securityStatus: '-0.99',
+    effect: 'No Effect',
+    statics: ['C2', 'Highsec']
+  },
+  'J124837': {
+    systemName: 'J124837',
+    wormholeClass: 'C4',
+    securityStatus: '-0.99',
+    effect: 'No Effect',
+    statics: ['C2', 'C4'],
+    bookmarkCode: 'XND'
+  },
+  'J103217': {
+    systemName: 'J103217',
+    wormholeClass: 'C2',
+    securityStatus: '-0.99',
+    effect: 'No Effect',
+    statics: ['Highsec', 'C2'],
+    bookmarkCode: 'WCU'
+  },
+  'J151359': {
+    systemName: 'J151359',
+    wormholeClass: 'C4',
+    securityStatus: '-0.99',
+    effect: 'No Effect',
+    statics: ['C2', 'C4'],
+    bookmarkCode: 'KRY'
+  },
+  'J101126': {
+    systemName: 'J101126',
+    wormholeClass: 'C4',
+    securityStatus: '-0.99',
+    effect: 'No Effect',
+    statics: ['C1', 'C4'],
+    bookmarkCode: 'VNY'
+  },
+  'J212504': {
+    systemName: 'J212504',
+    wormholeClass: 'C1',
+    securityStatus: '-0.99',
+    effect: 'No Effect',
+    statics: ['Highsec'],
+    bookmarkCode: 'XWJ'
+  },
+  'J210422': {
+    systemName: 'J210422',
+    wormholeClass: 'C2',
+    securityStatus: '-0.99',
+    effect: 'No Effect',
+    statics: ['Highsec', 'C2'],
+    bookmarkCode: 'EOE'
   }
 };
 

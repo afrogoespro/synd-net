@@ -50,6 +50,24 @@
   border-radius: 9999px;
 }
 
+/* Pulsing Red EOL Connection Glow */
+@keyframes eolGlowPulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 3px #ef4444);
+    stroke: #ef4444;
+    opacity: 0.85;
+  }
+  50% {
+    filter: drop-shadow(0 0 10px #f87171) drop-shadow(0 0 16px rgba(239, 68, 68, 0.75));
+    stroke: #fca5a5;
+    opacity: 1;
+  }
+}
+
+.eol-pulse-line {
+  animation: eolGlowPulse 1.8s ease-in-out infinite;
+}
+
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(148, 163, 184, 0.4);
 }
