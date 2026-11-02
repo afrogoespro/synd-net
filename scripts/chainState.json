@@ -37,7 +37,7 @@
         "Ennis Urbanski"
       ],
       "signatures": [],
-      "lastUpdated": "02:50",
+      "lastUpdated": "03:23",
       "x": 650,
       "y": 40
     },
@@ -123,7 +123,7 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "02:35",
+      "lastUpdated": "03:23",
       "x": 440,
       "y": 136
     },
@@ -137,7 +137,7 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "02:35",
+      "lastUpdated": "03:23",
       "x": 440,
       "y": 232
     },
@@ -151,7 +151,7 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "02:35",
+      "lastUpdated": "03:23",
       "x": 440,
       "y": 328
     },
@@ -227,9 +227,11 @@
       "security": 1,
       "statics": [],
       "structures": [],
-      "activePilots": [],
+      "activePilots": [
+        "Syndra en Tilavine"
+      ],
       "signatures": [],
-      "lastUpdated": "15:42",
+      "lastUpdated": "03:23",
       "x": 740,
       "y": 136
     },
@@ -525,7 +527,7 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "02:35",
+      "lastUpdated": "03:23",
       "x": 440,
       "y": 426
     },
@@ -537,7 +539,7 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "02:35",
+      "lastUpdated": "03:23",
       "x": 440,
       "y": 524
     },
@@ -549,7 +551,7 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "02:35",
+      "lastUpdated": "03:23",
       "x": 440,
       "y": 622
     },
@@ -564,19 +566,7 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "02:35",
-      "x": 440,
-      "y": 720
-    },
-    "New": {
-      "id": "New",
-      "name": "New",
-      "systemClass": "Highsec",
-      "statics": [],
-      "structures": [],
-      "activePilots": [],
-      "signatures": [],
-      "lastUpdated": "02:35",
+      "lastUpdated": "03:23",
       "x": 440,
       "y": 720
     },
@@ -598,11 +588,9 @@
           "timestamp": "02:58"
         }
       ],
-      "activePilots": [
-        "Syndra en Tilavine"
-      ],
+      "activePilots": [],
       "signatures": [],
-      "lastUpdated": "02:58",
+      "lastUpdated": "03:23",
       "x": 740,
       "y": 234
     }
@@ -852,18 +840,18 @@
       "timeStatus": "stable"
     },
     {
-      "id": "conn-1793586933547",
-      "from": "Jita",
-      "to": "New",
+      "id": "conn-1793588141391",
+      "from": "New Caldari",
+      "to": "Josameto",
       "wormholeType": "Wormhole",
       "massStatus": "stable",
       "timeStatus": "stable"
     },
     {
-      "id": "conn-1793588141391",
-      "from": "New Caldari",
-      "to": "Josameto",
-      "wormholeType": "Wormhole",
+      "id": "conn-1793589828001",
+      "from": "Ajanen",
+      "to": "New Caldari",
+      "wormholeType": "Stargate",
       "massStatus": "stable",
       "timeStatus": "stable"
     }

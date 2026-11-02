@@ -167,7 +167,7 @@ export const Header: React.FC<HeaderProps> = ({
               }`}
             >
               <Cpu className="w-3.5 h-3.5 text-indigo-400" />
-              <span>EFT Analyzer</span>
+              <span>Ship Fittings</span>
             </button>
           </nav>
 
@@ -320,7 +320,7 @@ export const Header: React.FC<HeaderProps> = ({
               activeTab === 'eft' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50' : 'text-gray-400'
             }`}
           >
-            EFT Analyzer
+            Ship Fittings
           </button>
         </div>
       </div>

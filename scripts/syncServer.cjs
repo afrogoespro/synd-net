@@ -717,11 +717,14 @@ function pollActiveChatlogs() {
         fs.closeSync(fd);
 
         const text = buf.toString('utf16le');
-        const matches = [...text.matchAll(/Channel changed to Local\s*:\s*([A-Za-z0-9\-]+)/gi)];
+        const matches = [...text.matchAll(/Channel changed to Local\s*:\s*([^\r\n]+)/gi)];
         if (matches.length > 0) {
           const listener = getChatListener(file);
           for (const m of matches) {
-            handleSystemTransition(m[1].trim(), null, listener);
+            const cleanSys = m[1].replace(/<[^>]+>/g, '').trim();
+            if (cleanSys) {
+              handleSystemTransition(cleanSys, null, listener);
+            }
           }
         }
       }
@@ -781,13 +784,20 @@ function pollActiveGamelogs() {
         const listener = getGamelogListener(file);
         const lines = text.split(/\r?\n/);
         for (const line of lines) {
-          const jumpMatch = line.match(/Jumping from\s+([A-Za-z0-9\-\s]+?)\s+to\s+([A-Za-z0-9\-]+)/i);
+          const jumpMatch = line.match(/Jumping from\s+([^\r\n]+?)\s+to\s+([^\r\n]+)/i);
           if (jumpMatch) {
-            handleSystemTransition(jumpMatch[2].trim(), jumpMatch[1].trim(), listener);
+            const from = jumpMatch[1].replace(/<[^>]+>/g, '').trim();
+            const to = jumpMatch[2].replace(/<[^>]+>/g, '').trim();
+            if (to) {
+              handleSystemTransition(to, from, listener);
+            }
           }
-          const undockMatch = line.match(/Undocking from .+ to ([A-Za-z0-9\-]+) solar system/i);
+          const undockMatch = line.match(/Undocking from .+ to ([^\r\n]+) solar system/i);
           if (undockMatch) {
-            handleSystemTransition(undockMatch[1].trim(), null, listener);
+            const sys = undockMatch[1].replace(/<[^>]+>/g, '').trim();
+            if (sys) {
+              handleSystemTransition(sys, null, listener);
+            }
           }
         }
       }
@@ -812,7 +822,7 @@ setInterval(() => {
   if (isCheckingClip) return;
   isCheckingClip = true;
 
-  exec('powershell.exe -NoProfile -Command "Get-Clipboard"', { timeout: 3000 }, (err, stdout) => {
+  exec('powershell.exe -NoProfile -Command "Get-Clipboard -Raw"', { timeout: 3000 }, (err, stdout) => {
     isCheckingClip = false;
     if (err || !stdout) return;
 

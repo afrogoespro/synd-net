@@ -4,7 +4,7 @@ import {
   Check, Share2, ZoomIn, ZoomOut, Maximize2, Crosshair,
   User, MapPin, Eye, Radio, ExternalLink, Layers, Sparkles, KeyRound, LogOut,
   Sun, Moon, ChevronDown, ChevronRight, FolderTree, GitFork, Copy, Route, Navigation, Zap,
-  Clock, Hourglass, Skull, ShieldAlert, X
+  Clock, Hourglass, Skull, ShieldAlert, X, Cpu
 } from 'lucide-react';
 import { mapperService } from '../services/mapperService';
 import { ChainMapState, WormholeNode, WormholeConnection, WormholeSignature, StructureTimer } from '../types/mapper';
@@ -16,6 +16,7 @@ import { PilotLoginModal } from './PilotLoginModal';
 import { SignaturePromptModal } from './SignaturePromptModal';
 import { StructureTimerModal } from './StructureTimerModal';
 import { IntegratedIntelDeck } from './IntegratedIntelDeck';
+import { ShipFittingsModal } from './ShipFittingsModal';
 
 export const ChainMapperView: React.FC = () => {
   const [mapState, setMapState] = useState<ChainMapState>(mapperService.getState());
@@ -28,10 +29,11 @@ export const ChainMapperView: React.FC = () => {
   const [whTypeInput, setWhTypeInput] = useState<string>('K162');
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
   const [showInspector, setShowInspector] = useState<boolean>(true);
+  const [isFittingModalOpen, setIsFittingModalOpen] = useState<boolean>(false);
   
   // Canvas Pan & Zoom State
   const [pan, setPan] = useState<{ x: number; y: number }>({ x: 40, y: 20 });
-  const [zoom, setZoom] = useState<number>(1.0);
+  const [zoom, setZoom] = useState<number>(0.85);
   const [isPanning, setIsPanning] = useState<boolean>(false);
   const [dragStart, setDragStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
@@ -133,14 +135,18 @@ export const ChainMapperView: React.FC = () => {
   // GalaxyFinder Center on System
   const centerOnSystem = (sysId: string) => {
     const target = mapState.systems[sysId];
-    if (target && containerRef.current) {
-      const targetX = target.x !== undefined ? target.x : 650;
-      const targetY = target.y !== undefined ? target.y : 140;
+    if (target && containerRef.current && target.x !== undefined && target.y !== undefined) {
       const rect = containerRef.current.getBoundingClientRect();
+      const w = Math.max(rect.width, 300);
+      const h = Math.max(rect.height, 250);
+      const targetCenterX = target.x + NODE_W / 2;
+      const targetCenterY = target.y + NODE_H / 2;
       setPan({
-        x: Math.round(rect.width / 2 - targetX * zoom - 68),
-        y: Math.round(rect.height / 2 - targetY * zoom - 28)
+        x: Math.round(w / 2 - targetCenterX * zoom),
+        y: Math.round(h / 2 - targetCenterY * zoom)
       });
+    } else {
+      handleFit();
     }
   };
 
@@ -302,21 +308,51 @@ export const ChainMapperView: React.FC = () => {
     setZoom(prev => Math.min(Math.max(prev * zoomFactor, 0.35), 2.5));
   };
 
-  // Zoom controls
+  // Zoom & Pan Auto-Fit
   const handleZoomIn = () => setZoom(z => Math.min(z + 0.15, 2.2));
   const handleZoomOut = () => setZoom(z => Math.max(z - 0.15, 0.4));
+  
   const handleFit = () => {
-    setZoom(1.0);
-    setPan({ x: 40, y: 20 });
+    const nodes = Object.values(mapState.systems).filter(n => !hiddenNodeIds.has(n.id));
+    if (nodes.length === 0) return;
+
+    const minX = Math.min(...nodes.map(n => n.x || 0));
+    const maxX = Math.max(...nodes.map(n => (n.x || 0) + NODE_W));
+    const minY = Math.min(...nodes.map(n => n.y || 0));
+    const maxY = Math.max(...nodes.map(n => (n.y || 0) + NODE_H));
+
+    const contentW = Math.max(maxX - minX + 160, 400);
+    const contentH = Math.max(maxY - minY + 140, 300);
+
+    const availableW = containerRef.current?.clientWidth || (window.innerWidth - (showInspector ? 384 : 0));
+    const availableH = containerRef.current?.clientHeight || (window.innerHeight - 150);
+
+    const fitZoom = Math.min(Math.max(Math.min(availableW / contentW, availableH / contentH), 0.45), 1.0);
+    const fitPanX = availableW / 2 - ((minX + maxX) / 2) * fitZoom;
+    const fitPanY = Math.max(20, availableH / 2 - ((minY + maxY) / 2) * fitZoom);
+
+    setZoom(fitZoom);
+    setPan({ x: Math.round(fitPanX), y: Math.round(fitPanY) });
   };
 
+  // Run dynamic fit on first render and window resize
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleFit();
+    }, 150);
+    const handleResize = () => handleFit();
+    window.addEventListener('resize', handleResize);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [mapState.systems, hiddenNodeIds]);
+
   const handleCenterOnPilot = () => {
-    if (activeSystem && activeSystem.x && activeSystem.y && containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect();
-      setPan({
-        x: rect.width / 2 - activeSystem.x * zoom - 65,
-        y: rect.height / 2 - activeSystem.y * zoom - 27
-      });
+    if (activeSystem) {
+      centerOnSystem(activeSystem.id);
+    } else {
+      handleFit();
     }
   };
 
@@ -587,6 +623,20 @@ export const ChainMapperView: React.FC = () => {
             <span>Timers: {(mapState.timers || []).length}</span>
           </button>
 
+          {/* Ship Fittings Window Button */}
+          <button
+            onClick={() => setIsFittingModalOpen(true)}
+            className={`px-3 py-1 rounded-full border text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all ${
+              isDark 
+                ? 'bg-indigo-500/15 border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/25' 
+                : 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100'
+            }`}
+            title="Open Ship Fittings Window (EFT Analyzer, Stats, & Presets)"
+          >
+            <Cpu className="w-3 h-3 text-indigo-400" />
+            <span>Fittings</span>
+          </button>
+
           {/* Share Link Pill */}
           <button
             onClick={handleCopyBuddyLink}
@@ -659,14 +709,16 @@ export const ChainMapperView: React.FC = () => {
         }`}
         style={{
           backgroundImage: isDark ? `
-            radial-gradient(1px 1px at 20px 30px, #ffffff18, rgba(0,0,0,0)),
-            radial-gradient(1px 1px at 40px 70px, #38bdf820, rgba(0,0,0,0)),
-            radial-gradient(1px 1px at 90px 40px, #ffffff15, rgba(0,0,0,0)),
-            radial-gradient(2px 2px at 160px 120px, #818cf820, rgba(0,0,0,0))
+            radial-gradient(ellipse 70% 45% at 90% 15%, rgba(56, 189, 248, 0.15) 0%, rgba(14, 165, 233, 0.05) 45%, transparent 75%),
+            radial-gradient(ellipse 60% 40% at 10% 85%, rgba(168, 85, 247, 0.10) 0%, transparent 60%),
+            radial-gradient(1.5px 1.5px at 30px 40px, rgba(255,255,255,0.25), transparent),
+            radial-gradient(1px 1px at 80px 120px, rgba(56,189,248,0.20), transparent),
+            radial-gradient(1.5px 1.5px at 180px 70px, rgba(168,85,247,0.20), transparent)
           ` : `
             radial-gradient(#94a3b840 1px, transparent 1px)
           `,
-          backgroundSize: isDark ? '250px 250px' : '24px 24px'
+          backgroundColor: isDark ? '#050813' : '#f8fafc',
+          backgroundSize: isDark ? '100% 100%, 100% 100%, 260px 260px, 260px 260px, 260px 260px' : '24px 24px'
         }}
       >
         {/* Transformable Canvas Layer */}
@@ -707,14 +759,16 @@ export const ChainMapperView: React.FC = () => {
               const isStargate = conn.wormholeType === 'Stargate';
 
               // User requirement:
-              // Known space (stargates) = green (#22c55e)
-              // Wormholes = purple (#c084fc)
-              let strokeColor = isStargate ? (isDark ? '#22c55e' : '#16a34a') : (isDark ? '#c084fc' : '#9333ea');
-              let strokeDash: string | undefined = undefined;
+              // Known space (stargates) = emerald green (#22c55e) solid
+              // Wormholes = purple or individual class color
+              const destClass = toSys.systemClass;
+              const whClassColor = getSystemClassColor(destClass);
+              let strokeColor = isStargate ? '#22c55e' : whClassColor;
+              let strokeDash: string | undefined = isStargate ? undefined : '6 3';
 
               if (!isStargate) {
                 if (conn.massStatus === 'critical') {
-                  strokeColor = '#f97316'; // Orange / Red Critical
+                  strokeColor = '#ef4444'; // Red Critical
                   strokeDash = '4 3';
                 } else if (conn.massStatus === 'destab') {
                   strokeColor = '#eab308'; // Amber Destabilized
@@ -1905,6 +1959,13 @@ export const ChainMapperView: React.FC = () => {
           </aside>
         )}
       </div>
+
+      {/* Ship Fittings Window Modal */}
+      <ShipFittingsModal
+        isOpen={isFittingModalOpen}
+        onClose={() => setIsFittingModalOpen(false)}
+        theme={theme}
+      />
     </div>
   );
 };

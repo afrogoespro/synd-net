@@ -24,7 +24,7 @@ export const IntegratedIntelDeck: React.FC<IntegratedIntelDeckProps> = ({
 }) => {
   const isDark = theme === 'dark';
   const [activeSubTab, setActiveSubTab] = useState<'dscan' | 'sigs' | 'structs'>('dscan');
-  const [deckHeight, setDeckHeight] = useState<'minimized' | 'compact' | 'full'>('compact');
+  const [deckHeight, setDeckHeight] = useState<'minimized' | 'compact' | 'full'>('minimized');
   
   // D-Scan State
   const [dscanInput, setDscanInput] = useState<string>('');
@@ -46,8 +46,10 @@ export const IntegratedIntelDeck: React.FC<IntegratedIntelDeckProps> = ({
       // If it looks like probe scanner
       if (text.includes('Cosmic Signature') || text.includes('Cosmic Anomaly') || /[A-Z]{3}-\d{2,3}/.test(text)) {
         handleParseProbeScan(text);
+        setDeckHeight('compact');
       } else if (text.includes('AU') || text.includes('km') || text.includes('Force Field')) {
         handleParseDScan(text);
+        setDeckHeight('compact');
       }
     });
     return () => unsub();
@@ -176,7 +178,9 @@ export const IntegratedIntelDeck: React.FC<IntegratedIntelDeckProps> = ({
     'h-96 sm:h-[420px]';
 
   return (
-    <div className={`w-full transition-all duration-200 border-t z-30 flex flex-col font-mono select-none ${
+    <div 
+      onWheel={(e) => e.stopPropagation()}
+      className={`w-full transition-all duration-200 border-t z-30 flex flex-col font-mono select-none ${
       isDark 
         ? 'bg-[#080c16]/95 border-cyan-900/60 text-gray-200 shadow-[0_-10px_25px_rgba(0,0,0,0.6)] backdrop-blur-md' 
         : 'bg-white/95 border-slate-300 text-slate-800 shadow-[0_-6px_20px_rgba(0,0,0,0.08)] backdrop-blur-md'

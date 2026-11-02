@@ -101,6 +101,11 @@ class MapperService {
             this.activeSystemId = data.payload.systemName;
             this.jumpListeners.forEach(cb => cb(data.payload));
           }
+          if (data.type === 'CLIPBOARD_TEXT' && data.payload?.text) {
+            import('./scoutWatcher').then(({ scoutWatcher }) => {
+              scoutWatcher.evaluateText(data.payload.text, 'clipboard_auto');
+            }).catch(() => {});
+          }
         } catch (err) {
           console.error("Map stream error:", err);
         }

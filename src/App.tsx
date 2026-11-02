@@ -254,7 +254,7 @@ export function App() {
             theme={theme}
           />
         )}
-        {activeTab === 'dscan' && <DScanParserView onScanAnalyzed={handleScanAnalyzed} />}
+        {activeTab === 'dscan' && <ChainMapperView />}
         {activeTab === 'mapper' && <ChainMapperView />}
         {activeTab === 'ore' && <OreSiteEvaluatorView />}
         {activeTab === 'local' && <LocalIntelView />}
