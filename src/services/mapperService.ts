@@ -327,8 +327,10 @@ class MapperService {
   }
 
   // Set a pilot's location (e.g. buddy sets their position to this system)
-  public async setPilotLocation(pilotName: string, systemName: string) {
+  public async setPilotLocation(pilotName: string, systemName: string, shipName?: string) {
     if (!pilotName || !systemName) return;
+
+    const pilotEntry = shipName ? `${pilotName} (${shipName})` : pilotName;
 
     // Update local state immediately
     Object.values(this.state.systems).forEach(sys => {
@@ -337,8 +339,8 @@ class MapperService {
 
     if (this.state.systems[systemName]) {
       this.state.systems[systemName].activePilots = this.state.systems[systemName].activePilots || [];
-      if (!this.state.systems[systemName].activePilots.includes(pilotName)) {
-        this.state.systems[systemName].activePilots.push(pilotName);
+      if (!this.state.systems[systemName].activePilots.includes(pilotEntry)) {
+        this.state.systems[systemName].activePilots.push(pilotEntry);
       }
     }
     this.notify();
@@ -425,7 +427,7 @@ class MapperService {
     } catch {}
   }
 
-  // GalaxyFinder Tidy Tree Auto-Organizer
+  // GalaxyFinder Hierarchical Tree Auto-Organizer
   public autoOrganizeTreeLayout() {
     const systems = this.state.systems;
     const connections = this.state.connections;
@@ -435,57 +437,81 @@ class MapperService {
     // Root is 'Jita' or first system
     const rootId = systems['Jita'] ? 'Jita' : sysKeys[0];
     const visited = new Set<string>();
-    const levels: string[][] = [];
 
-    // BFS tree traversal
-    let currentLevel = [rootId];
+    const childrenMap: Record<string, string[]> = {};
+    sysKeys.forEach(k => { childrenMap[k] = []; });
+
+    // Build directed tree structure starting from root
+    const queue = [rootId];
     visited.add(rootId);
 
-    while (currentLevel.length > 0) {
-      levels.push(currentLevel);
-      const nextLevel: string[] = [];
+    while (queue.length > 0) {
+      const parent = queue.shift()!;
+      // Find connected neighbors
+      const neighbors = connections
+        .filter(c => (c.from === parent && !visited.has(c.to)) || (c.to === parent && !visited.has(c.from)))
+        .map(c => (c.from === parent ? c.to : c.from));
 
-      for (const parentId of currentLevel) {
-        const children = connections
-          .filter(c => c.from === parentId && !visited.has(c.to))
-          .map(c => c.to);
-
-        for (const childId of children) {
-          if (!visited.has(childId)) {
-            visited.add(childId);
-            nextLevel.push(childId);
-          }
+      for (const n of neighbors) {
+        if (!visited.has(n)) {
+          visited.add(n);
+          childrenMap[parent].push(n);
+          queue.push(n);
         }
       }
-
-      currentLevel = nextLevel;
     }
 
-    // Add unvisited systems
-    const remaining = sysKeys.filter(k => !visited.has(k));
-    if (remaining.length > 0) {
-      levels.push(remaining);
-    }
+    // Attach any unvisited or disconnected systems to root
+    sysKeys.forEach(k => {
+      if (!visited.has(k)) {
+        childrenMap[rootId].push(k);
+        visited.add(k);
+      }
+    });
 
-    // Assign X, Y coordinates
     const NODE_WIDTH = 138;
     const HORIZONTAL_GAP = 28;
-    const VERTICAL_GAP = 98;
-    const ROOT_CENTER_X = 650;
+    const VERTICAL_GAP = 96;
     const START_Y = 40;
 
-    levels.forEach((levelNodes, depth) => {
-      const totalWidth = levelNodes.length * (NODE_WIDTH + HORIZONTAL_GAP) - HORIZONTAL_GAP;
-      const startX = ROOT_CENTER_X - totalWidth / 2;
-      const y = START_Y + depth * VERTICAL_GAP;
+    // Post-order traversal to calculate required subtree width for each node
+    const subtreeWidths: Record<string, number> = {};
+    const calcWidth = (nodeId: string): number => {
+      const children = childrenMap[nodeId] || [];
+      if (children.length === 0) {
+        subtreeWidths[nodeId] = NODE_WIDTH + HORIZONTAL_GAP;
+        return subtreeWidths[nodeId];
+      }
+      let sum = 0;
+      for (const c of children) {
+        sum += calcWidth(c);
+      }
+      subtreeWidths[nodeId] = Math.max(NODE_WIDTH + HORIZONTAL_GAP, sum);
+      return subtreeWidths[nodeId];
+    };
 
-      levelNodes.forEach((nodeId, idx) => {
-        if (systems[nodeId]) {
-          systems[nodeId].x = Math.round(startX + idx * (NODE_WIDTH + HORIZONTAL_GAP));
-          systems[nodeId].y = y;
-        }
-      });
-    });
+    calcWidth(rootId);
+
+    // Pre-order traversal to place nodes
+    const placeNodes = (nodeId: string, leftX: number, depth: number) => {
+      const totalWidth = subtreeWidths[nodeId] || (NODE_WIDTH + HORIZONTAL_GAP);
+      const centerX = leftX + totalWidth / 2;
+      if (systems[nodeId]) {
+        systems[nodeId].x = Math.round(centerX - NODE_WIDTH / 2);
+        systems[nodeId].y = START_Y + depth * VERTICAL_GAP;
+      }
+
+      let childLeft = leftX;
+      const children = childrenMap[nodeId] || [];
+      for (const c of children) {
+        placeNodes(c, childLeft, depth + 1);
+        childLeft += (subtreeWidths[c] || (NODE_WIDTH + HORIZONTAL_GAP));
+      }
+    };
+
+    const totalTreeWidth = subtreeWidths[rootId] || 1200;
+    const rootLeft = Math.max(40, 650 - totalTreeWidth / 2);
+    placeNodes(rootId, rootLeft, 0);
 
     this.notify();
 

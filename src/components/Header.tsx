@@ -129,20 +129,6 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
 
             <button
-              onClick={() => setActiveTab('dscan')}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all ${
-                activeTab === 'dscan'
-                  ? isDark 
-                    ? 'bg-white/15 text-white font-semibold shadow-sm' 
-                    : 'bg-white text-slate-900 font-semibold shadow-sm border border-slate-200/60'
-                  : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Radar className="w-3.5 h-3.5" />
-              <span>D-Scan</span>
-            </button>
-
-            <button
               onClick={() => setActiveTab('ore')}
               className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all ${
                 activeTab === 'ore'
@@ -154,20 +140,6 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Pickaxe className="w-3.5 h-3.5 text-amber-400" />
               <span>Ore &amp; Gas</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('local')}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all ${
-                activeTab === 'local'
-                  ? isDark 
-                    ? 'bg-white/15 text-white font-semibold shadow-sm' 
-                    : 'bg-white text-slate-900 font-semibold shadow-sm border border-slate-200/60'
-                  : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Users className="w-3.5 h-3.5" />
-              <span>Local Intel</span>
             </button>
 
             <button
@@ -311,12 +283,12 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Mobile Navigation bar */}
         <div className="flex md:hidden overflow-x-auto py-2 gap-2 border-t border-gray-800/80">
           <button
-            onClick={() => setActiveTab('dscan')}
+            onClick={() => setActiveTab('dashboard')}
             className={`px-3 py-1 rounded text-xs whitespace-nowrap font-medium ${
-              activeTab === 'dscan' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50' : 'text-gray-400'
+              activeTab === 'dashboard' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50' : 'text-gray-400'
             }`}
           >
-            D-Scan
+            Overview
           </button>
           <button
             onClick={() => setActiveTab('mapper')}
@@ -333,14 +305,6 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
           >
             Ore Valuator
-          </button>
-          <button
-            onClick={() => setActiveTab('local')}
-            className={`px-3 py-1 rounded text-xs whitespace-nowrap font-medium ${
-              activeTab === 'local' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50' : 'text-gray-400'
-            }`}
-          >
-            Local Intel
           </button>
           <button
             onClick={() => setActiveTab('killfeed')}

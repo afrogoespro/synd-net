@@ -14,6 +14,7 @@ import { MusicPlayerPopup } from './components/MusicPlayerPopup';
 import { scoutWatcher, ScoutAlertEvent } from './services/scoutWatcher';
 import { mapperService } from './services/mapperService';
 import { soundManager } from './services/soundEffects';
+import { authService } from './services/authService';
 import { DScanReport } from './types/dscan';
 
 export function App() {
@@ -58,7 +59,20 @@ export function App() {
       }
     });
 
-    return () => unsubJump();
+    // Subscribe to live character jumps from official EVE SSO scope access (esi-location.read_location.v1)
+    const unsubSSO = authService.onLocationUpdate(({ systemName, shipName }) => {
+      setCurrentSystem(systemName);
+      const pilot = authService.getPilot();
+      if (pilot) {
+        mapperService.setPilotLocation(pilot.characterName, systemName, shipName);
+      }
+      playTacticalAlert('wh_entry');
+    });
+
+    return () => {
+      unsubJump();
+      unsubSSO();
+    };
   }, []);
 
   // Play audio chime for alerts

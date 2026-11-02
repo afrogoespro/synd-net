@@ -4,381 +4,493 @@
       "id": "Jita",
       "name": "Jita",
       "systemClass": "Highsec",
+      "region": "The Forge",
       "security": 0.9,
       "statics": [],
       "structures": [],
       "activePilots": [
-        "Ennis Urbanski",
-        "Syndra en Tilavine"
+        "Ennis Urbanski"
       ],
-      "signatures": [
-        {
-          "id": "sig-1793576659012-0.05426345758515083",
-          "sigId": "DYO-665",
-          "type": "Wormhole",
-          "name": "Unstable Wormhole",
-          "group": "Wormhole",
-          "distance": "26.09 AU",
-          "signalPercent": 100,
-          "createdTime": "23:44"
-        },
-        {
-          "id": "sig-1793576655621-0.7773427397764975",
-          "sigId": "AGU-956",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Unknown",
-          "distance": "4.18 AU",
-          "signalPercent": 100,
-          "createdTime": "23:44"
-        },
-        {
-          "id": "sig-1793576655621-0.03921927363225386",
-          "sigId": "GFG-368",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Unknown",
-          "distance": "4.87 AU",
-          "signalPercent": 100,
-          "createdTime": "23:44"
-        },
-        {
-          "id": "sig-1793576655621-0.7981940264809618",
-          "sigId": "SOH-870",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Unknown",
-          "distance": "20.36 AU",
-          "signalPercent": 100,
-          "createdTime": "23:44"
-        },
-        {
-          "id": "sig-1793576655621-0.6455065911737944",
-          "sigId": "KZU-024",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Unknown",
-          "distance": "21.87 AU",
-          "signalPercent": 100,
-          "createdTime": "23:44"
-        },
-        {
-          "id": "sig-1793576655621-0.5824755839458102",
-          "sigId": "KMG-280",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Unknown",
-          "distance": "21.71 AU",
-          "signalPercent": 100,
-          "createdTime": "23:44"
-        },
-        {
-          "id": "sig-1793576655621-0.6819170670206582",
-          "sigId": "MGH-604",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Unknown",
-          "distance": "34.99 AU",
-          "signalPercent": 100,
-          "createdTime": "23:44"
-        },
-        {
-          "id": "sig-1793576655621-0.13121486739932453",
-          "sigId": "ZWL-335",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Unknown",
-          "distance": "26.09 AU",
-          "signalPercent": 100,
-          "createdTime": "23:44"
-        },
-        {
-          "id": "sig-1793584734702-0.5353822000662244",
-          "sigId": "JLV-427",
-          "type": "Relic",
-          "name": "Relic Site",
-          "group": "Relic Site",
-          "distance": "8.84 AU",
-          "signalPercent": 1,
-          "createdTime": "01:58"
-        },
-        {
-          "id": "sig-1793584734702-0.40706674309758883",
-          "sigId": "ZSG-272",
-          "type": "Relic",
-          "name": "Relic Site",
-          "group": "Relic Site",
-          "distance": "7.54 AU",
-          "signalPercent": 5,
-          "createdTime": "01:58"
-        },
-        {
-          "id": "sig-1793584734702-0.27760465619426256",
-          "sigId": "ZBU-471",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Unknown",
-          "distance": "8.76 AU",
-          "signalPercent": 100,
-          "createdTime": "01:58"
-        },
-        {
-          "id": "sig-1793584734702-0.08274851799034455",
-          "sigId": "QJX-710",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Unknown",
-          "distance": "10.41 AU",
-          "signalPercent": 4,
-          "createdTime": "01:58"
-        },
-        {
-          "id": "sig-1793584734702-0.4485307898421578",
-          "sigId": "SNC-440",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Unknown",
-          "distance": "8.76 AU",
-          "signalPercent": 7,
-          "createdTime": "01:58"
-        }
-      ],
-      "lastUpdated": "02:18",
+      "signatures": [],
+      "lastUpdated": "02:35",
       "x": 650,
       "y": 40
     },
-    "Ajanen": {
-      "id": "Ajanen",
-      "name": "Ajanen",
+    "Ikuchi": {
+      "id": "Ikuchi",
+      "name": "Ikuchi",
       "systemClass": "Highsec",
+      "region": "The Forge",
+      "security": 1,
       "statics": [],
       "structures": [],
       "activePilots": [],
-      "signatures": [
-        {
-          "id": "sig-1793584021087-0.6929138506487483",
-          "sigId": "FPO-527",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Unknown",
-          "distance": "3.00 AU",
-          "signalPercent": 100,
-          "createdTime": "01:47"
-        },
-        {
-          "id": "sig-1793584021087-0.0875027835344977",
-          "sigId": "SEG-558",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Unknown",
-          "distance": "1.68 AU",
-          "signalPercent": 100,
-          "createdTime": "01:47"
-        },
-        {
-          "id": "sig-1793584519091-0.06741672790307018",
-          "sigId": "JLV-427",
-          "type": "Relic",
-          "name": "Relic Site",
-          "group": "Relic Site",
-          "distance": "8.84 AU",
-          "signalPercent": 1,
-          "createdTime": "01:55"
-        },
-        {
-          "id": "sig-1793584519091-0.4361580467894185",
-          "sigId": "ZSG-272",
-          "type": "Relic",
-          "name": "Relic Site",
-          "group": "Relic Site",
-          "distance": "7.54 AU",
-          "signalPercent": 5,
-          "createdTime": "01:55"
-        },
-        {
-          "id": "sig-1793584519091-0.8735327842365985",
-          "sigId": "ZBU-471",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Unknown",
-          "distance": "8.76 AU",
-          "signalPercent": 100,
-          "createdTime": "01:55"
-        },
-        {
-          "id": "sig-1793584519091-0.31853721910492894",
-          "sigId": "QJX-710",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Unknown",
-          "distance": "10.41 AU",
-          "signalPercent": 4,
-          "createdTime": "01:55"
-        },
-        {
-          "id": "sig-1793584519091-0.7180354138968515",
-          "sigId": "SNC-440",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Unknown",
-          "distance": "8.76 AU",
-          "signalPercent": 7,
-          "createdTime": "01:55"
-        }
-      ],
-      "lastUpdated": "01:55",
-      "x": 650,
-      "y": 630
+      "signatures": [],
+      "lastUpdated": "15:42",
+      "x": 140,
+      "y": 136
     },
-    "Kuoka": {
-      "id": "Kuoka",
-      "name": "Kuoka",
+    "Ansila": {
+      "id": "Ansila",
+      "name": "Ansila",
       "systemClass": "Highsec",
+      "region": "The Forge",
+      "security": 0.9,
       "statics": [],
       "structures": [],
       "activePilots": [],
-      "signatures": [
-        {
-          "id": "sig-1793584567609-0.10243952078158514",
-          "sigId": "JLV-427",
-          "type": "Relic",
-          "name": "Relic Site",
-          "group": "Relic Site",
-          "distance": "8.84 AU",
-          "signalPercent": 1,
-          "createdTime": "01:56"
-        },
-        {
-          "id": "sig-1793584567609-0.40047482669173684",
-          "sigId": "ZSG-272",
-          "type": "Relic",
-          "name": "Relic Site",
-          "group": "Relic Site",
-          "distance": "7.54 AU",
-          "signalPercent": 5,
-          "createdTime": "01:56"
-        },
-        {
-          "id": "sig-1793584567609-0.28255757068360854",
-          "sigId": "ZBU-471",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Unknown",
-          "distance": "8.76 AU",
-          "signalPercent": 100,
-          "createdTime": "01:56"
-        },
-        {
-          "id": "sig-1793584567609-0.9846461261044792",
-          "sigId": "QJX-710",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Unknown",
-          "distance": "10.41 AU",
-          "signalPercent": 4,
-          "createdTime": "01:56"
-        },
-        {
-          "id": "sig-1793584567609-0.03254624631144276",
-          "sigId": "SNC-440",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Unknown",
-          "distance": "8.76 AU",
-          "signalPercent": 7,
-          "createdTime": "01:56"
-        }
+      "signatures": [],
+      "lastUpdated": "15:42",
+      "x": 140,
+      "y": 232
+    },
+    "Hykkota": {
+      "id": "Hykkota",
+      "name": "Hykkota",
+      "systemClass": "Highsec",
+      "region": "The Forge",
+      "security": 0.8,
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "15:42",
+      "x": 140,
+      "y": 328
+    },
+    "J151141": {
+      "id": "J151141",
+      "name": "J151141",
+      "systemClass": "C1",
+      "region": "W-Space",
+      "sigCode": "YSO",
+      "statics": [
+        "Highsec"
       ],
-      "lastUpdated": "01:56",
-      "x": 650,
-      "y": 532
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "15:42",
+      "x": 140,
+      "y": 424
+    },
+    "Muvolailen": {
+      "id": "Muvolailen",
+      "name": "Muvolailen",
+      "systemClass": "Highsec",
+      "region": "The Citadel",
+      "security": 0.7,
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "15:42",
+      "x": 290,
+      "y": 136
     },
     "Sobaseki": {
       "id": "Sobaseki",
       "name": "Sobaseki",
       "systemClass": "Highsec",
+      "region": "Lonetrek",
+      "security": 0.8,
       "statics": [],
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "02:16",
-      "x": 650,
-      "y": 140
+      "lastUpdated": "02:35",
+      "x": 440,
+      "y": 136
     },
     "Isanamo": {
       "id": "Isanamo",
       "name": "Isanamo",
       "systemClass": "Highsec",
+      "region": "Lonetrek",
+      "security": 0.6,
       "statics": [],
       "structures": [],
       "activePilots": [],
-      "signatures": [
-        {
-          "id": "sig-1793585733874-0.8118542331658988",
-          "sigId": "TLD-985",
-          "type": "Combat",
-          "name": "Homefront Operation Site - Combat Site",
-          "group": "Combat Site",
-          "distance": "16.83 AU",
-          "signalPercent": 100,
-          "createdTime": "02:15"
-        },
-        {
-          "id": "sig-1793585733874-0.5324912705345188",
-          "sigId": "XEQ-144",
-          "type": "Combat",
-          "name": "Drone Assembly",
-          "group": "Combat Site",
-          "distance": "16.22 AU",
-          "signalPercent": 100,
-          "createdTime": "02:15"
-        },
-        {
-          "id": "sig-1793585733874-0.8013210085972655",
-          "sigId": "RKF-719",
-          "type": "Combat",
-          "name": "Criterion of Fitness",
-          "group": "Combat Site",
-          "distance": "18.06 AU",
-          "signalPercent": 100,
-          "createdTime": "02:15"
-        },
-        {
-          "id": "sig-1793585733874-0.799728412352072",
-          "sigId": "WWQ-074",
-          "type": "Combat",
-          "name": "Tetrimon Base",
-          "group": "Combat Site",
-          "distance": "14.77 AU",
-          "signalPercent": 100,
-          "createdTime": "02:15"
-        },
-        {
-          "id": "sig-1793585733874-0.712076351102399",
-          "sigId": "FEZ-130",
-          "type": "Combat",
-          "name": "Guristas Hideaway",
-          "group": "Combat Site",
-          "distance": "17.16 AU",
-          "signalPercent": 100,
-          "createdTime": "02:15"
-        }
-      ],
-      "lastUpdated": "02:15",
-      "x": 650,
-      "y": 238
+      "signatures": [],
+      "lastUpdated": "02:35",
+      "x": 440,
+      "y": 232
     },
     "Uemisaisen": {
       "id": "Uemisaisen",
       "name": "Uemisaisen",
       "systemClass": "Highsec",
+      "region": "Lonetrek",
+      "security": 0.6,
       "statics": [],
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "02:03",
-      "x": 650,
-      "y": 336
+      "lastUpdated": "02:35",
+      "x": 440,
+      "y": 328
+    },
+    "J103955": {
+      "id": "J103955",
+      "name": "J103955",
+      "systemClass": "C3",
+      "region": "W-Space",
+      "sigCode": "JVC",
+      "statics": [
+        "Lowsec"
+      ],
+      "structures": [],
+      "activePilots": [
+        "USS Hauler"
+      ],
+      "signatures": [],
+      "lastUpdated": "15:42",
+      "x": 410,
+      "y": 424
+    },
+    "J142349": {
+      "id": "J142349",
+      "name": "J142349",
+      "systemClass": "C5",
+      "region": "W-Space",
+      "sigCode": "JPV",
+      "statics": [
+        "C3"
+      ],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "15:42",
+      "x": 330,
+      "y": 520
+    },
+    "Atlar": {
+      "id": "Atlar",
+      "name": "Atlar",
+      "systemClass": "Lowsec",
+      "region": "Molden Heath",
+      "security": 0.4,
+      "sigCode": "UCY",
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "15:42",
+      "x": 460,
+      "y": 520
+    },
+    "B-XJX4": {
+      "id": "B-XJX4",
+      "name": "B-XJX4",
+      "systemClass": "Nullsec",
+      "region": "Catch",
+      "security": -0.7,
+      "sigCode": "WOL",
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "15:42",
+      "x": 210,
+      "y": 520
+    },
+    "New Caldari": {
+      "id": "New Caldari",
+      "name": "New Caldari",
+      "systemClass": "Highsec",
+      "region": "The Forge",
+      "security": 1,
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "15:42",
+      "x": 740,
+      "y": 136
+    },
+    "Alikara": {
+      "id": "Alikara",
+      "name": "Alikara",
+      "systemClass": "Highsec",
+      "region": "The Citadel",
+      "security": 0.7,
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "15:42",
+      "x": 700,
+      "y": 232
+    },
+    "J101817": {
+      "id": "J101817",
+      "name": "J101817",
+      "systemClass": "C1",
+      "region": "W-Space",
+      "sigCode": "ISA",
+      "statics": [
+        "Highsec"
+      ],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "15:42",
+      "x": 840,
+      "y": 232
+    },
+    "J204842": {
+      "id": "J204842",
+      "name": "J204842",
+      "systemClass": "C3",
+      "region": "W-Space",
+      "sigCode": "XSX",
+      "statics": [
+        "Lowsec"
+      ],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "15:42",
+      "x": 700,
+      "y": 328
+    },
+    "J123947": {
+      "id": "J123947",
+      "name": "J123947",
+      "systemClass": "C4",
+      "region": "W-Space",
+      "sigCode": "RCC",
+      "statics": [
+        "C3",
+        "C4"
+      ],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "15:42",
+      "x": 600,
+      "y": 424
+    },
+    "J155214": {
+      "id": "J155214",
+      "name": "J155214",
+      "systemClass": "C4",
+      "region": "W-Space",
+      "sigCode": "MFD",
+      "statics": [
+        "C3",
+        "C2"
+      ],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "15:42",
+      "x": 780,
+      "y": 424
+    },
+    "J111543": {
+      "id": "J111543",
+      "name": "J111543",
+      "systemClass": "C5",
+      "region": "W-Space",
+      "sigCode": "JCW",
+      "statics": [
+        "C4"
+      ],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "15:42",
+      "x": 720,
+      "y": 520
+    },
+    "J133210": {
+      "id": "J133210",
+      "name": "J133210",
+      "systemClass": "C2",
+      "region": "W-Space",
+      "sigCode": "WMI",
+      "statics": [
+        "Highsec",
+        "C3"
+      ],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "15:42",
+      "x": 860,
+      "y": 520
+    },
+    "Perimeter": {
+      "id": "Perimeter",
+      "name": "Perimeter",
+      "systemClass": "Highsec",
+      "region": "The Forge",
+      "security": 1,
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "15:42",
+      "x": 1040,
+      "y": 136
+    },
+    "Niyabainen": {
+      "id": "Niyabainen",
+      "name": "Niyabainen",
+      "systemClass": "Highsec",
+      "region": "The Forge",
+      "security": 1,
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "15:42",
+      "x": 1040,
+      "y": 232
+    },
+    "Maurasi": {
+      "id": "Maurasi",
+      "name": "Maurasi",
+      "systemClass": "Highsec",
+      "region": "The Forge",
+      "security": 0.9,
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "15:42",
+      "x": 1190,
+      "y": 136
+    },
+    "Urlen": {
+      "id": "Urlen",
+      "name": "Urlen",
+      "systemClass": "Highsec",
+      "region": "The Forge",
+      "security": 1,
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "15:42",
+      "x": 1190,
+      "y": 232
+    },
+    "J210422": {
+      "id": "J210422",
+      "name": "J210422",
+      "systemClass": "C2",
+      "region": "W-Space",
+      "sigCode": "EOE",
+      "statics": [
+        "Highsec",
+        "C3"
+      ],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "15:42",
+      "x": 1280,
+      "y": 328
+    },
+    "Kisogo": {
+      "id": "Kisogo",
+      "name": "Kisogo",
+      "systemClass": "Highsec",
+      "region": "The Forge",
+      "security": 1,
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "15:42",
+      "x": 1140,
+      "y": 328
+    },
+    "J212504": {
+      "id": "J212504",
+      "name": "J212504",
+      "systemClass": "C1",
+      "region": "W-Space",
+      "sigCode": "XWJ",
+      "statics": [
+        "Highsec"
+      ],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "15:42",
+      "x": 1000,
+      "y": 328
+    },
+    "J103217": {
+      "id": "J103217",
+      "name": "J103217",
+      "systemClass": "C2",
+      "region": "W-Space",
+      "sigCode": "WCU",
+      "statics": [
+        "Highsec",
+        "C3"
+      ],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "15:42",
+      "x": 1140,
+      "y": 424
+    },
+    "J124837": {
+      "id": "J124837",
+      "name": "J124837",
+      "systemClass": "C4",
+      "region": "W-Space",
+      "sigCode": "XND",
+      "statics": [
+        "C2",
+        "C1"
+      ],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "15:42",
+      "x": 1000,
+      "y": 424
+    },
+    "J151359": {
+      "id": "J151359",
+      "name": "J151359",
+      "systemClass": "C4",
+      "region": "W-Space",
+      "sigCode": "KRY",
+      "statics": [
+        "C2",
+        "C4"
+      ],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "15:42",
+      "x": 1070,
+      "y": 520
+    },
+    "J101126": {
+      "id": "J101126",
+      "name": "J101126",
+      "systemClass": "C4",
+      "region": "W-Space",
+      "sigCode": "VNY",
+      "statics": [
+        "C1",
+        "C4"
+      ],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "15:42",
+      "x": 1210,
+      "y": 520
     },
     "Erenta": {
       "id": "Erenta",
@@ -387,52 +499,34 @@
       "statics": [],
       "structures": [],
       "activePilots": [],
-      "signatures": [
-        {
-          "id": "sig-1793584854693-0.12021727857005837",
-          "sigId": "FWE-105",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Unknown",
-          "distance": "20.71 AU",
-          "signalPercent": 100,
-          "createdTime": "02:00"
-        },
-        {
-          "id": "sig-1793584854693-0.762819287096543",
-          "sigId": "OXI-944",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Unknown",
-          "distance": "28.70 AU",
-          "signalPercent": 100,
-          "createdTime": "02:00"
-        },
-        {
-          "id": "sig-1793584854693-0.017858482514855112",
-          "sigId": "BWL-935",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Unknown",
-          "distance": "26.95 AU",
-          "signalPercent": 100,
-          "createdTime": "02:00"
-        },
-        {
-          "id": "sig-1793584854693-0.3338931826795528",
-          "sigId": "PGE-566",
-          "type": "Combat",
-          "name": "Criterion of Fitness",
-          "group": "Combat Site",
-          "distance": "30.77 AU",
-          "signalPercent": 100,
-          "createdTime": "02:00"
-        }
-      ],
-      "lastUpdated": "02:00",
-      "x": 650,
-      "y": 434,
-      "isCollapsed": false
+      "signatures": [],
+      "lastUpdated": "02:35",
+      "x": 440,
+      "y": 426
+    },
+    "Kuoka": {
+      "id": "Kuoka",
+      "name": "Kuoka",
+      "systemClass": "Highsec",
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "02:35",
+      "x": 440,
+      "y": 524
+    },
+    "Ajanen": {
+      "id": "Ajanen",
+      "name": "Ajanen",
+      "systemClass": "Highsec",
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "02:35",
+      "x": 440,
+      "y": 622
     },
     "J124526": {
       "id": "J124526",
@@ -445,38 +539,231 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "01:54",
-      "x": 650,
-      "y": 728
+      "lastUpdated": "02:35",
+      "x": 440,
+      "y": 720
+    },
+    "New": {
+      "id": "New",
+      "name": "New",
+      "systemClass": "Highsec",
+      "statics": [],
+      "structures": [],
+      "activePilots": [
+        "Syndra en Tilavine"
+      ],
+      "signatures": [],
+      "lastUpdated": "02:35",
+      "x": 440,
+      "y": 720
     }
   },
   "connections": [
     {
-      "id": "conn-1793584042443",
-      "from": "Ajanen",
-      "to": "Kuoka",
-      "wormholeType": "Stargate",
-      "massStatus": "stable",
-      "timeStatus": "stable"
+      "id": "c-jita-ikuchi",
+      "from": "Jita",
+      "to": "Ikuchi",
+      "wormholeType": "Stargate"
     },
     {
-      "id": "conn-1793584447531",
+      "id": "c-ikuchi-ansila",
+      "from": "Ikuchi",
+      "to": "Ansila",
+      "wormholeType": "Stargate"
+    },
+    {
+      "id": "c-ansila-hykkota",
+      "from": "Ansila",
+      "to": "Hykkota",
+      "wormholeType": "Stargate"
+    },
+    {
+      "id": "c-hykkota-j151141",
+      "from": "Hykkota",
+      "to": "J151141",
+      "wormholeType": "Wormhole",
+      "sigFrom": "YSO"
+    },
+    {
+      "id": "c-jita-muvolailen",
+      "from": "Jita",
+      "to": "Muvolailen",
+      "wormholeType": "Stargate"
+    },
+    {
+      "id": "c-jita-sobaseki",
+      "from": "Jita",
+      "to": "Sobaseki",
+      "wormholeType": "Stargate"
+    },
+    {
+      "id": "c-sobaseki-isanamo",
       "from": "Sobaseki",
       "to": "Isanamo",
-      "wormholeType": "Stargate",
-      "massStatus": "stable",
-      "timeStatus": "stable"
+      "wormholeType": "Stargate"
     },
     {
-      "id": "conn-1793584447532",
+      "id": "c-isanamo-uemisaisen",
       "from": "Isanamo",
       "to": "Uemisaisen",
-      "wormholeType": "Stargate",
-      "massStatus": "stable",
-      "timeStatus": "stable"
+      "wormholeType": "Stargate"
     },
     {
-      "id": "conn-1793584447532",
+      "id": "c-uemisaisen-j103955",
+      "from": "Uemisaisen",
+      "to": "J103955",
+      "wormholeType": "Wormhole",
+      "sigFrom": "ANF"
+    },
+    {
+      "id": "c-j103955-j142349",
+      "from": "J103955",
+      "to": "J142349",
+      "wormholeType": "Wormhole",
+      "sigFrom": "JPV"
+    },
+    {
+      "id": "c-j103955-atlar",
+      "from": "J103955",
+      "to": "Atlar",
+      "wormholeType": "Wormhole",
+      "sigFrom": "UCY"
+    },
+    {
+      "id": "c-j103955-bxjx4",
+      "from": "J103955",
+      "to": "B-XJX4",
+      "wormholeType": "Wormhole",
+      "sigFrom": "WOL"
+    },
+    {
+      "id": "c-jita-newcaldari",
+      "from": "Jita",
+      "to": "New Caldari",
+      "wormholeType": "Stargate"
+    },
+    {
+      "id": "c-newcaldari-alikara",
+      "from": "New Caldari",
+      "to": "Alikara",
+      "wormholeType": "Stargate"
+    },
+    {
+      "id": "c-newcaldari-j101817",
+      "from": "New Caldari",
+      "to": "J101817",
+      "wormholeType": "Wormhole",
+      "sigFrom": "ISA"
+    },
+    {
+      "id": "c-alikara-j204842",
+      "from": "Alikara",
+      "to": "J204842",
+      "wormholeType": "Wormhole",
+      "sigFrom": "XSX"
+    },
+    {
+      "id": "c-j204842-j123947",
+      "from": "J204842",
+      "to": "J123947",
+      "wormholeType": "Wormhole",
+      "sigFrom": "RCC"
+    },
+    {
+      "id": "c-j204842-j155214",
+      "from": "J204842",
+      "to": "J155214",
+      "wormholeType": "Wormhole",
+      "sigFrom": "MFD"
+    },
+    {
+      "id": "c-j155214-j111543",
+      "from": "J155214",
+      "to": "J111543",
+      "wormholeType": "Wormhole",
+      "sigFrom": "JCW"
+    },
+    {
+      "id": "c-j155214-j133210",
+      "from": "J155214",
+      "to": "J133210",
+      "wormholeType": "Wormhole",
+      "sigFrom": "WMI"
+    },
+    {
+      "id": "c-jita-perimeter",
+      "from": "Jita",
+      "to": "Perimeter",
+      "wormholeType": "Stargate"
+    },
+    {
+      "id": "c-perimeter-niyabainen",
+      "from": "Perimeter",
+      "to": "Niyabainen",
+      "wormholeType": "Stargate"
+    },
+    {
+      "id": "c-jita-maurasi",
+      "from": "Jita",
+      "to": "Maurasi",
+      "wormholeType": "Stargate"
+    },
+    {
+      "id": "c-maurasi-urlen",
+      "from": "Maurasi",
+      "to": "Urlen",
+      "wormholeType": "Stargate"
+    },
+    {
+      "id": "c-urlen-j210422",
+      "from": "Urlen",
+      "to": "J210422",
+      "wormholeType": "Wormhole",
+      "sigFrom": "EOE"
+    },
+    {
+      "id": "c-urlen-kisogo",
+      "from": "Urlen",
+      "to": "Kisogo",
+      "wormholeType": "Stargate"
+    },
+    {
+      "id": "c-urlen-j212504",
+      "from": "Urlen",
+      "to": "J212504",
+      "wormholeType": "Wormhole",
+      "sigFrom": "XWJ"
+    },
+    {
+      "id": "c-kisogo-j103217",
+      "from": "Kisogo",
+      "to": "J103217",
+      "wormholeType": "Wormhole",
+      "sigFrom": "WCU"
+    },
+    {
+      "id": "c-j212504-j124837",
+      "from": "J212504",
+      "to": "J124837",
+      "wormholeType": "Wormhole",
+      "sigFrom": "XND"
+    },
+    {
+      "id": "c-j103217-j151359",
+      "from": "J103217",
+      "to": "J151359",
+      "wormholeType": "Wormhole",
+      "sigFrom": "KRY"
+    },
+    {
+      "id": "c-j103217-j101126",
+      "from": "J103217",
+      "to": "J101126",
+      "wormholeType": "Wormhole",
+      "sigFrom": "VNY"
+    },
+    {
+      "id": "conn-1793586933527",
       "from": "Uemisaisen",
       "to": "Erenta",
       "wormholeType": "Stargate",
@@ -484,7 +771,7 @@
       "timeStatus": "stable"
     },
     {
-      "id": "conn-1793584447533",
+      "id": "conn-1793586933528",
       "from": "Erenta",
       "to": "Kuoka",
       "wormholeType": "Stargate",
@@ -492,7 +779,15 @@
       "timeStatus": "stable"
     },
     {
-      "id": "conn-1793584447535",
+      "id": "conn-1793586933528",
+      "from": "Kuoka",
+      "to": "Ajanen",
+      "wormholeType": "Stargate",
+      "massStatus": "stable",
+      "timeStatus": "stable"
+    },
+    {
+      "id": "conn-1793586933529",
       "from": "Ajanen",
       "to": "J124526",
       "wormholeType": "Wormhole",
@@ -500,9 +795,17 @@
       "timeStatus": "stable"
     },
     {
-      "id": "conn-1793584447540",
-      "from": "Sobaseki",
-      "to": "Jita",
+      "id": "conn-1793586933530",
+      "from": "Ajanen",
+      "to": "New",
+      "wormholeType": "Stargate",
+      "massStatus": "stable",
+      "timeStatus": "stable"
+    },
+    {
+      "id": "conn-1793586933547",
+      "from": "Jita",
+      "to": "New",
       "wormholeType": "Wormhole",
       "massStatus": "stable",
       "timeStatus": "stable"
@@ -511,17 +814,5 @@
   "onlineBuddies": [
     "Syndra en Tilavine",
     "USS Hauler"
-  ],
-  "timers": [
-    {
-      "id": "timer-1793585018684-281",
-      "name": "Astrahaus test",
-      "systemName": "Erenta",
-      "privacy": "Corporation",
-      "structureType": "Astrahus",
-      "timerType": "Armor",
-      "vulnerableTime": "2026-11-03T05:06:38.683Z",
-      "owner": "big corp"
-    }
   ]
 }
