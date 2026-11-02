@@ -4,7 +4,7 @@ import {
   Check, Share2, ZoomIn, ZoomOut, Maximize2, Crosshair,
   User, MapPin, Eye, Radio, ExternalLink, Layers, Sparkles, KeyRound, LogOut,
   Sun, Moon, ChevronDown, ChevronRight, FolderTree, GitFork, Copy, Route, Navigation, Zap,
-  Clock, Hourglass, Skull, ShieldAlert
+  Clock, Hourglass, Skull, ShieldAlert, X
 } from 'lucide-react';
 import { mapperService } from '../services/mapperService';
 import { ChainMapState, WormholeNode, WormholeConnection, WormholeSignature, StructureTimer } from '../types/mapper';
@@ -292,9 +292,14 @@ export const ChainMapperView: React.FC = () => {
 
   // Wheel zoom
   const handleWheel = (e: React.WheelEvent) => {
+    // If scrolling over controls, buttons, drawers, or dialogs, do NOT zoom the map
+    const target = e.target as HTMLElement;
+    if (target.closest('.canvas-control') || target.closest('aside') || target.closest('button') || target.closest('input') || target.closest('textarea')) {
+      return;
+    }
     e.preventDefault();
-    const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
-    setZoom(prev => Math.min(Math.max(prev * zoomFactor, 0.4), 2.2));
+    const zoomFactor = e.deltaY < 0 ? 1.08 : 0.92;
+    setZoom(prev => Math.min(Math.max(prev * zoomFactor, 0.35), 2.5));
   };
 
   // Zoom controls
@@ -635,9 +640,14 @@ export const ChainMapperView: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. MAIN INTERACTIVE VISUAL CANVAS */}
-      <div 
-        ref={containerRef}
+      {/* 2. MAIN BODY ROW: LEFT (CANVAS + BOTTOM DECK) | RIGHT (FULL-HEIGHT SYSTEM INSPECTOR) */}
+      <div className="flex-1 flex min-h-0 relative overflow-hidden">
+        
+        {/* LEFT COLUMN: Map Canvas + Integrated Bottom Intel Deck */}
+        <div className="flex-1 flex flex-col min-w-0 h-full relative overflow-hidden">
+          {/* Main Interactive Visual Canvas */}
+          <div 
+            ref={containerRef}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -1076,9 +1086,319 @@ export const ChainMapperView: React.FC = () => {
         </div>
 
         {/* 4. SYSTEM INSPECTOR DRAWER (Collapsible Right Side) */}
+        {/* Floating GalaxyFinder Hubs, Timers & zKill Feed (Bottom-Right Apple Frosted Glass Panel) */}
+        {!showInspector && (
+          <div className={`canvas-control absolute bottom-4 right-4 z-20 w-80 backdrop-blur-2xl border rounded-2xl shadow-2xl overflow-hidden font-sans text-xs transition-all ${
+            isDark ? 'bg-[#090d16]/90 border-white/10 text-slate-200' : 'bg-white/95 border-slate-200 text-slate-800'
+          }`}>
+            {/* Top 3-Way Tab Switcher */}
+            <div className={`p-2 border-b flex items-center justify-between ${isDark ? 'border-white/5 bg-white/5' : 'border-slate-100 bg-slate-50'}`}>
+              <div className={`flex items-center p-0.5 rounded-full border text-[10px] font-medium ${
+                isDark ? 'bg-black/40 border-white/10' : 'bg-slate-200/60 border-slate-300'
+              }`}>
+                <button
+                  onClick={() => setFloatingTab('hubs')}
+                  className={`px-2 py-0.5 rounded-full transition-all ${
+                    floatingTab === 'hubs' 
+                      ? isDark ? 'bg-cyan-500/20 text-cyan-300 font-semibold shadow-sm' : 'bg-white text-slate-900 font-semibold shadow-sm' 
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Hubs
+                </button>
+                <button
+                  onClick={() => setFloatingTab('timers')}
+                  className={`px-2 py-0.5 rounded-full transition-all ${
+                    floatingTab === 'timers' 
+                      ? isDark ? 'bg-amber-500/20 text-amber-300 font-semibold shadow-sm' : 'bg-white text-slate-900 font-semibold shadow-sm' 
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Timers ({(mapState.timers || []).length})
+                </button>
+                <button
+                  onClick={() => setFloatingTab('zkill')}
+                  className={`px-2 py-0.5 rounded-full transition-all flex items-center gap-1 ${
+                    floatingTab === 'zkill' 
+                      ? isDark ? 'bg-red-500/20 text-red-300 font-semibold shadow-sm' : 'bg-white text-red-700 font-semibold shadow-sm' 
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <Skull className="w-2.5 h-2.5 text-red-400" />
+                  <span>zKill ({selectedSystemKills.length})</span>
+                </button>
+              </div>
+
+              <span className="text-[10px] text-slate-400 font-medium truncate max-w-[80px]">
+                {selectedSystem?.name || 'Jita'}
+              </span>
+            </div>
+
+            {/* TAB 1: TRADE HUBS */}
+            {floatingTab === 'hubs' && (
+              <div className="p-3 space-y-1">
+                {tradeHubRoutes.map(hub => {
+                  const hasPath = hub.jumps !== null;
+                  return (
+                    <div 
+                      key={hub.hubName}
+                      onClick={() => {
+                        if (hasPath) {
+                          setSelectedSystemId(hub.hubName);
+                          centerOnSystem(hub.hubName);
+                        }
+                      }}
+                      className={`flex items-center justify-between px-2.5 py-1 rounded-xl transition-colors ${
+                        hasPath 
+                          ? isDark ? 'hover:bg-white/5 cursor-pointer text-slate-200' : 'hover:bg-slate-100 cursor-pointer text-slate-800' 
+                          : 'text-slate-500'
+                      }`}
+                    >
+                      <span className="font-semibold text-xs">{hub.hubName}</span>
+                      <span className={`font-semibold tabular-nums text-xs ${hasPath ? 'text-cyan-400' : 'text-slate-500'}`}>
+                        {hasPath ? `${hub.jumps} J` : '—'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* TAB 2: TIMERS */}
+            {floatingTab === 'timers' && (
+              <div className="p-3">
+                <div className="flex items-center justify-between pb-2 border-b border-white/5">
+                  <span className="text-xs font-semibold text-slate-300">Structure Timers</span>
+                  <button
+                    onClick={() => setIsTimerModalOpen(true)}
+                    className="p-1 rounded-full bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 transition-colors"
+                    title="Create Structure Timer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                <div className="pt-2">
+                  {(!mapState.timers || mapState.timers.length === 0) ? (
+                    <div className="py-3 text-center text-slate-400 text-[10px] font-medium">
+                      No active timers in chain.
+                      <button
+                        onClick={() => setIsTimerModalOpen(true)}
+                        className="block mx-auto mt-1 text-cyan-400 hover:underline text-[10px] font-semibold"
+                      >
+                        + Add Timer
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                      {mapState.timers.map(timer => {
+                        const rem = formatTimeRemaining(timer.vulnerableTime);
+                        const stageColor = timer.timerType === 'Hull' ? 'text-red-400 border-red-500/40 bg-red-950/40' :
+                                           timer.timerType === 'Armor' ? 'text-amber-400 border-amber-500/40 bg-amber-950/40' :
+                                           'text-blue-400 border-blue-500/40 bg-blue-950/40';
+
+                        return (
+                          <div 
+                            key={timer.id}
+                            className={`p-2 rounded-xl border transition-all flex items-center justify-between ${
+                              isDark ? 'bg-white/5 border-white/5 hover:border-cyan-500/40' : 'bg-slate-50 border-slate-200'
+                            }`}
+                          >
+                            <div 
+                              className="cursor-pointer min-w-0 flex-1 pr-1.5"
+                              onClick={() => {
+                                setSelectedSystemId(timer.systemName);
+                                centerOnSystem(timer.systemName);
+                              }}
+                            >
+                              <div className="flex items-center gap-1.5 leading-tight">
+                                <span className="font-semibold text-xs truncate">{timer.name}</span>
+                                <span className={`text-[8.5px] px-1 py-0.2 rounded border font-bold uppercase ${stageColor}`}>
+                                  {timer.timerType}
+                                </span>
+                              </div>
+                              <div className="text-[10px] text-slate-400 font-sans mt-0.5">
+                                {timer.systemName} • {timer.structureType}
+                              </div>
+                            </div>
+
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                mapperService.deleteStructureTimer(timer.id);
+                              }}
+                              className="p-1 rounded-full text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                              title="Delete timer"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 3: LIVE ZKILLBOARD FEED AT A GLANCE */}
+            {floatingTab === 'zkill' && (
+              <div className="p-3">
+                <div className="flex items-center justify-between pb-2 border-b border-white/5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-semibold text-slate-200">
+                      {selectedSystem?.name || 'System'}
+                    </span>
+                    <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full uppercase ${
+                      systemThreatMap[selectedSystem.name]?.threat === 'Extreme Danger' ? 'bg-red-500/20 text-red-300 border border-red-500/50 animate-pulse' :
+                      systemThreatMap[selectedSystem.name]?.threat === 'Active Hunters' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50' :
+                      systemThreatMap[selectedSystem.name]?.threat === 'Low Risk' ? 'bg-sky-500/20 text-sky-300 border border-sky-500/50' :
+                      'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                    }`}>
+                      {systemThreatMap[selectedSystem.name]?.threat || 'Quiet'}
+                    </span>
+                  </div>
+
+                  <a
+                    href={`https://zkillboard.com/system/${selectedSystem.name}/`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[10px] text-cyan-400 hover:text-cyan-300 flex items-center gap-0.5"
+                    title="Open on zKillboard"
+                  >
+                    <span>zKill</span>
+                    <ExternalLink className="w-2.5 h-2.5" />
+                  </a>
+                </div>
+
+                <div className="pt-2">
+                  {selectedSystemKillsLoading ? (
+                    <div className="py-4 text-center text-xs text-slate-400 flex items-center justify-center gap-1.5">
+                      <div className="w-3 h-3 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                      <span>Updating zKill...</span>
+                    </div>
+                  ) : selectedSystemKills.length === 0 ? (
+                    <div className="py-4 text-center text-xs text-slate-500">
+                      <span className="text-emerald-400 font-semibold block text-[11px] mb-0.5">Quiet Space</span>
+                      0 kills in past 24h. Safe to jump.
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                      {selectedSystemKills.map(kill => {
+                        const iskFormatted = kill.totalValue >= 1e9
+                          ? `${(kill.totalValue / 1e9).toFixed(2)}B ISK`
+                          : `${(kill.totalValue / 1e6).toFixed(1)}M ISK`;
+
+                        return (
+                          <a
+                            key={kill.killmailId}
+                            href={kill.zkillUrl || `https://zkillboard.com/kill/${kill.killmailId}/`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2 rounded-xl bg-black/40 hover:bg-white/5 border border-white/5 hover:border-red-500/50 flex items-center justify-between gap-2 transition-all group"
+                          >
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                              {kill.victim.shipTypeId ? (
+                                <img
+                                  src={`https://images.evetech.net/types/${kill.victim.shipTypeId}/render?size=64`}
+                                  alt={kill.victim.shipTypeName}
+                                  className="w-7 h-7 rounded-lg border border-white/10 object-cover bg-black/80 shrink-0"
+                                />
+                              ) : (
+                                <div className="w-7 h-7 rounded-lg bg-red-950/60 border border-red-800 flex items-center justify-center shrink-0">
+                                  <Skull className="w-3.5 h-3.5 text-red-400" />
+                                </div>
+                              )}
+                              <div className="min-w-0 flex-1 leading-tight">
+                                <div className="text-[11px] font-bold text-white group-hover:text-red-300 truncate">
+                                  {kill.victim.shipTypeName}
+                                </div>
+                                <div className="text-[9.5px] text-slate-400 truncate">
+                                  <span className="text-red-400 mr-0.5">⚔️</span>
+                                  {kill.finalBlow.characterName}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="text-right shrink-0 leading-tight">
+                              <div className="text-[10.5px] font-bold text-amber-400 tabular-nums">
+                                {iskFormatted}
+                              </div>
+                              <div className="text-[9px] text-slate-500 font-mono">
+                                {kill.killmailTime.slice(0, 5)} EVE
+                              </div>
+                            </div>
+                          </a>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Structure Timer Modal */}
+        <StructureTimerModal
+          isOpen={isTimerModalOpen}
+          defaultSystem={selectedSystem?.name || 'Jita'}
+          availableSystems={Object.keys(mapState.systems)}
+          onClose={() => setIsTimerModalOpen(false)}
+        />
+
+        {/* Pilot Login Modal */}
+        <PilotLoginModal
+          isOpen={isLoginModalOpen}
+          onClose={() => setIsLoginModalOpen(false)}
+          onSuccess={(profile) => {
+            mapperService.setPilotLocation(profile.characterName, selectedSystem?.id || 'J103955');
+          }}
+        />
+
+        {/* Signature & Connection Editor Modal */}
+        {isConnModalOpen && selectedConnection && (
+          <SignaturePromptModal
+            isOpen={isConnModalOpen}
+            fromSystem={selectedConnection.from}
+            toSystem={selectedConnection.to}
+            initialSig={selectedConnection.sigFrom || ''}
+            initialType={selectedConnection.wormholeType || 'K162'}
+            initialMass={selectedConnection.massStatus || 'stable'}
+            initialTime={selectedConnection.timeStatus || 'stable'}
+            initialTactical={selectedConnection.tactical || 'clear'}
+            initialIsFrig={selectedConnection.isFrig || false}
+            connectionId={selectedConnection.id}
+            onClose={() => {
+              setIsConnModalOpen(false);
+              setSelectedConnection(null);
+            }}
+          />
+        )}
+      </div>
+
+      {/* Integrated Bottom Intel Deck (D-Scan Radar, Probe Scanner / Signatures, Structures) */}
+      <IntegratedIntelDeck
+        selectedSystem={selectedSystem}
+        theme={theme}
+        onLinkWormhole={(sig) => {
+          const target = window.prompt(`Link Wormhole signature [${sig.sigId}] (${sig.name || 'Wormhole'}) to destination system:`, '');
+          if (target && target.trim()) {
+            mapperService.addSystemConnection(
+              selectedSystem.id,
+              target.trim(),
+              sig.name?.includes('K162') ? 'K162' : 'Wormhole',
+              sig.sigId
+            );
+          }
+        }}
+      />
+        </div>
+
+        {/* RIGHT COLUMN: FULL-HEIGHT SYSTEM INSPECTOR (GOES ALL THE WAY DOWN TO THE BOTTOM OF THE SCREEN!) */}
         {showInspector && selectedSystem && (
-          <div className="canvas-control absolute top-4 right-4 bottom-4 w-80 bg-[#0d1322]/95 backdrop-blur-lg border border-cyan-900/40 rounded-2xl p-4 shadow-2xl flex flex-col justify-between overflow-y-auto z-20 text-xs">
-            <div>
+          <aside onWheel={(e) => e.stopPropagation()} className={`w-84 xl:w-96 border-l h-full flex flex-col flex-shrink-0 z-30 overflow-hidden select-text text-xs transition-all ${isDark ? "bg-[#0a0f1d] border-white/10 text-slate-200 shadow-2xl" : "bg-white border-slate-200 text-slate-800 shadow-xl"}`}>
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
               {/* Header */}
               <div className="pb-3 mb-3 border-b border-gray-800 flex items-center justify-between">
                 <div>
@@ -1582,316 +1902,9 @@ export const ChainMapperView: React.FC = () => {
                 <span>Reset Map</span>
               </button>
             </div>
-          </div>
-        )}
-
-        {/* Floating GalaxyFinder Hubs, Timers & zKill Feed (Bottom-Right Apple Frosted Glass Panel) */}
-        {!showInspector && (
-          <div className={`canvas-control absolute bottom-4 right-4 z-20 w-80 backdrop-blur-2xl border rounded-2xl shadow-2xl overflow-hidden font-sans text-xs transition-all ${
-            isDark ? 'bg-[#090d16]/90 border-white/10 text-slate-200' : 'bg-white/95 border-slate-200 text-slate-800'
-          }`}>
-            {/* Top 3-Way Tab Switcher */}
-            <div className={`p-2 border-b flex items-center justify-between ${isDark ? 'border-white/5 bg-white/5' : 'border-slate-100 bg-slate-50'}`}>
-              <div className={`flex items-center p-0.5 rounded-full border text-[10px] font-medium ${
-                isDark ? 'bg-black/40 border-white/10' : 'bg-slate-200/60 border-slate-300'
-              }`}>
-                <button
-                  onClick={() => setFloatingTab('hubs')}
-                  className={`px-2 py-0.5 rounded-full transition-all ${
-                    floatingTab === 'hubs' 
-                      ? isDark ? 'bg-cyan-500/20 text-cyan-300 font-semibold shadow-sm' : 'bg-white text-slate-900 font-semibold shadow-sm' 
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  Hubs
-                </button>
-                <button
-                  onClick={() => setFloatingTab('timers')}
-                  className={`px-2 py-0.5 rounded-full transition-all ${
-                    floatingTab === 'timers' 
-                      ? isDark ? 'bg-amber-500/20 text-amber-300 font-semibold shadow-sm' : 'bg-white text-slate-900 font-semibold shadow-sm' 
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  Timers ({(mapState.timers || []).length})
-                </button>
-                <button
-                  onClick={() => setFloatingTab('zkill')}
-                  className={`px-2 py-0.5 rounded-full transition-all flex items-center gap-1 ${
-                    floatingTab === 'zkill' 
-                      ? isDark ? 'bg-red-500/20 text-red-300 font-semibold shadow-sm' : 'bg-white text-red-700 font-semibold shadow-sm' 
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  <Skull className="w-2.5 h-2.5 text-red-400" />
-                  <span>zKill ({selectedSystemKills.length})</span>
-                </button>
-              </div>
-
-              <span className="text-[10px] text-slate-400 font-medium truncate max-w-[80px]">
-                {selectedSystem?.name || 'Jita'}
-              </span>
-            </div>
-
-            {/* TAB 1: TRADE HUBS */}
-            {floatingTab === 'hubs' && (
-              <div className="p-3 space-y-1">
-                {tradeHubRoutes.map(hub => {
-                  const hasPath = hub.jumps !== null;
-                  return (
-                    <div 
-                      key={hub.hubName}
-                      onClick={() => {
-                        if (hasPath) {
-                          setSelectedSystemId(hub.hubName);
-                          centerOnSystem(hub.hubName);
-                        }
-                      }}
-                      className={`flex items-center justify-between px-2.5 py-1 rounded-xl transition-colors ${
-                        hasPath 
-                          ? isDark ? 'hover:bg-white/5 cursor-pointer text-slate-200' : 'hover:bg-slate-100 cursor-pointer text-slate-800' 
-                          : 'text-slate-500'
-                      }`}
-                    >
-                      <span className="font-semibold text-xs">{hub.hubName}</span>
-                      <span className={`font-semibold tabular-nums text-xs ${hasPath ? 'text-cyan-400' : 'text-slate-500'}`}>
-                        {hasPath ? `${hub.jumps} J` : '—'}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* TAB 2: TIMERS */}
-            {floatingTab === 'timers' && (
-              <div className="p-3">
-                <div className="flex items-center justify-between pb-2 border-b border-white/5">
-                  <span className="text-xs font-semibold text-slate-300">Structure Timers</span>
-                  <button
-                    onClick={() => setIsTimerModalOpen(true)}
-                    className="p-1 rounded-full bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 transition-colors"
-                    title="Create Structure Timer"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                <div className="pt-2">
-                  {(!mapState.timers || mapState.timers.length === 0) ? (
-                    <div className="py-3 text-center text-slate-400 text-[10px] font-medium">
-                      No active timers in chain.
-                      <button
-                        onClick={() => setIsTimerModalOpen(true)}
-                        className="block mx-auto mt-1 text-cyan-400 hover:underline text-[10px] font-semibold"
-                      >
-                        + Add Timer
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                      {mapState.timers.map(timer => {
-                        const rem = formatTimeRemaining(timer.vulnerableTime);
-                        const stageColor = timer.timerType === 'Hull' ? 'text-red-400 border-red-500/40 bg-red-950/40' :
-                                           timer.timerType === 'Armor' ? 'text-amber-400 border-amber-500/40 bg-amber-950/40' :
-                                           'text-blue-400 border-blue-500/40 bg-blue-950/40';
-
-                        return (
-                          <div 
-                            key={timer.id}
-                            className={`p-2 rounded-xl border transition-all flex items-center justify-between ${
-                              isDark ? 'bg-white/5 border-white/5 hover:border-cyan-500/40' : 'bg-slate-50 border-slate-200'
-                            }`}
-                          >
-                            <div 
-                              className="cursor-pointer min-w-0 flex-1 pr-1.5"
-                              onClick={() => {
-                                setSelectedSystemId(timer.systemName);
-                                centerOnSystem(timer.systemName);
-                              }}
-                            >
-                              <div className="flex items-center gap-1.5 leading-tight">
-                                <span className="font-semibold text-xs truncate">{timer.name}</span>
-                                <span className={`text-[8.5px] px-1 py-0.2 rounded border font-bold uppercase ${stageColor}`}>
-                                  {timer.timerType}
-                                </span>
-                              </div>
-                              <div className="text-[10px] text-slate-400 font-sans mt-0.5">
-                                {timer.systemName} • {timer.structureType}
-                              </div>
-                            </div>
-
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                mapperService.deleteStructureTimer(timer.id);
-                              }}
-                              className="p-1 rounded-full text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                              title="Delete timer"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* TAB 3: LIVE ZKILLBOARD FEED AT A GLANCE */}
-            {floatingTab === 'zkill' && (
-              <div className="p-3">
-                <div className="flex items-center justify-between pb-2 border-b border-white/5">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-semibold text-slate-200">
-                      {selectedSystem?.name || 'System'}
-                    </span>
-                    <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full uppercase ${
-                      systemThreatMap[selectedSystem.name]?.threat === 'Extreme Danger' ? 'bg-red-500/20 text-red-300 border border-red-500/50 animate-pulse' :
-                      systemThreatMap[selectedSystem.name]?.threat === 'Active Hunters' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50' :
-                      systemThreatMap[selectedSystem.name]?.threat === 'Low Risk' ? 'bg-sky-500/20 text-sky-300 border border-sky-500/50' :
-                      'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                    }`}>
-                      {systemThreatMap[selectedSystem.name]?.threat || 'Quiet'}
-                    </span>
-                  </div>
-
-                  <a
-                    href={`https://zkillboard.com/system/${selectedSystem.name}/`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[10px] text-cyan-400 hover:text-cyan-300 flex items-center gap-0.5"
-                    title="Open on zKillboard"
-                  >
-                    <span>zKill</span>
-                    <ExternalLink className="w-2.5 h-2.5" />
-                  </a>
-                </div>
-
-                <div className="pt-2">
-                  {selectedSystemKillsLoading ? (
-                    <div className="py-4 text-center text-xs text-slate-400 flex items-center justify-center gap-1.5">
-                      <div className="w-3 h-3 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
-                      <span>Updating zKill...</span>
-                    </div>
-                  ) : selectedSystemKills.length === 0 ? (
-                    <div className="py-4 text-center text-xs text-slate-500">
-                      <span className="text-emerald-400 font-semibold block text-[11px] mb-0.5">Quiet Space</span>
-                      0 kills in past 24h. Safe to jump.
-                    </div>
-                  ) : (
-                    <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
-                      {selectedSystemKills.map(kill => {
-                        const iskFormatted = kill.totalValue >= 1e9
-                          ? `${(kill.totalValue / 1e9).toFixed(2)}B ISK`
-                          : `${(kill.totalValue / 1e6).toFixed(1)}M ISK`;
-
-                        return (
-                          <a
-                            key={kill.killmailId}
-                            href={kill.zkillUrl || `https://zkillboard.com/kill/${kill.killmailId}/`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-2 rounded-xl bg-black/40 hover:bg-white/5 border border-white/5 hover:border-red-500/50 flex items-center justify-between gap-2 transition-all group"
-                          >
-                            <div className="flex items-center gap-2 min-w-0 flex-1">
-                              {kill.victim.shipTypeId ? (
-                                <img
-                                  src={`https://images.evetech.net/types/${kill.victim.shipTypeId}/render?size=64`}
-                                  alt={kill.victim.shipTypeName}
-                                  className="w-7 h-7 rounded-lg border border-white/10 object-cover bg-black/80 shrink-0"
-                                />
-                              ) : (
-                                <div className="w-7 h-7 rounded-lg bg-red-950/60 border border-red-800 flex items-center justify-center shrink-0">
-                                  <Skull className="w-3.5 h-3.5 text-red-400" />
-                                </div>
-                              )}
-                              <div className="min-w-0 flex-1 leading-tight">
-                                <div className="text-[11px] font-bold text-white group-hover:text-red-300 truncate">
-                                  {kill.victim.shipTypeName}
-                                </div>
-                                <div className="text-[9.5px] text-slate-400 truncate">
-                                  <span className="text-red-400 mr-0.5">⚔️</span>
-                                  {kill.finalBlow.characterName}
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="text-right shrink-0 leading-tight">
-                              <div className="text-[10.5px] font-bold text-amber-400 tabular-nums">
-                                {iskFormatted}
-                              </div>
-                              <div className="text-[9px] text-slate-500 font-mono">
-                                {kill.killmailTime.slice(0, 5)} EVE
-                              </div>
-                            </div>
-                          </a>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Structure Timer Modal */}
-        <StructureTimerModal
-          isOpen={isTimerModalOpen}
-          defaultSystem={selectedSystem?.name || 'Jita'}
-          availableSystems={Object.keys(mapState.systems)}
-          onClose={() => setIsTimerModalOpen(false)}
-        />
-
-        {/* Pilot Login Modal */}
-        <PilotLoginModal
-          isOpen={isLoginModalOpen}
-          onClose={() => setIsLoginModalOpen(false)}
-          onSuccess={(profile) => {
-            mapperService.setPilotLocation(profile.characterName, selectedSystem?.id || 'J103955');
-          }}
-        />
-
-        {/* Signature & Connection Editor Modal */}
-        {isConnModalOpen && selectedConnection && (
-          <SignaturePromptModal
-            isOpen={isConnModalOpen}
-            fromSystem={selectedConnection.from}
-            toSystem={selectedConnection.to}
-            initialSig={selectedConnection.sigFrom || ''}
-            initialType={selectedConnection.wormholeType || 'K162'}
-            initialMass={selectedConnection.massStatus || 'stable'}
-            initialTime={selectedConnection.timeStatus || 'stable'}
-            initialTactical={selectedConnection.tactical || 'clear'}
-            initialIsFrig={selectedConnection.isFrig || false}
-            connectionId={selectedConnection.id}
-            onClose={() => {
-              setIsConnModalOpen(false);
-              setSelectedConnection(null);
-            }}
-          />
+          </aside>
         )}
       </div>
-
-      {/* Integrated Bottom Intel Deck (D-Scan Radar, Probe Scanner / Signatures, Structures) */}
-      <IntegratedIntelDeck
-        selectedSystem={selectedSystem}
-        theme={theme}
-        onLinkWormhole={(sig) => {
-          const target = window.prompt(`Link Wormhole signature [${sig.sigId}] (${sig.name || 'Wormhole'}) to destination system:`, '');
-          if (target && target.trim()) {
-            mapperService.addSystemConnection(
-              selectedSystem.id,
-              target.trim(),
-              sig.name?.includes('K162') ? 'K162' : 'Wormhole',
-              sig.sigId
-            );
-          }
-        }}
-      />
     </div>
   );
 };
