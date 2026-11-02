@@ -37,9 +37,9 @@
         "Ennis Urbanski"
       ],
       "signatures": [],
-      "lastUpdated": "04:03",
-      "x": 1510,
-      "y": -103
+      "lastUpdated": "04:10",
+      "x": 578,
+      "y": 50
     },
     "Maurasi": {
       "id": "Maurasi",
@@ -52,8 +52,8 @@
       "activePilots": [],
       "signatures": [],
       "lastUpdated": "15:42",
-      "x": 1510,
-      "y": 156
+      "x": 488,
+      "y": 160
     },
     "Urlen": {
       "id": "Urlen",
@@ -66,8 +66,8 @@
       "activePilots": [],
       "signatures": [],
       "lastUpdated": "15:42",
-      "x": 1399,
-      "y": 283
+      "x": 488,
+      "y": 270
     },
     "J210422": {
       "id": "J210422",
@@ -83,8 +83,8 @@
       "activePilots": [],
       "signatures": [],
       "lastUpdated": "15:42",
-      "x": 1447,
-      "y": 483
+      "x": 488,
+      "y": 456
     },
     "Kisogo": {
       "id": "Kisogo",
@@ -97,7 +97,7 @@
       "activePilots": [],
       "signatures": [],
       "lastUpdated": "15:42",
-      "x": 1228,
+      "x": 308,
       "y": 380
     },
     "J212504": {
@@ -113,7 +113,7 @@
       "activePilots": [],
       "signatures": [],
       "lastUpdated": "15:42",
-      "x": 1678,
+      "x": 758,
       "y": 380
     },
     "J103217": {
@@ -130,7 +130,7 @@
       "activePilots": [],
       "signatures": [],
       "lastUpdated": "15:42",
-      "x": 1228,
+      "x": 308,
       "y": 490
     },
     "J124837": {
@@ -147,7 +147,7 @@
       "activePilots": [],
       "signatures": [],
       "lastUpdated": "15:42",
-      "x": 1678,
+      "x": 758,
       "y": 490
     },
     "J151359": {
@@ -164,8 +164,8 @@
       "activePilots": [],
       "signatures": [],
       "lastUpdated": "15:42",
-      "x": 1095,
-      "y": 591
+      "x": 218,
+      "y": 600
     },
     "J101126": {
       "id": "J101126",
@@ -181,8 +181,8 @@
       "activePilots": [],
       "signatures": [],
       "lastUpdated": "15:42",
-      "x": 1365,
-      "y": 592
+      "x": 398,
+      "y": 600
     },
     "Ikuchi": {
       "id": "Ikuchi",
@@ -194,9 +194,36 @@
         "Syndra en Tilavine"
       ],
       "signatures": [],
-      "lastUpdated": "04:03",
-      "x": 1510,
-      "y": -5
+      "lastUpdated": "04:10",
+      "x": 1009,
+      "y": 132
+    },
+    "New Caldari": {
+      "id": "New Caldari",
+      "name": "New Caldari",
+      "systemClass": "Highsec",
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "04:10",
+      "x": 650,
+      "y": 140
+    },
+    "Josameto": {
+      "id": "Josameto",
+      "name": "Josameto",
+      "systemClass": "C2",
+      "statics": [
+        "C2",
+        "Highsec"
+      ],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "04:10",
+      "x": 650,
+      "y": 238
     }
   },
   "connections": [
@@ -267,10 +294,27 @@
       "wormholeType": "Wormhole",
       "massStatus": "stable",
       "timeStatus": "stable"
+    },
+    {
+      "id": "conn-1793592643350",
+      "from": "New Caldari",
+      "to": "Josameto",
+      "wormholeType": "Wormhole",
+      "massStatus": "stable",
+      "timeStatus": "stable"
+    },
+    {
+      "id": "conn-1793592643353",
+      "from": "New Caldari",
+      "to": "Jita",
+      "wormholeType": "Wormhole",
+      "massStatus": "stable",
+      "timeStatus": "stable"
     }
   ],
   "onlineBuddies": [
     "Syndra en Tilavine",
     "USS Hauler"
-  ]
+  ],
+  "eveClientId": ""
 }

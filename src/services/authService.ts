@@ -98,9 +98,47 @@ class AuthService {
 
   constructor() {
     this.loadSession();
+    this.loadSharedConfig();
     this.checkSSOCallback();
     if (this.currentPilot && this.ssoTokens?.accessToken) {
       this.startLocationTracking();
+    }
+  }
+
+  /**
+   * Loads shared CCP Client ID from the backend server so buddies inherit it automatically.
+   */
+  public async loadSharedConfig(): Promise<string> {
+    try {
+      const res = await fetch('/api/auth/config');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.clientId) {
+          localStorage.setItem(STORAGE_KEY_CLIENT_ID, data.clientId);
+          return data.clientId;
+        }
+      }
+    } catch {}
+    return localStorage.getItem(STORAGE_KEY_CLIENT_ID) || '';
+  }
+
+  /**
+   * Saves shared CCP Client ID to backend server so all fleet members can use 1-click SSO.
+   */
+  public async saveSharedClientId(clientId: string): Promise<boolean> {
+    const clean = (clientId || '').trim();
+    if (clean) {
+      localStorage.setItem(STORAGE_KEY_CLIENT_ID, clean);
+    }
+    try {
+      const res = await fetch('/api/auth/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId: clean })
+      });
+      return res.ok;
+    } catch {
+      return false;
     }
   }
 
@@ -165,12 +203,18 @@ class AuthService {
    * Scopes: esi-location.read_location.v1, esi-location.read_ship_type.v1, esi-location.read_online.v1, esi-ui.write_waypoint.v1
    */
   public async initiateEveSSO(customClientId?: string) {
+    let clientId = (customClientId || '').trim() || localStorage.getItem(STORAGE_KEY_CLIENT_ID) || '';
+    if (!clientId) {
+      clientId = await this.loadSharedConfig();
+    }
     const envClientId = (import.meta as any).env?.VITE_EVE_CLIENT_ID;
-    const clientId = (customClientId || '').trim() || localStorage.getItem(STORAGE_KEY_CLIENT_ID) || (envClientId ? String(envClientId).trim() : '');
+    if (!clientId && envClientId) {
+      clientId = String(envClientId).trim();
+    }
 
     if (!clientId) {
       throw new Error(
-        'EVE SSO requires a CCP Application Client ID. Please register a free app at developers.eveonline.com with your current URL as the Callback, or switch to "Pilot Lookup" for instant login.'
+        'EVE SSO is not configured yet. Please configure a CCP Client ID, or use instant Pilot Lookup below.'
       );
     }
 

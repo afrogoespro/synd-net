@@ -348,6 +348,35 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Get or set shared EVE SSO Client ID across all fleet members
+  if (req.url === '/api/auth/config') {
+    if (req.method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        clientId: chainMap.eveClientId || process.env.VITE_EVE_CLIENT_ID || ''
+      }));
+      return;
+    }
+    if (req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => { body += chunk; });
+      req.on('end', () => {
+        try {
+          const { clientId } = JSON.parse(body);
+          chainMap.eveClientId = (clientId || '').trim();
+          saveState();
+          console.log(`[SSO Config] Saved shared CCP Client ID: ${chainMap.eveClientId ? chainMap.eveClientId.slice(0, 8) + '...' : 'none'}`);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true, clientId: chainMap.eveClientId }));
+        } catch (err) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: err.message }));
+        }
+      });
+      return;
+    }
+  }
+
   // Update signatures/anomalies for a system
   if (req.url === '/api/map/signatures' && req.method === 'POST') {
     let body = '';
