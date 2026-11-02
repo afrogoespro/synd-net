@@ -588,12 +588,21 @@
         "C2",
         "Highsec"
       ],
-      "structures": [],
+      "structures": [
+        {
+          "id": "struct-1793588302900-0.04456996583038075",
+          "name": "Josameto - Free Research Lab",
+          "type": "Raitaru",
+          "distance": "8.40 AU",
+          "scoutedBy": "You",
+          "timestamp": "02:58"
+        }
+      ],
       "activePilots": [
         "Syndra en Tilavine"
       ],
       "signatures": [],
-      "lastUpdated": "02:55",
+      "lastUpdated": "02:58",
       "x": 740,
       "y": 234
     }
