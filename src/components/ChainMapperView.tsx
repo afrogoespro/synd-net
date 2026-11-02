@@ -1223,22 +1223,24 @@ export const ChainMapperView: React.FC = () => {
                       {renderSecurityOrClass(node)}
                       
                       <div className="flex items-center gap-1.5">
-                        {/* Dedicated Statics Display in Upper Right (User Diagram: Statics C2 C3) */}
+                        {/* Dedicated Statics Display in Upper Right (User Diagram: Statics \n C2 C3) */}
                         {isWormhole && cleanStatics.length > 0 && (
-                          <div className="flex items-center gap-0.5">
-                            <span className="text-[7.5px] font-mono uppercase text-slate-400 font-bold tracking-tight mr-0.5">Statics:</span>
-                            {cleanStatics.map((st, sIdx) => {
-                              const stColor = st.startsWith('C') ? getSystemClassColor(st) : st === 'H' ? '#22c55e' : st === 'L' ? '#f97316' : '#ef4444';
-                              return (
-                                <span 
-                                  key={sIdx} 
-                                  className="text-[8.5px] font-bold font-mono px-1 py-0.2 rounded border bg-black/40"
-                                  style={{ color: stColor, borderColor: stColor + '55' }}
-                                >
-                                  {st}
-                                </span>
-                              );
-                            })}
+                          <div className="flex flex-col items-end leading-none">
+                            <span className="text-[7.5px] font-mono uppercase text-slate-400 font-bold tracking-tight">Statics</span>
+                            <div className="flex items-center gap-0.5 mt-0.5">
+                              {cleanStatics.map((st, sIdx) => {
+                                const stColor = st.startsWith('C') ? getSystemClassColor(st) : st === 'H' ? '#22c55e' : st === 'L' ? '#f97316' : '#ef4444';
+                                return (
+                                  <span 
+                                    key={sIdx} 
+                                    className="text-[8.5px] font-bold font-mono px-1 py-0.2 rounded border bg-black/40"
+                                    style={{ color: stColor, borderColor: stColor + '55' }}
+                                  >
+                                    {st}
+                                  </span>
+                                );
+                              })}
+                            </div>
                           </div>
                         )}
 
