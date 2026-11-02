@@ -11,6 +11,7 @@ import { WormholeScoutPopup } from './components/WormholeScoutPopup';
 import { WormholeTacticalHUD } from './components/WormholeTacticalHUD';
 import { SignaturePromptModal } from './components/SignaturePromptModal';
 import { MusicPlayerPopup } from './components/MusicPlayerPopup';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { scoutWatcher, ScoutAlertEvent } from './services/scoutWatcher';
 import { mapperService } from './services/mapperService';
 import { soundManager } from './services/soundEffects';
@@ -18,7 +19,14 @@ import { authService } from './services/authService';
 import { DScanReport } from './types/dscan';
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'dscan' | 'mapper' | 'ore' | 'local' | 'killfeed' | 'eft'>('dashboard');
+  const [activeTab, setActiveTabState] = useState<'dashboard' | 'dscan' | 'mapper' | 'ore' | 'local' | 'killfeed' | 'eft'>(() => {
+    return (localStorage.getItem('synd_active_tab') as any) || 'mapper';
+  });
+
+  const setActiveTab = (tab: 'dashboard' | 'dscan' | 'mapper' | 'ore' | 'local' | 'killfeed' | 'eft') => {
+    setActiveTabState(tab);
+    localStorage.setItem('synd_active_tab', tab);
+  };
   const [audioAlertsEnabled, setAudioAlertsEnabled] = useState<boolean>(true);
   const [autoWatchEnabled, setAutoWatchEnabled] = useState<boolean>(true);
   const [activeScoutAlert, setActiveScoutAlert] = useState<ScoutAlertEvent | null>(null);
@@ -203,9 +211,10 @@ export function App() {
   };
 
   return (
-    <div className={`min-h-screen flex flex-col font-sans transition-colors duration-200 ${
-      theme === 'dark' ? 'bg-[#080b11] text-gray-200' : 'bg-slate-50 text-slate-900'
-    }`}>
+    <ErrorBoundary>
+      <div className={`min-h-screen flex flex-col font-sans transition-colors duration-200 ${
+        theme === 'dark' ? 'bg-[#080b11] text-gray-200' : 'bg-slate-50 text-slate-900'
+      }`}>
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -288,6 +297,7 @@ export function App() {
         </footer>
       )}
     </div>
+    </ErrorBoundary>
   );
 }
 

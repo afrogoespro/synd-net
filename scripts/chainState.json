@@ -574,13 +574,28 @@
       "systemClass": "Highsec",
       "statics": [],
       "structures": [],
-      "activePilots": [
-        "Syndra en Tilavine"
-      ],
+      "activePilots": [],
       "signatures": [],
       "lastUpdated": "02:35",
       "x": 440,
       "y": 720
+    },
+    "Josameto": {
+      "id": "Josameto",
+      "name": "Josameto",
+      "systemClass": "C2",
+      "statics": [
+        "C2",
+        "Highsec"
+      ],
+      "structures": [],
+      "activePilots": [
+        "Syndra en Tilavine"
+      ],
+      "signatures": [],
+      "lastUpdated": "02:55",
+      "x": 740,
+      "y": 234
     }
   },
   "connections": [
@@ -831,6 +846,14 @@
       "id": "conn-1793586933547",
       "from": "Jita",
       "to": "New",
+      "wormholeType": "Wormhole",
+      "massStatus": "stable",
+      "timeStatus": "stable"
+    },
+    {
+      "id": "conn-1793588141391",
+      "from": "New Caldari",
+      "to": "Josameto",
       "wormholeType": "Wormhole",
       "massStatus": "stable",
       "timeStatus": "stable"

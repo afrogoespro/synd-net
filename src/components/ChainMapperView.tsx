@@ -1247,20 +1247,20 @@ export const ChainMapperView: React.FC = () => {
                 <div className="flex items-center justify-between pb-2 border-b border-white/5">
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs font-semibold text-slate-200">
-                      {selectedSystem?.name || 'System'}
+                      {selectedSystem?.name || activeSystem?.name || 'System'}
                     </span>
                     <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full uppercase ${
-                      systemThreatMap[selectedSystem.name]?.threat === 'Extreme Danger' ? 'bg-red-500/20 text-red-300 border border-red-500/50 animate-pulse' :
-                      systemThreatMap[selectedSystem.name]?.threat === 'Active Hunters' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50' :
-                      systemThreatMap[selectedSystem.name]?.threat === 'Low Risk' ? 'bg-sky-500/20 text-sky-300 border border-sky-500/50' :
+                      (selectedSystem?.name && systemThreatMap[selectedSystem.name]?.threat === 'Extreme Danger') ? 'bg-red-500/20 text-red-300 border border-red-500/50 animate-pulse' :
+                      (selectedSystem?.name && systemThreatMap[selectedSystem.name]?.threat === 'Active Hunters') ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50' :
+                      (selectedSystem?.name && systemThreatMap[selectedSystem.name]?.threat === 'Low Risk') ? 'bg-sky-500/20 text-sky-300 border border-sky-500/50' :
                       'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
                     }`}>
-                      {systemThreatMap[selectedSystem.name]?.threat || 'Quiet'}
+                      {(selectedSystem?.name && systemThreatMap[selectedSystem.name]?.threat) || 'Quiet'}
                     </span>
                   </div>
 
                   <a
-                    href={`https://zkillboard.com/system/${selectedSystem.name}/`}
+                    href={`https://zkillboard.com/system/${encodeURIComponent(selectedSystem?.name || activeSystem?.name || 'Jita')}/`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-[10px] text-cyan-400 hover:text-cyan-300 flex items-center gap-0.5"
@@ -1567,21 +1567,21 @@ export const ChainMapperView: React.FC = () => {
                     <span>Live zKillboard Feed</span>
                   </div>
                   <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase ${
-                    systemThreatMap[selectedSystem.name]?.threat === 'Extreme Danger' ? 'bg-red-500/20 text-red-300 border border-red-500/50 animate-pulse' :
-                    systemThreatMap[selectedSystem.name]?.threat === 'Active Hunters' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50' :
-                    systemThreatMap[selectedSystem.name]?.threat === 'Low Risk' ? 'bg-sky-500/20 text-sky-300 border border-sky-500/50' :
+                    (selectedSystem?.name && systemThreatMap[selectedSystem.name]?.threat === 'Extreme Danger') ? 'bg-red-500/20 text-red-300 border border-red-500/50 animate-pulse' :
+                    (selectedSystem?.name && systemThreatMap[selectedSystem.name]?.threat === 'Active Hunters') ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50' :
+                    (selectedSystem?.name && systemThreatMap[selectedSystem.name]?.threat === 'Low Risk') ? 'bg-sky-500/20 text-sky-300 border border-sky-500/50' :
                     'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
                   }`}>
-                    {systemThreatMap[selectedSystem.name]?.threat || 'Quiet'}
+                    {(selectedSystem?.name && systemThreatMap[selectedSystem.name]?.threat) || 'Quiet'}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between text-[11px] text-slate-400 pb-1 border-b border-white/5">
                   <span className="font-sans">
-                    {systemThreatMap[selectedSystem.name]?.kills24h || 0} kills in 24h
+                    {(selectedSystem?.name && systemThreatMap[selectedSystem.name]?.kills24h) || 0} kills in 24h
                   </span>
                   <a
-                    href={`https://zkillboard.com/system/${selectedSystem.name}/`}
+                    href={`https://zkillboard.com/system/${encodeURIComponent(selectedSystem?.name || '')}/`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-[10px] text-cyan-400 hover:text-cyan-300 flex items-center gap-1 font-semibold"
