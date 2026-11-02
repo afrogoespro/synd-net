@@ -94,14 +94,22 @@ export const PilotLoginModal: React.FC<PilotLoginModalProps> = ({
   };
 
   // Rendered via portal into <body> so parent transforms / backdrop-filters
-  // can't hijack `position: fixed` (that was pushing the modal off the top of the screen).
+  // can't hijack `position: fixed`.
+  // Using items-start with py-12 and my-auto guarantees the modal is centered when space permits,
+  // while ensuring the top header is NEVER clipped or inaccessible on smaller viewports.
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999] overflow-y-auto bg-black/80 backdrop-blur-xl animate-in fade-in duration-150 font-sans text-xs select-none"
+      className="fixed inset-0 z-[9999] overflow-y-auto bg-black/85 backdrop-blur-2xl animate-in fade-in duration-200 font-sans text-xs select-none"
       onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="min-h-full flex items-center justify-center p-4 sm:p-8" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="relative w-full max-w-lg my-auto bg-[#0e1422]/95 border border-white/10 rounded-3xl shadow-[0_0_60px_rgba(0,0,0,0.85)] overflow-hidden text-slate-200">
+      <div 
+        className="min-h-full flex justify-center items-start sm:items-center py-12 px-4"
+        onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      >
+        <div 
+          onClick={(e) => e.stopPropagation()}
+          className="relative w-full max-w-lg my-auto bg-[#0e1422]/95 border border-white/10 rounded-3xl shadow-[0_0_60px_rgba(0,0,0,0.85)] overflow-hidden text-slate-200"
+        >
         
         {/* Top Header */}
         <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">

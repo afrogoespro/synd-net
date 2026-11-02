@@ -446,6 +446,47 @@ class MapperService {
     } catch {}
   }
 
+  // Mass delete multiple systems at once
+  public async deleteSystemsBatch(systemIds: string[]) {
+    if (!Array.isArray(systemIds) || systemIds.length === 0) return;
+    const deleteSet = new Set(systemIds.map(s => String(s).trim()));
+
+    deleteSet.forEach(cleanSys => {
+      delete this.state.systems[cleanSys];
+    });
+    this.state.connections = this.state.connections.filter(
+      c => !deleteSet.has(c.from) && !deleteSet.has(c.to)
+    );
+    this.notify();
+
+    try {
+      await fetch('/api/map/systems/delete-batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ systemIds: Array.from(deleteSet) })
+      });
+    } catch {}
+  }
+
+  // Save manual position updates for dragged systems
+  public async saveSystemPositions(positions: Record<string, { x: number; y: number }>) {
+    Object.entries(positions).forEach(([sysId, pos]) => {
+      if (this.state.systems[sysId]) {
+        this.state.systems[sysId].x = Math.round(pos.x);
+        this.state.systems[sysId].y = Math.round(pos.y);
+      }
+    });
+    this.notify();
+
+    try {
+      await fetch('/api/map/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chainMap: this.state })
+      });
+    } catch {}
+  }
+
   // Prune disconnected / dead-end systems
   public async pruneDeadEnds() {
     try {
@@ -468,21 +509,29 @@ class MapperService {
     sysKeys.forEach(k => { childrenMap[k] = []; });
 
     // Build directed tree structure starting from root
+    // To keep it clean: prioritize stargate connections to highsec hubs first, then wormholes
     const queue = [rootId];
     visited.add(rootId);
 
     while (queue.length > 0) {
       const parent = queue.shift()!;
-      // Find connected neighbors
-      const neighbors = connections
-        .filter(c => (c.from === parent && !visited.has(c.to)) || (c.to === parent && !visited.has(c.from)))
-        .map(c => (c.from === parent ? c.to : c.from));
+      // Find connected neighbors with stable sorting (stargates first, then wormholes)
+      const parentConns = connections.filter(
+        c => (c.from === parent && !visited.has(c.to)) || (c.to === parent && !visited.has(c.from))
+      );
+      
+      parentConns.sort((a, b) => {
+        if (a.wormholeType === 'Stargate' && b.wormholeType !== 'Stargate') return -1;
+        if (a.wormholeType !== 'Stargate' && b.wormholeType === 'Stargate') return 1;
+        return 0;
+      });
 
-      for (const n of neighbors) {
-        if (!visited.has(n)) {
-          visited.add(n);
-          childrenMap[parent].push(n);
-          queue.push(n);
+      for (const c of parentConns) {
+        const neighbor = c.from === parent ? c.to : c.from;
+        if (!visited.has(neighbor)) {
+          visited.add(neighbor);
+          childrenMap[parent].push(neighbor);
+          queue.push(neighbor);
         }
       }
     }
@@ -495,10 +544,10 @@ class MapperService {
       }
     });
 
-    const NODE_WIDTH = 138;
-    const HORIZONTAL_GAP = 28;
-    const VERTICAL_GAP = 96;
-    const START_Y = 40;
+    const NODE_WIDTH = 144;
+    const HORIZONTAL_GAP = 36;
+    const VERTICAL_GAP = 110;
+    const START_Y = 50;
 
     // Post-order traversal to calculate required subtree width for each node
     const subtreeWidths: Record<string, number> = {};

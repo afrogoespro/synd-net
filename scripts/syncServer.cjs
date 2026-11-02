@@ -160,7 +160,33 @@ const server = http.createServer((req, res) => {
       try {
         const update = JSON.parse(body);
 
-        // System update
+        // Full chainMap layout / position sync
+        if (update.positions && typeof update.positions === 'object') {
+          Object.entries(update.positions).forEach(([sysId, pos]) => {
+            if (chainMap.systems[sysId] && typeof pos.x === 'number' && typeof pos.y === 'number') {
+              chainMap.systems[sysId].x = Math.round(pos.x);
+              chainMap.systems[sysId].y = Math.round(pos.y);
+            }
+          });
+          saveState();
+          broadcastUpdate('MAP_UPDATE', chainMap);
+          console.log(`[Shared Map] Updated positions for ${Object.keys(update.positions).length} systems`);
+        } else if (update.chainMap && update.chainMap.systems) {
+          Object.entries(update.chainMap.systems).forEach(([sysId, sysData]) => {
+            if (chainMap.systems[sysId]) {
+              if (typeof sysData.x === 'number') chainMap.systems[sysId].x = Math.round(sysData.x);
+              if (typeof sysData.y === 'number') chainMap.systems[sysId].y = Math.round(sysData.y);
+              if (sysData.isCollapsed !== undefined) {
+                chainMap.systems[sysId].isCollapsed = sysData.isCollapsed;
+              }
+            }
+          });
+          saveState();
+          broadcastUpdate('MAP_UPDATE', chainMap);
+          console.log(`[Shared Map] Synchronized tree positions across ${Object.keys(update.chainMap.systems).length} systems`);
+        }
+
+        // Single System update
         if (update.system) {
           const sysId = update.system.id || update.system.name;
           const existing = chainMap.systems[sysId] || {
@@ -439,6 +465,37 @@ const server = http.createServer((req, res) => {
           saveState();
           broadcastUpdate('MAP_UPDATE', chainMap);
           console.log(`[System Deleted] Removed ${cleanSys} and all associated connections`);
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, chainMap }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // Mass delete multiple systems and all their connections
+  if (req.url === '/api/map/systems/delete-batch' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try {
+        const { systemIds } = JSON.parse(body);
+        if (Array.isArray(systemIds) && systemIds.length > 0) {
+          const deleteSet = new Set(systemIds.map(s => String(s).trim()));
+          deleteSet.forEach(cleanSys => {
+            if (chainMap.systems[cleanSys]) {
+              delete chainMap.systems[cleanSys];
+            }
+          });
+          chainMap.connections = chainMap.connections.filter(
+            c => !deleteSet.has(c.from) && !deleteSet.has(c.to)
+          );
+          saveState();
+          broadcastUpdate('MAP_UPDATE', chainMap);
+          console.log(`[Batch Systems Deleted] Removed ${deleteSet.size} systems and their connections`);
         }
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true, chainMap }));

@@ -4,7 +4,7 @@ import {
   Check, Share2, ZoomIn, ZoomOut, Maximize2, Crosshair,
   User, MapPin, Eye, Radio, ExternalLink, Layers, Sparkles, KeyRound, LogOut,
   Sun, Moon, ChevronDown, ChevronRight, FolderTree, GitFork, Copy, Route, Navigation, Zap,
-  Clock, Hourglass, Skull, ShieldAlert, X, Cpu
+  Clock, Hourglass, Skull, ShieldAlert, X, Cpu, BoxSelect
 } from 'lucide-react';
 import { mapperService } from '../services/mapperService';
 import { ChainMapState, WormholeNode, WormholeConnection, WormholeSignature, StructureTimer } from '../types/mapper';
@@ -66,6 +66,14 @@ export const ChainMapperView: React.FC = () => {
   const [dragStart, setDragStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
   const [nodeOffset, setNodeOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+
+  // Multi-Selection & Mass Manipulation State
+  const [multiSelectedIds, setMultiSelectedIds] = useState<Set<string>>(new Set());
+  const [boxSelectMode, setBoxSelectMode] = useState<boolean>(false);
+  const [boxSelectRect, setBoxSelectRect] = useState<{ startX: number; startY: number; currX: number; currY: number } | null>(null);
+  const dragInitialPositionsRef = useRef<Record<string, { x: number; y: number }>>({});
+  const dragStartMouseRef = useRef<{ clientX: number; clientY: number }>({ clientX: 0, clientY: 0 });
+  const hasDraggedRef = useRef<boolean>(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -275,53 +283,180 @@ export const ChainMapperView: React.FC = () => {
     return () => { isMounted = false; };
   }, [selectedSystem?.name, activeSystem?.name]);
 
+  // Global Keyboard Shortcuts (Escape to clear selection, Delete/Backspace for batch deletion)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+        return;
+      }
+
+      if (e.key === 'Escape') {
+        if (multiSelectedIds.size > 0) {
+          setMultiSelectedIds(new Set());
+        }
+        if (boxSelectMode) {
+          setBoxSelectMode(false);
+        }
+      } else if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (multiSelectedIds.size > 0) {
+          if (window.confirm(`Mass delete ${multiSelectedIds.size} selected systems and all their connections?`)) {
+            mapperService.deleteSystemsBatch(Array.from(multiSelectedIds));
+            setMultiSelectedIds(new Set());
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [multiSelectedIds, boxSelectMode]);
+
   // Pan canvas handlers
   const handleMouseDown = (e: React.MouseEvent) => {
-    // Only pan if clicking canvas background (not a node or button)
+    // Only proceed if clicking canvas background (not a node or control button)
     if ((e.target as HTMLElement).closest('.canvas-node') || (e.target as HTMLElement).closest('.canvas-control')) {
       return;
     }
+
+    // If Box Select mode is toggled OR Shift key is held while clicking canvas, start Box Selection
+    if (boxSelectMode || e.shiftKey) {
+      const canvasX = (e.clientX - pan.x) / zoom;
+      const canvasY = (e.clientY - pan.y) / zoom;
+      setBoxSelectRect({
+        startX: canvasX,
+        startY: canvasY,
+        currX: canvasX,
+        currY: canvasY
+      });
+      if (!e.shiftKey) {
+        setMultiSelectedIds(new Set());
+      }
+      return;
+    }
+
+    // Clicking plain background clears selection
+    if (multiSelectedIds.size > 0) {
+      setMultiSelectedIds(new Set());
+    }
+
     setIsPanning(true);
     setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
+    if (boxSelectRect) {
+      const canvasX = (e.clientX - pan.x) / zoom;
+      const canvasY = (e.clientY - pan.y) / zoom;
+      setBoxSelectRect(prev => prev ? { ...prev, currX: canvasX, currY: canvasY } : null);
+
+      const left = Math.min(boxSelectRect.startX, canvasX);
+      const right = Math.max(boxSelectRect.startX, canvasX);
+      const top = Math.min(boxSelectRect.startY, canvasY);
+      const bottom = Math.max(boxSelectRect.startY, canvasY);
+
+      const selected = new Set<string>();
+      Object.values(mapState.systems).forEach(node => {
+        if (hiddenNodeIds.has(node.id)) return;
+        const nx = node.x || 0;
+        const ny = node.y || 0;
+        if (nx + NODE_W >= left && nx <= right && ny + NODE_H >= top && ny <= bottom) {
+          selected.add(node.id);
+        }
+      });
+      setMultiSelectedIds(selected);
+      return;
+    }
+
     if (isPanning) {
       setPan({
         x: e.clientX - dragStart.x,
         y: e.clientY - dragStart.y
       });
     } else if (draggingNodeId) {
-      // Dragging a specific node
-      const current = mapState.systems[draggingNodeId];
-      if (current) {
-        const newX = (e.clientX - pan.x) / zoom - nodeOffset.x;
-        const newY = (e.clientY - pan.y) / zoom - nodeOffset.y;
-        current.x = Math.round(newX);
-        current.y = Math.round(newY);
-        setMapState({ ...mapState });
+      const deltaX = (e.clientX - dragStartMouseRef.current.clientX) / zoom;
+      const deltaY = (e.clientY - dragStartMouseRef.current.clientY) / zoom;
+      if (Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2) {
+        hasDraggedRef.current = true;
       }
+
+      const initialMap = dragInitialPositionsRef.current;
+      const nodeIds = Object.keys(initialMap);
+      nodeIds.forEach(id => {
+        const initial = initialMap[id];
+        const sys = mapState.systems[id];
+        if (initial && sys) {
+          sys.x = Math.round(initial.x + deltaX);
+          sys.y = Math.round(initial.y + deltaY);
+        }
+      });
+      setMapState({ ...mapState });
     }
   };
 
   const handleMouseUp = () => {
+    if (boxSelectRect) {
+      setBoxSelectRect(null);
+    }
     setIsPanning(false);
-    setDraggingNodeId(null);
+
+    if (draggingNodeId) {
+      if (hasDraggedRef.current) {
+        const initialMap = dragInitialPositionsRef.current;
+        const updated: Record<string, { x: number; y: number }> = {};
+        Object.keys(initialMap).forEach(id => {
+          const sys = mapState.systems[id];
+          if (sys) {
+            updated[id] = { x: sys.x || 0, y: sys.y || 0 };
+          }
+        });
+        if (Object.keys(updated).length > 0) {
+          mapperService.saveSystemPositions(updated);
+        }
+      }
+      setDraggingNodeId(null);
+    }
   };
 
-  // Node Drag Start
+  // Node Drag Start (supports single drag & multi-selection drag)
   const handleNodeDragStart = (e: React.MouseEvent, node: WormholeNode) => {
     e.stopPropagation();
+
+    // If Shift or Ctrl is pressed: toggle selection without starting pan/drag
+    if (e.shiftKey || e.ctrlKey || e.metaKey) {
+      setMultiSelectedIds(prev => {
+        const next = new Set(prev);
+        if (next.has(node.id)) next.delete(node.id);
+        else next.add(node.id);
+        return next;
+      });
+      setSelectedSystemId(node.id);
+      return;
+    }
+
+    // Determine target nodes for dragging
+    let dragTargets: string[] = [node.id];
+    if (multiSelectedIds.has(node.id)) {
+      dragTargets = Array.from(multiSelectedIds);
+    } else {
+      setMultiSelectedIds(new Set([node.id]));
+      dragTargets = [node.id];
+    }
+
     setSelectedSystemId(node.id);
     setDraggingNodeId(node.id);
-    const nodeX = node.x || 0;
-    const nodeY = node.y || 0;
-    const mouseCanvasX = (e.clientX - pan.x) / zoom;
-    const mouseCanvasY = (e.clientY - pan.y) / zoom;
-    setNodeOffset({
-      x: mouseCanvasX - nodeX,
-      y: mouseCanvasY - nodeY
+    hasDraggedRef.current = false;
+    dragStartMouseRef.current = { clientX: e.clientX, clientY: e.clientY };
+
+    // Record initial coordinates for all dragged nodes
+    const initialPos: Record<string, { x: number; y: number }> = {};
+    dragTargets.forEach(id => {
+      const s = mapState.systems[id];
+      if (s) {
+        initialPos[id] = { x: s.x || 0, y: s.y || 0 };
+      }
     });
+    dragInitialPositionsRef.current = initialPos;
   };
 
   // Wheel zoom
@@ -597,14 +732,31 @@ export const ChainMapperView: React.FC = () => {
 
             {/* Tidy Tree */}
             <button
-              onClick={() => mapperService.autoOrganizeTreeLayout()}
-              className={`px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 transition-all ${
-                isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+              onClick={() => {
+                mapperService.autoOrganizeTreeLayout();
+                setTimeout(() => handleFit(), 80);
+              }}
+              className={`px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                isDark ? 'bg-cyan-500/15 text-cyan-300 hover:bg-cyan-500/25 border border-cyan-500/30' : 'bg-cyan-50 text-cyan-700 hover:bg-cyan-100 border border-cyan-300'
               }`}
-              title="Auto-organize tree layout"
+              title="Clean & Untangle Tree (Auto-organize spacing and center view)"
             >
               <FolderTree className="w-3 h-3 text-cyan-400" />
               <span className="hidden sm:inline">Tidy Tree</span>
+            </button>
+
+            {/* Box / Marquee Select Mode */}
+            <button
+              onClick={() => setBoxSelectMode(!boxSelectMode)}
+              className={`px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer ${
+                boxSelectMode
+                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm font-semibold'
+                  : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+              }`}
+              title="Box / Marquee Selection Mode (or drag on canvas while holding Shift)"
+            >
+              <BoxSelect className="w-3 h-3 text-amber-400" />
+              <span className="hidden sm:inline">Box Select</span>
             </button>
 
             {/* Collapse All */}
@@ -924,12 +1076,26 @@ export const ChainMapperView: React.FC = () => {
             })}
           </svg>
 
+          {/* MARQUEE BOX SELECTION OVERLAY */}
+          {boxSelectRect && (
+            <div
+              className="absolute pointer-events-none border-2 border-cyan-400/90 bg-cyan-500/15 rounded-xl z-40 shadow-[0_0_24px_rgba(6,182,212,0.35)] backdrop-blur-[1px]"
+              style={{
+                left: `${Math.min(boxSelectRect.startX, boxSelectRect.currX)}px`,
+                top: `${Math.min(boxSelectRect.startY, boxSelectRect.currY)}px`,
+                width: `${Math.abs(boxSelectRect.currX - boxSelectRect.startX)}px`,
+                height: `${Math.abs(boxSelectRect.currY - boxSelectRect.startY)}px`
+              }}
+            />
+          )}
+
           {/* HTML NODE CARDS LAYER */}
           <div className="absolute inset-0 pointer-events-auto">
             {Object.values(mapState.systems).map((node) => {
               if (hiddenNodeIds.has(node.id)) return null;
 
               const isSelected = node.id === selectedSystem?.id;
+              const isMultiSelected = multiSelectedIds.has(node.id);
               const isActivePlayer = node.id === activeSystem?.id;
               const pilotCount = node.activePilots ? node.activePilots.length : 0;
               const sortedPilots = [...(node.activePilots || [])].sort((a, b) => a.localeCompare(b));
@@ -962,6 +1128,10 @@ export const ChainMapperView: React.FC = () => {
                         ? isDark
                           ? 'bg-[#101a2e]/90 shadow-[0_0_24px_rgba(56,189,248,0.45),0_0_8px_rgba(255,255,255,0.7)] ring-2 ring-white/90'
                           : 'bg-white/95 shadow-[0_0_20px_rgba(2,132,199,0.35)] ring-2 ring-sky-500'
+                        : isMultiSelected
+                        ? isDark
+                          ? 'bg-[#0b192e]/95 shadow-[0_0_24px_rgba(6,182,212,0.65)] ring-2 ring-cyan-400'
+                          : 'bg-cyan-50/95 shadow-lg ring-2 ring-cyan-500'
                         : isSelected
                         ? isDark
                           ? 'bg-[#0f172a]/90 shadow-[0_0_16px_rgba(6,182,212,0.3)] ring-1.5 ring-cyan-400'
@@ -971,10 +1141,16 @@ export const ChainMapperView: React.FC = () => {
                         : 'bg-white/90 hover:bg-slate-50 shadow-sm border border-slate-200/80'
                     }`}
                     style={{
-                      borderWidth: (isActivePlayer || isSelected) ? '0px' : '1px',
+                      borderWidth: (isActivePlayer || isSelected || isMultiSelected) ? '0px' : '1px',
                       borderColor: borderColor
                     }}
                   >
+                    {/* Multi-Selection Checkmark Badge */}
+                    {isMultiSelected && (
+                      <div className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-cyan-400 text-black flex items-center justify-center font-black text-[10px] shadow-lg shadow-cyan-500/60 z-30 animate-in zoom-in-75 duration-100">
+                        <Check className="w-3.5 h-3.5 stroke-[3.5]" />
+                      </div>
+                    )}
                     {/* Top Row: Security or WH Class + Statics + Fold Control */}
                     <div className="flex items-center justify-between leading-none">
                       {renderSecurityOrClass(node)}
@@ -1126,6 +1302,85 @@ export const ChainMapperView: React.FC = () => {
             })}
           </div>
         </div>
+
+        {/* FLOATING MASS ACTION DOCK (Centered Bottom) */}
+        {multiSelectedIds.size > 0 && (
+          <div className="canvas-control absolute bottom-5 left-1/2 -translate-x-1/2 z-40 bg-[#0c1220]/95 border border-cyan-500/40 rounded-2xl px-4 py-2.5 shadow-[0_12px_40px_rgba(0,0,0,0.85)] flex items-center gap-3 backdrop-blur-2xl animate-in fade-in slide-in-from-bottom-2 duration-150">
+            <div className="flex items-center gap-2 pr-3 border-r border-white/10">
+              <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse" />
+              <span className="text-xs font-bold text-white tracking-wide whitespace-nowrap">
+                {multiSelectedIds.size} {multiSelectedIds.size === 1 ? 'System' : 'Systems'} Selected
+              </span>
+            </div>
+
+            {/* Mass Delete */}
+            <button
+              onClick={() => {
+                if (window.confirm(`Mass delete ${multiSelectedIds.size} selected system(s) and all their connections from the map?`)) {
+                  mapperService.deleteSystemsBatch(Array.from(multiSelectedIds));
+                  setMultiSelectedIds(new Set());
+                }
+              }}
+              className="px-3.5 py-1.5 bg-red-600/90 hover:bg-red-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md shadow-red-950/40 cursor-pointer whitespace-nowrap"
+              title="Delete all selected systems"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Delete Selected ({multiSelectedIds.size})</span>
+            </button>
+
+            {/* Select Downstream Branch */}
+            <button
+              onClick={() => {
+                const expanded = new Set(multiSelectedIds);
+                const queue = Array.from(multiSelectedIds);
+                while (queue.length > 0) {
+                  const curr = queue.shift()!;
+                  const childConns = mapState.connections.filter(c => c.from === curr && !expanded.has(c.to));
+                  for (const c of childConns) {
+                    expanded.add(c.to);
+                    queue.push(c.to);
+                  }
+                }
+                setMultiSelectedIds(expanded);
+              }}
+              className="px-3 py-1.5 bg-white/10 hover:bg-white/15 text-slate-200 rounded-xl text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap"
+              title="Select all child and descendant systems in this branch"
+            >
+              <GitFork className="w-3.5 h-3.5 text-cyan-400" />
+              <span className="hidden sm:inline">Select Branch</span>
+            </button>
+
+            {/* Align Horizontal */}
+            <button
+              onClick={() => {
+                const nodes = Array.from(multiSelectedIds).map(id => mapState.systems[id]).filter(Boolean);
+                if (nodes.length <= 1) return;
+                const avgY = Math.round(nodes.reduce((acc, n) => acc + (n.y || 0), 0) / nodes.length);
+                const updated: Record<string, { x: number; y: number }> = {};
+                nodes.forEach(n => {
+                  n.y = avgY;
+                  updated[n.id] = { x: n.x || 0, y: avgY };
+                });
+                setMapState({ ...mapState });
+                mapperService.saveSystemPositions(updated);
+              }}
+              className="px-2.5 py-1.5 bg-white/5 hover:bg-white/10 text-slate-300 rounded-xl text-xs font-medium flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap"
+              title="Align selected systems on same horizontal line"
+            >
+              <Sparkles className="w-3 h-3 text-amber-400" />
+              <span className="hidden sm:inline">Align H</span>
+            </button>
+
+            {/* Clear Selection */}
+            <button
+              onClick={() => setMultiSelectedIds(new Set())}
+              className="p-1.5 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition-all cursor-pointer"
+              title="Clear selection (Esc)"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
 
         {/* 3. FLOATING CANVAS CONTROLS (Bottom-Left) */}
         <div className="canvas-control absolute bottom-4 left-4 z-20 flex flex-col items-center bg-[#0d1220]/90 backdrop-blur-md border border-gray-800 rounded-xl p-1 shadow-2xl space-y-1">
