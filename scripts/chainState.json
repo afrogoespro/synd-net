@@ -90,9 +90,59 @@
           "distance": "26.09 AU",
           "signalPercent": 100,
           "createdTime": "23:44"
+        },
+        {
+          "id": "sig-1793584734702-0.5353822000662244",
+          "sigId": "JLV-427",
+          "type": "Relic",
+          "name": "Relic Site",
+          "group": "Relic Site",
+          "distance": "8.84 AU",
+          "signalPercent": 1,
+          "createdTime": "01:58"
+        },
+        {
+          "id": "sig-1793584734702-0.40706674309758883",
+          "sigId": "ZSG-272",
+          "type": "Relic",
+          "name": "Relic Site",
+          "group": "Relic Site",
+          "distance": "7.54 AU",
+          "signalPercent": 5,
+          "createdTime": "01:58"
+        },
+        {
+          "id": "sig-1793584734702-0.27760465619426256",
+          "sigId": "ZBU-471",
+          "type": "Anomaly",
+          "name": "Cosmic Signature",
+          "group": "Unknown",
+          "distance": "8.76 AU",
+          "signalPercent": 100,
+          "createdTime": "01:58"
+        },
+        {
+          "id": "sig-1793584734702-0.08274851799034455",
+          "sigId": "QJX-710",
+          "type": "Anomaly",
+          "name": "Cosmic Signature",
+          "group": "Unknown",
+          "distance": "10.41 AU",
+          "signalPercent": 4,
+          "createdTime": "01:58"
+        },
+        {
+          "id": "sig-1793584734702-0.4485307898421578",
+          "sigId": "SNC-440",
+          "type": "Anomaly",
+          "name": "Cosmic Signature",
+          "group": "Unknown",
+          "distance": "8.76 AU",
+          "signalPercent": 7,
+          "createdTime": "01:58"
         }
       ],
-      "lastUpdated": "01:54",
+      "lastUpdated": "01:58",
       "x": 650,
       "y": 40
     },
@@ -123,9 +173,59 @@
           "distance": "1.68 AU",
           "signalPercent": 100,
           "createdTime": "01:47"
+        },
+        {
+          "id": "sig-1793584519091-0.06741672790307018",
+          "sigId": "JLV-427",
+          "type": "Relic",
+          "name": "Relic Site",
+          "group": "Relic Site",
+          "distance": "8.84 AU",
+          "signalPercent": 1,
+          "createdTime": "01:55"
+        },
+        {
+          "id": "sig-1793584519091-0.4361580467894185",
+          "sigId": "ZSG-272",
+          "type": "Relic",
+          "name": "Relic Site",
+          "group": "Relic Site",
+          "distance": "7.54 AU",
+          "signalPercent": 5,
+          "createdTime": "01:55"
+        },
+        {
+          "id": "sig-1793584519091-0.8735327842365985",
+          "sigId": "ZBU-471",
+          "type": "Anomaly",
+          "name": "Cosmic Signature",
+          "group": "Unknown",
+          "distance": "8.76 AU",
+          "signalPercent": 100,
+          "createdTime": "01:55"
+        },
+        {
+          "id": "sig-1793584519091-0.31853721910492894",
+          "sigId": "QJX-710",
+          "type": "Anomaly",
+          "name": "Cosmic Signature",
+          "group": "Unknown",
+          "distance": "10.41 AU",
+          "signalPercent": 4,
+          "createdTime": "01:55"
+        },
+        {
+          "id": "sig-1793584519091-0.7180354138968515",
+          "sigId": "SNC-440",
+          "type": "Anomaly",
+          "name": "Cosmic Signature",
+          "group": "Unknown",
+          "distance": "8.76 AU",
+          "signalPercent": 7,
+          "createdTime": "01:55"
         }
       ],
-      "lastUpdated": "01:54",
+      "lastUpdated": "01:55",
       "x": 650,
       "y": 630
     },
@@ -135,11 +235,60 @@
       "systemClass": "Highsec",
       "statics": [],
       "structures": [],
-      "activePilots": [
-        "Syndra en Tilavine"
+      "activePilots": [],
+      "signatures": [
+        {
+          "id": "sig-1793584567609-0.10243952078158514",
+          "sigId": "JLV-427",
+          "type": "Relic",
+          "name": "Relic Site",
+          "group": "Relic Site",
+          "distance": "8.84 AU",
+          "signalPercent": 1,
+          "createdTime": "01:56"
+        },
+        {
+          "id": "sig-1793584567609-0.40047482669173684",
+          "sigId": "ZSG-272",
+          "type": "Relic",
+          "name": "Relic Site",
+          "group": "Relic Site",
+          "distance": "7.54 AU",
+          "signalPercent": 5,
+          "createdTime": "01:56"
+        },
+        {
+          "id": "sig-1793584567609-0.28255757068360854",
+          "sigId": "ZBU-471",
+          "type": "Anomaly",
+          "name": "Cosmic Signature",
+          "group": "Unknown",
+          "distance": "8.76 AU",
+          "signalPercent": 100,
+          "createdTime": "01:56"
+        },
+        {
+          "id": "sig-1793584567609-0.9846461261044792",
+          "sigId": "QJX-710",
+          "type": "Anomaly",
+          "name": "Cosmic Signature",
+          "group": "Unknown",
+          "distance": "10.41 AU",
+          "signalPercent": 4,
+          "createdTime": "01:56"
+        },
+        {
+          "id": "sig-1793584567609-0.03254624631144276",
+          "sigId": "SNC-440",
+          "type": "Anomaly",
+          "name": "Cosmic Signature",
+          "group": "Unknown",
+          "distance": "8.76 AU",
+          "signalPercent": 7,
+          "createdTime": "01:56"
+        }
       ],
-      "signatures": [],
-      "lastUpdated": "01:54",
+      "lastUpdated": "01:56",
       "x": 650,
       "y": 532
     },
@@ -173,9 +322,11 @@
       "systemClass": "Highsec",
       "statics": [],
       "structures": [],
-      "activePilots": [],
+      "activePilots": [
+        "Syndra en Tilavine"
+      ],
       "signatures": [],
-      "lastUpdated": "01:54",
+      "lastUpdated": "02:03",
       "x": 650,
       "y": 336
     },
@@ -186,10 +337,52 @@
       "statics": [],
       "structures": [],
       "activePilots": [],
-      "signatures": [],
-      "lastUpdated": "01:54",
+      "signatures": [
+        {
+          "id": "sig-1793584854693-0.12021727857005837",
+          "sigId": "FWE-105",
+          "type": "Anomaly",
+          "name": "Cosmic Signature",
+          "group": "Unknown",
+          "distance": "20.71 AU",
+          "signalPercent": 100,
+          "createdTime": "02:00"
+        },
+        {
+          "id": "sig-1793584854693-0.762819287096543",
+          "sigId": "OXI-944",
+          "type": "Anomaly",
+          "name": "Cosmic Signature",
+          "group": "Unknown",
+          "distance": "28.70 AU",
+          "signalPercent": 100,
+          "createdTime": "02:00"
+        },
+        {
+          "id": "sig-1793584854693-0.017858482514855112",
+          "sigId": "BWL-935",
+          "type": "Anomaly",
+          "name": "Cosmic Signature",
+          "group": "Unknown",
+          "distance": "26.95 AU",
+          "signalPercent": 100,
+          "createdTime": "02:00"
+        },
+        {
+          "id": "sig-1793584854693-0.3338931826795528",
+          "sigId": "PGE-566",
+          "type": "Combat",
+          "name": "Criterion of Fitness",
+          "group": "Combat Site",
+          "distance": "30.77 AU",
+          "signalPercent": 100,
+          "createdTime": "02:00"
+        }
+      ],
+      "lastUpdated": "02:00",
       "x": 650,
-      "y": 434
+      "y": 434,
+      "isCollapsed": false
     },
     "J124526": {
       "id": "J124526",
@@ -268,5 +461,17 @@
   "onlineBuddies": [
     "Syndra en Tilavine",
     "USS Hauler"
+  ],
+  "timers": [
+    {
+      "id": "timer-1793585018684-281",
+      "name": "Astrahaus test",
+      "systemName": "Erenta",
+      "privacy": "Corporation",
+      "structureType": "Astrahus",
+      "timerType": "Armor",
+      "vulnerableTime": "2026-11-03T05:06:38.683Z",
+      "owner": "big corp"
+    }
   ]
 }

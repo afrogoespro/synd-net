@@ -78,19 +78,19 @@ export const StructureTimerModal: React.FC<StructureTimerModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in font-mono select-none">
-      <div className="relative w-full max-w-xl bg-[#1e1f22] border border-[#3b3e45] rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden text-gray-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xl animate-fade-in font-sans select-none">
+      <div className="relative w-full max-w-xl bg-[#141b2b]/95 border border-white/10 rounded-3xl shadow-2xl overflow-hidden text-gray-200">
         
         {/* Header */}
-        <div className="px-6 py-4 border-b border-[#2e3136] flex items-center justify-between">
-          <h2 className="text-lg font-bold text-white tracking-wide">
+        <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+          <h2 className="text-base font-bold text-white tracking-tight">
             Create Structure Timer
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors p-1"
+            className="p-1 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
@@ -99,7 +99,7 @@ export const StructureTimerModal: React.FC<StructureTimerModalProps> = ({
           {/* Row 1: Name & Location */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[11px] font-semibold text-gray-400 mb-1">
+              <label className="block text-[11px] font-semibold text-slate-400 mb-1">
                 Name
               </label>
               <input
@@ -107,12 +107,12 @@ export const StructureTimerModal: React.FC<StructureTimerModalProps> = ({
                 placeholder="e.g. Primary Astrahus"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-[#2b2d31] border border-[#3f4248] focus:border-cyan-500 rounded px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none"
+                className="w-full bg-white/5 border border-white/10 focus:border-cyan-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-gray-400 mb-1">
+              <label className="block text-[11px] font-semibold text-slate-400 mb-1">
                 Location
               </label>
               <input
@@ -121,7 +121,7 @@ export const StructureTimerModal: React.FC<StructureTimerModalProps> = ({
                 value={location}
                 onChange={(e) => setLocation(e.target.value.toUpperCase())}
                 placeholder="Solar System"
-                className="w-full bg-[#2b2d31] border border-[#3f4248] focus:border-cyan-500 rounded px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none font-bold font-mono"
+                className="w-full bg-white/5 border border-white/10 focus:border-cyan-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none font-bold font-mono transition-colors"
               />
               <datalist id="location-systems">
                 {availableSystems.map(sys => (
@@ -134,30 +134,30 @@ export const StructureTimerModal: React.FC<StructureTimerModalProps> = ({
           {/* Row 2: Security, Structure, Timer */}
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-[11px] font-semibold text-gray-400 mb-1">
+              <label className="block text-[11px] font-semibold text-slate-400 mb-1">
                 Security
               </label>
               <select
                 value={privacy}
                 onChange={(e) => setPrivacy(e.target.value as any)}
-                className="w-full bg-[#2b2d31] border border-[#3f4248] focus:border-cyan-500 rounded px-2.5 py-2 text-xs text-white focus:outline-none"
+                className="w-full bg-[#1c2438] border border-white/10 focus:border-cyan-500 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none"
               >
                 <option value="Private">Private</option>
                 <option value="Corporation">Corporation</option>
                 <option value="Alliance">Alliance</option>
                 <option value="Public">Public</option>
               </select>
-              <span className="text-[10px] text-gray-500 mt-1 block">Select a privacy setting</span>
+              <span className="text-[10px] text-slate-500 mt-1 block">Select a privacy setting</span>
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-gray-400 mb-1">
+              <label className="block text-[11px] font-semibold text-slate-400 mb-1">
                 Structure
               </label>
               <select
                 value={structureType}
                 onChange={(e) => setStructureType(e.target.value as any)}
-                className="w-full bg-[#2b2d31] border border-[#3f4248] focus:border-cyan-500 rounded px-2.5 py-2 text-xs text-white focus:outline-none"
+                className="w-full bg-[#1c2438] border border-white/10 focus:border-cyan-500 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none"
               >
                 {STRUCTURE_TYPES.map(st => (
                   <option key={st} value={st}>{st}</option>
@@ -196,9 +196,9 @@ export const StructureTimerModal: React.FC<StructureTimerModalProps> = ({
                   max="30"
                   value={days}
                   onChange={(e) => setDays(Math.max(0, parseInt(e.target.value) || 0))}
-                  className="w-full bg-[#2b2d31] border border-[#3f4248] focus:border-cyan-500 rounded px-3 py-2 text-center text-sm font-bold text-white focus:outline-none pr-14"
+                  className="w-full bg-white/5 border border-white/10 focus:border-cyan-500 rounded-xl px-3 py-2 text-center text-sm font-bold text-white focus:outline-none pr-14"
                 />
-                <span className="absolute right-3 top-2.5 text-[11px] text-gray-400 pointer-events-none">
+                <span className="absolute right-3 top-2.5 text-[11px] text-slate-400 pointer-events-none">
                   Days
                 </span>
               </div>
@@ -210,9 +210,9 @@ export const StructureTimerModal: React.FC<StructureTimerModalProps> = ({
                   max="23"
                   value={hours}
                   onChange={(e) => setHours(Math.max(0, Math.min(23, parseInt(e.target.value) || 0)))}
-                  className="w-full bg-[#2b2d31] border border-[#3f4248] focus:border-cyan-500 rounded px-3 py-2 text-center text-sm font-bold text-white focus:outline-none pr-14"
+                  className="w-full bg-white/5 border border-white/10 focus:border-cyan-500 rounded-xl px-3 py-2 text-center text-sm font-bold text-white focus:outline-none pr-14"
                 />
-                <span className="absolute right-3 top-2.5 text-[11px] text-gray-400 pointer-events-none">
+                <span className="absolute right-3 top-2.5 text-[11px] text-slate-400 pointer-events-none">
                   Hours
                 </span>
               </div>
@@ -224,17 +224,17 @@ export const StructureTimerModal: React.FC<StructureTimerModalProps> = ({
                   max="59"
                   value={minutes}
                   onChange={(e) => setMinutes(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
-                  className="w-full bg-[#2b2d31] border border-[#3f4248] focus:border-cyan-500 rounded px-3 py-2 text-center text-sm font-bold text-white focus:outline-none pr-14"
+                  className="w-full bg-white/5 border border-white/10 focus:border-cyan-500 rounded-xl px-3 py-2 text-center text-sm font-bold text-white focus:outline-none pr-14"
                 />
-                <span className="absolute right-3 top-2.5 text-[11px] text-gray-400 pointer-events-none">
+                <span className="absolute right-3 top-2.5 text-[11px] text-slate-400 pointer-events-none">
                   Minutes
                 </span>
               </div>
             </div>
 
             {/* Vulnerability Preview */}
-            <div className="text-center mt-2.5 text-[11px] text-cyan-400 font-mono">
-              Reinforced until: <span className="font-bold underline">{targetEveString}</span>
+            <div className="text-center mt-2.5 text-xs text-cyan-400 font-sans">
+              Reinforced until: <span className="font-semibold underline">{targetEveString}</span>
             </div>
           </div>
 
@@ -245,24 +245,24 @@ export const StructureTimerModal: React.FC<StructureTimerModalProps> = ({
               placeholder="Search for owner Corporation or Alliance..."
               value={owner}
               onChange={(e) => setOwner(e.target.value)}
-              className="w-full bg-[#2b2d31] border border-[#3f4248] focus:border-cyan-500 rounded px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none"
+              className="w-full bg-white/5 border border-white/10 focus:border-cyan-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none"
             />
           </div>
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-[#2e3136] flex items-center justify-end gap-3 bg-[#1a1b1e]">
+        <div className="px-6 py-4 border-t border-white/5 flex items-center justify-end gap-2.5 bg-white/5">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded text-xs font-bold text-gray-400 hover:text-white transition-colors"
+            className="px-4 py-2 rounded-full text-xs font-semibold text-slate-400 hover:text-white transition-colors"
           >
-            CANCEL
+            Cancel
           </button>
           <button
             onClick={handleCreate}
-            className="px-6 py-2 rounded bg-cyan-600 hover:bg-cyan-500 text-black font-bold text-xs tracking-wider transition-all shadow-[0_0_12px_rgba(6,182,212,0.3)]"
+            className="px-6 py-2 rounded-full bg-cyan-500 hover:bg-cyan-400 text-black font-semibold text-xs transition-all shadow-md"
           >
-            CREATE
+            Create Timer
           </button>
         </div>
 

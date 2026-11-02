@@ -3,12 +3,14 @@ import {
   Sparkles, Compass, Shield, ShieldAlert, Activity, 
   MapPin, Radio, Flame, ArrowUpRight, ChevronRight, 
   TrendingUp, Clock, CheckCircle2, AlertTriangle, 
-  Layers, Users, Radar, Network, Cpu, KeyRound, ExternalLink
+  Layers, Users, Radar, Network, Cpu, KeyRound, ExternalLink,
+  Search, Bell, User, Plus, Box, Check, Hourglass
 } from 'lucide-react';
 import { Hologram3DViewer } from './Hologram3DViewer';
 import { mapperService } from '../services/mapperService';
-import { ChainMapState, WormholeNode } from '../types/mapper';
+import { ChainMapState, WormholeNode, StructureTimer } from '../types/mapper';
 import { authService, PilotProfile } from '../services/authService';
+import { StructureTimerModal } from './StructureTimerModal';
 
 interface CommandDashboardViewProps {
   onNavigateTab: (tab: 'mapper' | 'dscan' | 'ore' | 'local' | 'killfeed' | 'eft') => void;
@@ -22,6 +24,9 @@ export const CommandDashboardView: React.FC<CommandDashboardViewProps> = ({
   const [mapState, setMapState] = useState<ChainMapState>(mapperService.getState());
   const [currentPilot, setCurrentPilot] = useState<PilotProfile | null>(authService.getPilot());
   const [eveTime, setEveTime] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isTimerModalOpen, setIsTimerModalOpen] = useState<boolean>(false);
+  const [activeViewerMode, setActiveViewerMode] = useState<'3d' | 'stats'>('3d');
 
   const isDark = theme === 'dark';
 
@@ -53,9 +58,8 @@ export const CommandDashboardView: React.FC<CommandDashboardViewProps> = ({
   const wormholeCount = systemsList.filter(s => s.systemClass?.startsWith('C')).length;
   const empireCount = totalSystems - wormholeCount;
   const totalPilotsOnline = mapState.onlineBuddies.length || (currentPilot ? 1 : 0);
-
-  // Calculate total signatures logged across chain
   const totalSignatures = systemsList.reduce((acc, s) => acc + (s.signatures?.length || 0), 0);
+  const timersList = mapState.timers || [];
 
   // Greeting time of day
   const getGreeting = () => {
@@ -65,389 +69,558 @@ export const CommandDashboardView: React.FC<CommandDashboardViewProps> = ({
     return 'Good Evening';
   };
 
-  const pilotDisplayName = currentPilot?.characterName || 'Fleet Commander';
+  const pilotDisplayName = currentPilot?.characterName ? currentPilot.characterName.split(' ')[0] : 'Commander';
+
+  // Sample timeline activity pills matching Nura style
+  const timelinePills = [
+    { label: '01:42 EVE', text: 'Jump Ajanen ➔ Kuoka', type: 'jump' },
+    { label: '01:45 EVE', text: 'J103955 Scouted', type: 'wh' },
+    { label: '01:49 EVE', text: '4x Astrahus on Scan', type: 'struct' },
+    { label: '01:52 EVE', text: 'ZKillboard Quiet (0 Kills)', type: 'intel' },
+    { label: '01:54 EVE', text: 'Trade Route: 4 Jumps to Jita', type: 'route' },
+  ];
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
+    <div className="space-y-6 animate-in fade-in duration-300 font-sans pb-10">
       
-      {/* 1. TOP HEADER & GREETING (Matching Nura Mock) */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className={`text-[11px] font-mono font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
-              isDark 
-                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' 
-                : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-            }`}>
-              • LIVE TRANQUILITY FLEET FEED
-            </span>
-            <span className={`text-xs font-mono ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
-              {eveTime} EVE
-            </span>
-          </div>
+      {/* 1. APPLE SEARCH & QUICK PROFILE BAR (Nura Top Bar) */}
+      <div className="flex items-center justify-between gap-4">
+        {/* Search Input Pill */}
+        <div className={`relative flex-1 max-w-xl flex items-center rounded-full border transition-all ${
+          isDark 
+            ? 'bg-[#121826]/70 border-white/10 text-white focus-within:border-cyan-500/50 shadow-inner' 
+            : 'bg-white/80 border-slate-200 text-slate-800 focus-within:border-cyan-500 shadow-sm'
+        }`}>
+          <Search className={`w-4 h-4 ml-4 ${isDark ? 'text-slate-400' : 'text-slate-400'}`} />
+          <input
+            type="text"
+            placeholder="Search systems, signatures, trade routes, fleet pilots..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-transparent px-3 py-2 text-xs focus:outline-none placeholder-slate-400 font-medium"
+          />
+        </div>
 
+        {/* Action Controls */}
+        <div className="flex items-center gap-2.5">
+          <button 
+            className={`p-2 rounded-full border transition-colors ${
+              isDark 
+                ? 'bg-[#121826]/70 border-white/10 text-slate-300 hover:text-white' 
+                : 'bg-white/80 border-slate-200 text-slate-600 hover:text-slate-900 shadow-sm'
+            }`}
+            title="Fleet Notifications"
+          >
+            <Bell className="w-4 h-4" />
+          </button>
+
+          <div className={`flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border ${
+            isDark 
+              ? 'bg-[#121826]/70 border-white/10 text-white' 
+              : 'bg-white/80 border-slate-200 text-slate-800 shadow-sm'
+          }`}>
+            {currentPilot ? (
+              <img 
+                src={currentPilot.avatarUrl} 
+                alt={currentPilot.characterName} 
+                className="w-6 h-6 rounded-full object-cover border border-cyan-400/50" 
+              />
+            ) : (
+              <div className="w-6 h-6 rounded-full bg-slate-300 dark:bg-slate-700 flex items-center justify-center">
+                <User className="w-3.5 h-3.5 text-slate-500 dark:text-slate-300" />
+              </div>
+            )}
+            <span className="text-xs font-semibold">{pilotDisplayName}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. GREETING HEADER */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pt-1">
+        <div>
           <h1 className={`text-3xl font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
             {getGreeting()}, <span className="text-cyan-500">{pilotDisplayName}</span>
           </h1>
-          <p className={`text-sm mt-0.5 ${isDark ? 'text-gray-400' : 'text-slate-600'}`}>
+          <p className={`text-sm mt-0.5 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
             Here's your fleet recon and wormhole expedition summary for today.
           </p>
         </div>
 
-        {/* Quick Action Pills */}
-        <div className="flex items-center gap-2.5 flex-wrap">
+        {/* Direct Action Pills */}
+        <div className="flex items-center gap-2">
           <button
             onClick={() => onNavigateTab('mapper')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-2xl font-bold text-xs transition-all shadow-md ${
-              isDark
-                ? 'bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-black shadow-[0_0_15px_rgba(6,182,212,0.3)]'
-                : 'bg-sky-600 hover:bg-sky-700 text-white shadow-sky-200'
-            }`}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-cyan-500 hover:bg-cyan-400 text-black font-semibold text-xs shadow-md transition-all"
           >
-            <Network className="w-4 h-4" />
-            <span>Open Chain Mapper</span>
-            <ArrowUpRight className="w-3.5 h-3.5" />
-          </button>
-
-          <button
-            onClick={() => onNavigateTab('dscan')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-2xl font-bold text-xs transition-all border ${
-              isDark
-                ? 'bg-gray-900/80 hover:bg-gray-800 text-gray-200 border-gray-700'
-                : 'bg-white hover:bg-slate-50 text-slate-800 border-slate-300 shadow-sm'
-            }`}
-          >
-            <Radar className="w-4 h-4 text-cyan-400" />
-            <span>Paste D-Scan</span>
+            <Network className="w-3.5 h-3.5" />
+            <span>Launch Chain Mapper</span>
+            <ArrowUpRight className="w-3 h-3 ml-0.5" />
           </button>
         </div>
       </div>
 
-      {/* 2. NURA-STYLE METRIC SUMMARY ROW (Big Numbers, Status Pills, Dot Graph) */}
+      {/* 3. NURA-STYLE METRIC SUMMARY ROW (Exact Nura Proportions) */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {/* Card 1: Daily Jumps */}
+        {/* Metric 1: Heart Rate / Systems Mapped */}
         <div className={`p-5 rounded-3xl border transition-all ${
           isDark 
-            ? 'bg-[#0f1422]/90 border-gray-800 shadow-lg' 
-            : 'bg-white border-slate-200 shadow-sm hover:shadow-md'
+            ? 'bg-[#101626]/80 border-white/10 shadow-lg' 
+            : 'bg-white/80 border-slate-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)]'
         }`}>
           <div className="flex items-center justify-between mb-2">
-            <span className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
-              Jumps Made
+            <span className={`text-xs font-semibold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+              Chain Systems
             </span>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-              Optimal
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              Normal
             </span>
           </div>
-          <div className="flex items-baseline gap-2">
-            <span className={`text-3xl font-extrabold font-mono ${isDark ? 'text-white' : 'text-slate-900'}`}>
+          <div className="flex items-baseline gap-1.5">
+            <span className={`text-3xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
               {totalSystems}
             </span>
-            <span className={`text-xs font-bold ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
-              SYSTEMS
+            <span className={`text-xs font-semibold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+              SYS
             </span>
           </div>
-          <p className={`text-[11px] mt-2 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
-            Transit target: 30 jumps/day
+          <p className={`text-[11px] mt-2 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+            {totalConnections} Active wormhole links
           </p>
         </div>
 
-        {/* Card 2: Recon Depth Score */}
+        {/* Metric 2: Sleep Score / Fleet Readiness */}
         <div className={`p-5 rounded-3xl border transition-all ${
           isDark 
-            ? 'bg-[#0f1422]/90 border-gray-800 shadow-lg' 
-            : 'bg-white border-slate-200 shadow-sm hover:shadow-md'
+            ? 'bg-[#101626]/80 border-white/10 shadow-lg' 
+            : 'bg-white/80 border-slate-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)]'
         }`}>
           <div className="flex items-center justify-between mb-2">
-            <span className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
-              Recon Score
+            <span className={`text-xs font-semibold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+              Fleet Readiness
             </span>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               Excellent
             </span>
           </div>
-          <div className="flex items-baseline gap-2">
-            <span className={`text-3xl font-extrabold font-mono ${isDark ? 'text-white' : 'text-slate-900'}`}>
+          <div className="flex items-baseline gap-1.5">
+            <span className={`text-3xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
               94
             </span>
-            <span className={`text-xs font-bold ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
-              / 100
+            <span className={`text-xs font-semibold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+              %
             </span>
           </div>
-          <p className={`text-[11px] mt-2 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
-            {wormholeCount} J-Space • {empireCount} Empire
+          <p className={`text-[11px] mt-2 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+            Tranquility latency: 12ms
           </p>
         </div>
 
-        {/* Card 3: Signatures Mapped */}
+        {/* Metric 3: Step Target / Signatures Scanned */}
         <div className={`p-5 rounded-3xl border transition-all ${
           isDark 
-            ? 'bg-[#0f1422]/90 border-gray-800 shadow-lg' 
-            : 'bg-white border-slate-200 shadow-sm hover:shadow-md'
+            ? 'bg-[#101626]/80 border-white/10 shadow-lg' 
+            : 'bg-white/80 border-slate-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)]'
         }`}>
           <div className="flex items-center justify-between mb-2">
-            <span className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
-              Sigs Resolved
+            <span className={`text-xs font-semibold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+              Signatures
             </span>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-400 border border-sky-500/30">
-              84% Sigs
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+              84%
             </span>
           </div>
-          <div className="flex items-baseline gap-2">
-            <span className={`text-3xl font-extrabold font-mono ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              {Math.max(totalSignatures, 48)}
+          <div className="flex items-baseline gap-1.5">
+            <span className={`text-3xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              {Math.max(totalSignatures, 38)}
             </span>
-            <span className={`text-xs font-bold ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
+            <span className={`text-xs font-semibold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
               SIGS
             </span>
           </div>
-          <p className={`text-[11px] mt-2 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
-            Gas, Relic, Data &amp; WHs
+          <p className={`text-[11px] mt-2 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+            Target: 45 signatures mapped
           </p>
         </div>
 
-        {/* Card 4: Threat Index */}
+        {/* Metric 4: Stress Score / Threat Level */}
         <div className={`p-5 rounded-3xl border transition-all ${
           isDark 
-            ? 'bg-[#0f1422]/90 border-gray-800 shadow-lg' 
-            : 'bg-white border-slate-200 shadow-sm hover:shadow-md'
+            ? 'bg-[#101626]/80 border-white/10 shadow-lg' 
+            : 'bg-white/80 border-slate-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)]'
         }`}>
           <div className="flex items-center justify-between mb-2">
-            <span className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
+            <span className={`text-xs font-semibold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
               Threat Index
             </span>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-              Low Threat
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              Low
             </span>
           </div>
-          <div className="flex items-baseline gap-2">
-            <span className={`text-3xl font-extrabold font-mono ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
-              18%
+          <div className="flex items-baseline gap-1.5">
+            <span className={`text-3xl font-bold tracking-tight ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
+              21
             </span>
-            <span className={`text-xs font-bold ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
-              RISK
+            <span className={`text-xs font-semibold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+              %
             </span>
           </div>
-          <p className={`text-[11px] mt-2 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
-            0 hostile bubbles on scan
+          <p className={`text-[11px] mt-2 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+            Quiet zKillboard activity
           </p>
         </div>
       </div>
 
-      {/* 3. CENTERPIECE: 3D HOLOGRAPHIC CONSTELLATION & AI INSIGHTS */}
+      {/* 4. ACTIVITY TIMELINE PILLS (Matching Nura's horizontal milestone capsules) */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+        {timelinePills.map((pill, idx) => (
+          <div
+            key={idx}
+            className={`px-3 py-1.5 rounded-full border text-xs flex items-center gap-2 shrink-0 transition-colors ${
+              isDark 
+                ? 'bg-[#101626]/60 border-white/5 text-slate-300' 
+                : 'bg-slate-100/90 border-slate-200 text-slate-700'
+            }`}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+            <span className="font-semibold text-[11px] opacity-75">{pill.label}</span>
+            <span className="font-medium text-[11px]">{pill.text}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* 5. MAIN NURA CARDS GRID (Left 2 cols: Trend & 3D Constellation; Right 1 col: AI Insights & Scores) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Left 2 Cols: Interactive 3D Hologram */}
-        <div className={`lg:col-span-2 p-6 rounded-3xl border transition-all flex flex-col justify-between ${
-          isDark 
-            ? 'bg-gradient-to-br from-[#0c1222] via-[#090d18] to-[#06080e] border-cyan-500/30 shadow-[0_0_30px_rgba(6,182,212,0.15)]' 
-            : 'bg-gradient-to-br from-slate-50 via-white to-sky-50/40 border-slate-200 shadow-md'
-        }`}>
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse"></span>
-                <h3 className={`text-lg font-bold font-mono tracking-wide ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                  INTERACTIVE EXPEDITION HOLOGRAM
-                </h3>
-              </div>
-              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-slate-600'}`}>
-                3D orbital constellation of all systems jumped to &amp; from. Spin, zoom and hover any node.
-              </p>
-            </div>
-
-            <button
-              onClick={() => onNavigateTab('mapper')}
-              className={`p-2 rounded-xl border text-xs font-mono flex items-center gap-1.5 transition-colors ${
-                isDark 
-                  ? 'bg-cyan-500/10 text-cyan-300 border-cyan-500/40 hover:bg-cyan-500/20' 
-                  : 'bg-sky-50 text-sky-800 border-sky-300 hover:bg-sky-100'
-              }`}
-              title="Switch to 2D Tree Chain Mapper"
-            >
-              <span>2D Tree Map</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          {/* 3D Canvas Mount */}
-          <div className="relative w-full h-[450px] rounded-2xl overflow-hidden border border-cyan-500/20 bg-black/40">
-            <Hologram3DViewer
-              systems={mapState.systems}
-              connections={mapState.connections}
-              activeSystemId={activeSystem?.id || 'J103955'}
-              theme={theme}
-              onSelectSystem={(sysId) => {
-                onNavigateTab('mapper');
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Right 1 Col: AI Insights & Health Score Cards (Matching Nura Mock) */}
-        <div className="space-y-6 flex flex-col justify-between">
+        {/* Left Column (2 Cols) */}
+        <div className="lg:col-span-2 space-y-6">
           
-          {/* Card A: AI Tactical Insights with glowing 3D orb */}
+          {/* Card A: Heart Rate Trend / Fleet Jumps & Navigation Wave Chart */}
           <div className={`p-6 rounded-3xl border relative overflow-hidden transition-all ${
             isDark 
-              ? 'bg-gradient-to-br from-emerald-950/40 via-[#0e1622] to-[#080d15] border-emerald-500/40 shadow-lg' 
-              : 'bg-gradient-to-br from-emerald-50 via-white to-emerald-50/30 border-emerald-200 shadow-sm'
+              ? 'bg-[#101626]/80 border-white/10 shadow-lg' 
+              : 'bg-white/80 border-slate-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)]'
           }`}>
             <div className="flex items-center justify-between mb-4">
-              <span className={`text-xs font-bold uppercase tracking-wider font-mono ${
+              <div>
+                <h3 className={`text-base font-bold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  Fleet Navigation &amp; Jump Flow
+                </h3>
+                <p className={`text-xs font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                  Hourly jump velocity across known space and wormholes.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                  41% faster transit
+                </span>
+                <button
+                  onClick={() => onNavigateTab('mapper')}
+                  className={`p-1.5 rounded-full border transition-colors ${
+                    isDark ? 'border-white/10 text-slate-400 hover:text-white' : 'border-slate-200 text-slate-500 hover:text-slate-900'
+                  }`}
+                  title="Expand Full Mapper"
+                >
+                  <ArrowUpRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Smooth SVG Area Curve Chart (Matching Nura's Heart Rate curve) */}
+            <div className="relative w-full h-36 my-2">
+              <svg className="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 600 120">
+                <defs>
+                  <linearGradient id="nura-chart-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.35" />
+                    <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.0" />
+                  </linearGradient>
+                </defs>
+                {/* Area Fill */}
+                <path
+                  d="M 0 100 Q 80 40, 160 85 T 320 30 T 480 65 T 600 20 L 600 120 L 0 120 Z"
+                  fill="url(#nura-chart-gradient)"
+                />
+                {/* Smooth Curve Stroke */}
+                <path
+                  d="M 0 100 Q 80 40, 160 85 T 320 30 T 480 65 T 600 20"
+                  fill="none"
+                  stroke="#06b6d4"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                />
+                {/* Peak Indicator Dot */}
+                <circle cx="320" cy="30" r="4.5" fill="#ffffff" stroke="#06b6d4" strokeWidth="2.5" />
+              </svg>
+            </div>
+
+            {/* Footer Metrics (Resting / Max / Status) */}
+            <div className={`grid grid-cols-3 gap-2 pt-3 border-t text-center ${
+              isDark ? 'border-white/5' : 'border-slate-100'
+            }`}>
+              <div>
+                <span className={`text-[10px] uppercase font-semibold block ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                  Average
+                </span>
+                <span className={`text-xs font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  3.2 Jumps/hr
+                </span>
+              </div>
+              <div>
+                <span className={`text-[10px] uppercase font-semibold block ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                  Peak Velocity
+                </span>
+                <span className={`text-xs font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  14 Jumps/hr
+                </span>
+              </div>
+              <div>
+                <span className={`text-[10px] uppercase font-semibold block ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                  Chain Status
+                </span>
+                <span className="text-xs font-bold text-emerald-400">
+                  Optimal
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Card B: Interactive 3D Hologram / Constellation Viewer */}
+          <div className={`p-6 rounded-3xl border transition-all ${
+            isDark 
+              ? 'bg-[#101626]/80 border-white/10 shadow-lg' 
+              : 'bg-white/80 border-slate-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)]'
+          }`}>
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h3 className={`text-base font-bold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  Interactive 3D Constellation Hologram
+                </h3>
+                <p className={`text-xs font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                  Spatial orbital map of all jumped systems. Drag to rotate, scroll to zoom.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-1.5 p-1 rounded-full bg-slate-200/50 dark:bg-black/40 border border-slate-300/40 dark:border-white/5">
+                <button
+                  onClick={() => setActiveViewerMode('3d')}
+                  className={`px-2.5 py-0.5 rounded-full text-xs font-medium transition-all ${
+                    activeViewerMode === '3d'
+                      ? 'bg-white dark:bg-cyan-500/20 text-slate-900 dark:text-cyan-300 font-semibold shadow-sm'
+                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  3D Hologram
+                </button>
+                <button
+                  onClick={() => onNavigateTab('mapper')}
+                  className="px-2.5 py-0.5 rounded-full text-xs font-medium text-slate-500 hover:text-slate-900 dark:hover:text-white transition-all"
+                >
+                  2D Tree
+                </button>
+              </div>
+            </div>
+
+            {/* 3D Viewer Container */}
+            <div className="relative w-full h-[380px] rounded-2xl overflow-hidden border border-cyan-500/15 bg-black/40">
+              <Hologram3DViewer
+                systems={mapState.systems}
+                connections={mapState.connections}
+                activeSystemId={activeSystem?.id || 'J103955'}
+                theme={theme}
+                onSelectSystem={() => onNavigateTab('mapper')}
+              />
+            </div>
+          </div>
+
+        </div>
+
+        {/* Right Column (1 Col: AI Insights, Health Score, Biomarkers, Timers) */}
+        <div className="space-y-6">
+          
+          {/* Card 1: AI Insights with Glossy 3D Orb (Matching Nura AI Insights) */}
+          <div className={`p-6 rounded-3xl border relative overflow-hidden transition-all ${
+            isDark 
+              ? 'bg-gradient-to-br from-[#101b22] via-[#0e1624] to-[#0a101d] border-emerald-500/30 shadow-lg' 
+              : 'bg-gradient-to-br from-emerald-50/70 via-white to-emerald-50/30 border-emerald-200 shadow-sm'
+          }`}>
+            <div className="flex items-center justify-between mb-3">
+              <span className={`text-xs font-bold uppercase tracking-wider ${
                 isDark ? 'text-emerald-400' : 'text-emerald-700'
               }`}>
                 AI Tactical Insights
               </span>
 
-              {/* Glowing 3D Orb Graphic (Matching the Nura green sphere) */}
-              <div className="relative w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-600 via-emerald-400 to-white shadow-[0_0_15px_rgba(16,185,129,0.8)] animate-pulse" />
+              {/* Glossy 3D Green Pearl / Orb Graphic (from Nura reference) */}
+              <div className="relative w-7 h-7 rounded-full bg-gradient-to-tr from-emerald-600 via-emerald-400 to-white shadow-[0_0_16px_rgba(16,185,129,0.7)] animate-pulse" />
             </div>
 
-            <p className={`text-xs leading-relaxed font-sans ${isDark ? 'text-gray-300' : 'text-slate-700'}`}>
-              Your fleet headquarters in <strong>{activeSystem?.name || 'J103955'}</strong> maintains an active static to <strong>Lowsec</strong>. 
-              The trade connection to <strong>Jita 4-4</strong> is <strong>4 jumps away</strong> through Uemisaisen and Sobaseki.
+            <p className={`text-xs leading-relaxed font-sans ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+              Your wormhole network in <strong>{activeSystem?.name || 'J103955'}</strong> maintains an active static connection. 
+              The trade route to <strong>Jita 4-4</strong> is <strong>4 jumps</strong> via Uemisaisen. Scout consistency improved by 14% this session.
             </p>
 
-            <div className={`mt-4 pt-3 border-t text-[11px] font-mono flex items-center justify-between ${
-              isDark ? 'border-emerald-900/40 text-emerald-400' : 'border-emerald-200 text-emerald-700 font-semibold'
+            <div className={`mt-4 pt-3 border-t text-[11px] font-sans flex items-center justify-between ${
+              isDark ? 'border-emerald-500/20 text-emerald-400' : 'border-emerald-200 text-emerald-700 font-semibold'
             }`}>
-              <span>• D-Scan Hostile Count: 0</span>
+              <span>• Hostiles on Scan: 0</span>
               <span>• Mass: Stable</span>
             </div>
           </div>
 
-          {/* Card B: Fleet Recon Health Score */}
+          {/* Card 2: Health Score (Exact Nura proportions: 94 / 100, Excellent pill) */}
           <div className={`p-6 rounded-3xl border transition-all ${
             isDark 
-              ? 'bg-[#0f1422]/90 border-gray-800 shadow-lg' 
-              : 'bg-white border-slate-200 shadow-sm'
+              ? 'bg-[#101626]/80 border-white/10 shadow-lg' 
+              : 'bg-white/80 border-slate-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)]'
           }`}>
             <div className="flex items-center justify-between mb-3">
-              <span className={`text-xs font-bold uppercase tracking-wider font-mono ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
-                Expedition Security Score
+              <span className={`text-xs font-semibold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                Expedition Score
               </span>
               <Activity className="w-4 h-4 text-cyan-400" />
             </div>
 
-            <div className="flex items-center justify-between">
-              <div>
-                <div className={`text-4xl font-extrabold font-mono ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                  94
-                </div>
-                <div className={`text-xs font-medium mt-1 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
-                  Calculated from wormhole EOLs, mass states, and local threat levels.
-                </div>
+            <div className="text-center py-2">
+              <div className={`text-5xl font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                94
               </div>
-
-              <div className="flex flex-col items-center">
-                <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-sm">
+              <div className={`text-xs font-medium mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                100 Max Score
+              </div>
+              <div className="mt-3">
+                <span className="text-xs font-semibold px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                   Excellent
                 </span>
-                <span className={`text-[10px] mt-1 font-mono ${isDark ? 'text-gray-500' : 'text-slate-400'}`}>
-                  100 Max
+              </div>
+            </div>
+          </div>
+
+          {/* Card 3: Biomarker Overview / Chain Structure Overview */}
+          <div className={`p-6 rounded-3xl border transition-all ${
+            isDark 
+              ? 'bg-[#101626]/80 border-white/10 shadow-lg' 
+              : 'bg-white/80 border-slate-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)]'
+          }`}>
+            <div className="flex items-center justify-between mb-4">
+              <span className={`text-xs font-semibold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                Chain Gateways Overview
+              </span>
+              <button 
+                onClick={() => onNavigateTab('mapper')}
+                className={`text-slate-400 hover:text-cyan-400 transition-colors`}
+              >
+                <ArrowUpRight className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className={isDark ? 'text-slate-300 font-medium' : 'text-slate-700 font-medium'}>
+                  Highsec Connections
+                </span>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  Normal (4)
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between text-xs">
+                <span className={isDark ? 'text-slate-300 font-medium' : 'text-slate-700 font-medium'}>
+                  Lowsec Gateways
+                </span>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  Normal (2)
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between text-xs">
+                <span className={isDark ? 'text-slate-300 font-medium' : 'text-slate-700 font-medium'}>
+                  C1 - C3 Wormholes
+                </span>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                  Active (7)
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between text-xs">
+                <span className={isDark ? 'text-slate-300 font-medium' : 'text-slate-700 font-medium'}>
+                  C4 - C6 Deep WH
+                </span>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                  High Class (5)
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between text-xs">
+                <span className={isDark ? 'text-slate-300 font-medium' : 'text-slate-700 font-medium'}>
+                  Hostile Bubbles / Camps
+                </span>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  Clear (0)
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Card C: Active Pilot Tracking */}
-          <div className={`p-5 rounded-3xl border transition-all ${
+          {/* Card 4: Upcoming Structure Timers (Matching Nura Upcoming card) */}
+          <div className={`p-6 rounded-3xl border transition-all ${
             isDark 
-              ? 'bg-[#0f1422]/90 border-gray-800 shadow-lg' 
-              : 'bg-white border-slate-200 shadow-sm'
+              ? 'bg-[#101626]/80 border-white/10 shadow-lg' 
+              : 'bg-white/80 border-slate-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)]'
           }`}>
-            <span className={`text-[11px] font-bold uppercase tracking-wider font-mono block mb-3 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
-              Fleet Members in Chain ({totalPilotsOnline})
-            </span>
-
-            <div className="space-y-2">
-              {currentPilot ? (
-                <div className={`flex items-center justify-between p-2.5 rounded-2xl border ${
-                  isDark ? 'bg-cyan-950/30 border-cyan-500/40 text-white' : 'bg-sky-50 border-sky-200 text-slate-900'
-                }`}>
-                  <div className="flex items-center gap-2.5">
-                    <img 
-                      src={currentPilot.avatarUrl} 
-                      alt={currentPilot.characterName} 
-                      className="w-7 h-7 rounded-xl object-cover border border-cyan-400/50" 
-                    />
-                    <div>
-                      <div className="font-bold text-xs">{currentPilot.characterName}</div>
-                      <div className="text-[10px] text-cyan-400 font-mono">In {activeSystem?.name || 'J103955'}</div>
-                    </div>
-                  </div>
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                </div>
-              ) : (
-                <div className="text-xs text-gray-500 font-mono text-center py-2">
-                  No pilot signed in. Click Pilot Sign In to link your EVE character.
-                </div>
-              )}
+            <div className="flex items-center justify-between mb-3">
+              <span className={`text-xs font-semibold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                Upcoming Structure Timers
+              </span>
+              <button
+                onClick={() => setIsTimerModalOpen(true)}
+                className="p-1 rounded-full bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 transition-colors"
+                title="Create Structure Timer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </button>
             </div>
-          </div>
 
-        </div>
-
-      </div>
-
-      {/* 4. EXPEDITION FLIGHT LOG & RECENT JUMP TRAILS */}
-      <div className={`p-6 rounded-3xl border transition-all ${
-        isDark 
-          ? 'bg-[#0c101c]/90 border-gray-800 shadow-lg' 
-          : 'bg-white border-slate-200 shadow-sm'
-      }`}>
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h4 className={`text-base font-bold font-mono tracking-wide ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              TODAY'S JUMP LOG &amp; CHAIN EXPEDITION TRAIL
-            </h4>
-            <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
-              Chronological log of solar systems and wormholes navigated by your fleet today
-            </p>
-          </div>
-
-          <button
-            onClick={() => onNavigateTab('mapper')}
-            className={`text-xs font-mono text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors`}
-          >
-            <span>View Complete Chain</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        {/* Trail Steps */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2">
-          {['Kisogo', 'Urlen', 'Perimeter', 'Jita', 'Sobaseki', 'Isanamo', 'Uemisaisen', 'J103955'].map((sysName, idx, arr) => {
-            const isLast = idx === arr.length - 1;
-            const isWormhole = sysName.startsWith('J');
-            return (
-              <React.Fragment key={idx}>
-                <div className={`px-3.5 py-2 rounded-2xl border flex items-center gap-2 shrink-0 ${
-                  isLast 
-                    ? isDark 
-                      ? 'bg-purple-950/40 border-purple-500 text-purple-200 shadow-[0_0_12px_rgba(168,85,247,0.3)] font-bold' 
-                      : 'bg-purple-50 border-purple-400 text-purple-900 font-bold'
-                    : isDark 
-                    ? 'bg-[#0e1424] border-gray-800 text-gray-300' 
-                    : 'bg-slate-50 border-slate-200 text-slate-800'
-                }`}>
-                  <span className={`w-2 h-2 rounded-full ${isLast ? 'bg-purple-400 animate-ping' : isWormhole ? 'bg-cyan-400' : 'bg-emerald-400'}`}></span>
-                  <span className="font-mono text-xs">{sysName}</span>
-                  {isLast && (
-                    <span className="text-[9px] px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 uppercase font-bold">
-                      CURRENT
+            {timersList.length === 0 ? (
+              <div className={`text-xs text-center py-4 font-medium ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                No upcoming timers recorded. Click + to add one.
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {timersList.slice(0, 3).map((timer) => (
+                  <div 
+                    key={timer.id}
+                    className={`p-3 rounded-2xl border flex items-center justify-between ${
+                      isDark ? 'bg-white/5 border-white/5' : 'bg-slate-50 border-slate-200'
+                    }`}
+                  >
+                    <div>
+                      <div className={`text-xs font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                        {timer.name}
+                      </div>
+                      <div className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                        {timer.systemName} • {timer.structureType} ({timer.timerType})
+                      </div>
+                    </div>
+                    <span className="text-[11px] font-semibold text-amber-400">
+                      Active
                     </span>
-                  )}
-                </div>
-                {!isLast && (
-                  <span className="text-gray-600 font-mono text-xs shrink-0">→</span>
-                )}
-              </React.Fragment>
-            );
-          })}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
         </div>
+
       </div>
+
+      {/* Structure Timer Modal */}
+      <StructureTimerModal
+        isOpen={isTimerModalOpen}
+        defaultSystem={activeSystem?.name || 'J103955'}
+        availableSystems={Object.keys(mapState.systems)}
+        onClose={() => setIsTimerModalOpen(false)}
+      />
 
     </div>
   );

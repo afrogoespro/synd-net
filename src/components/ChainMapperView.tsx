@@ -395,83 +395,80 @@ export const ChainMapperView: React.FC = () => {
       isDark ? 'bg-[#04060c] text-gray-200' : 'bg-slate-100 text-slate-800'
     }`}>
       
-      {/* 1. TOP TITLE BAR (Tripwire / Pathfinder style) */}
-      <div className={`border-b px-4 py-2 flex items-center justify-between text-xs z-20 flex-wrap gap-2 ${
-        isDark ? 'bg-[#0b0f1a] border-gray-800/80 text-gray-300' : 'bg-white border-slate-200 text-slate-800 shadow-sm'
+      {/* 1. TOP TITLE BAR (Apple macOS Sequoia / VisionOS Frosted Glass Bar) */}
+      <div className={`border-b px-4 py-2 flex items-center justify-between text-xs z-20 flex-wrap gap-2.5 backdrop-blur-2xl transition-colors ${
+        isDark ? 'bg-[#090d16]/85 border-white/10 text-gray-200 shadow-md shadow-black/30' : 'bg-white/85 border-slate-200/80 text-slate-800 shadow-sm'
       }`}>
-        <div className="flex items-center gap-3 flex-wrap">
-          {/* Pilot Identity & EVE SSO Profile */}
-          <div className={`flex items-center gap-2 font-bold tracking-wide text-xs ${isDark ? 'text-white' : 'text-slate-900'}`}>
-            <span className="text-cyan-400 text-lg leading-none">≡</span>
-
+        <div className="flex items-center gap-2.5 flex-wrap">
+          {/* Pilot Identity & EVE SSO Profile (Apple Capsule) */}
+          <div className="flex items-center gap-2">
             {currentPilot ? (
-              <div className={`flex items-center gap-2 rounded-xl px-2.5 py-1 border shadow-sm ${
+              <div className={`flex items-center gap-2 rounded-full pl-1 pr-2 py-0.5 border shadow-sm transition-all ${
                 isDark 
-                  ? 'bg-[#080d1a] border-cyan-500/50 shadow-[0_0_12px_rgba(6,182,212,0.2)] text-white' 
-                  : 'bg-sky-50 border-sky-300 text-slate-900'
+                  ? 'bg-white/5 border-white/10 text-white' 
+                  : 'bg-slate-100 border-slate-200 text-slate-900'
               }`}>
                 <img
                   src={currentPilot.avatarUrl}
                   alt={currentPilot.characterName}
-                  className="w-5 h-5 rounded border border-cyan-400 object-cover"
+                  className="w-5 h-5 rounded-full border border-cyan-400/60 object-cover"
                 />
-                <span className="font-bold">{currentPilot.characterName}</span>
+                <span className="font-semibold text-xs">{currentPilot.characterName}</span>
                 {currentPilot.corporationTicker && (
-                  <span className={`text-[10px] hidden sm:inline ${isDark ? 'text-cyan-300' : 'text-sky-700 font-semibold'}`}>[{currentPilot.corporationTicker}]</span>
+                  <span className={`text-[10px] hidden sm:inline ${isDark ? 'text-cyan-300/80' : 'text-cyan-700 font-semibold'}`}>[{currentPilot.corporationTicker}]</span>
                 )}
                 <button
                   onClick={() => {
                     mapperService.setPilotLocation(currentPilot.characterName, selectedSystem?.id || 'J103955');
                   }}
-                  className="px-2 py-0.5 rounded bg-emerald-600 hover:bg-emerald-500 text-black font-bold text-xs flex items-center gap-1 shadow-[0_0_8px_rgba(16,185,129,0.4)] transition-all whitespace-nowrap ml-1"
+                  className="px-2 py-0.5 rounded-full bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-[11px] flex items-center gap-1 shadow-sm transition-all whitespace-nowrap ml-0.5"
                   title={`Move ${currentPilot.characterName} to ${selectedSystem?.name || 'J103955'}`}
                 >
-                  <MapPin className="w-3 h-3" />
-                  <span>I'M IN {selectedSystem?.name || 'J103955'}</span>
+                  <MapPin className="w-2.5 h-2.5" />
+                  <span>I'm in {selectedSystem?.name || 'J103955'}</span>
                 </button>
               </div>
             ) : (
               <button
                 onClick={() => setIsLoginModalOpen(true)}
-                className="px-3 py-1 rounded-lg bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-black font-bold text-xs flex items-center gap-1.5 shadow-[0_0_14px_rgba(6,182,212,0.35)] transition-all"
+                className="px-3 py-1 rounded-full bg-cyan-500 hover:bg-cyan-400 text-black font-semibold text-xs flex items-center gap-1.5 shadow-sm transition-all"
               >
                 <KeyRound className="w-3.5 h-3.5" />
-                <span>SIGN IN PILOT / EVE SSO</span>
+                <span>Sign In Pilot</span>
               </button>
             )}
           </div>
 
-          <span className="hidden lg:inline-block w-px h-4 bg-gray-700/60"></span>
-
-          <div className="hidden lg:flex items-center gap-2 text-[11px] text-gray-400">
-            <span className="flex items-center gap-1.5 text-emerald-400 font-bold">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-              LIVE SYNC
+          <div className={`hidden lg:flex items-center gap-2 px-2.5 py-1 rounded-full border text-[11px] font-sans ${
+            isDark ? 'bg-white/5 border-white/5 text-slate-400' : 'bg-slate-100 border-slate-200 text-slate-600'
+          }`}>
+            <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              Live Sync
             </span>
-            <span className="text-gray-600">|</span>
-            <span>{Object.keys(mapState.systems).length} Systems Mapped</span>
+            <span className="opacity-40">|</span>
+            <span>{Object.keys(mapState.systems).length} Systems</span>
           </div>
 
           {/* Active Fleet in Chain */}
           {allActivePilots.length > 0 && (
-            <div className="flex items-center gap-1.5 flex-wrap pl-2 border-l border-gray-800">
-              <span className="text-[10px] text-gray-400 font-bold uppercase hidden sm:inline">FLEET:</span>
+            <div className="flex items-center gap-1.5 flex-wrap">
               {allActivePilots.map((p, idx) => {
                 const isMe = currentPilot && p.pilotName.toLowerCase().includes(currentPilot.characterName.toLowerCase());
                 return (
                   <button
                     key={idx}
                     onClick={() => setSelectedSystemId(p.systemName)}
-                    className={`px-2 py-0.5 rounded text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm ${
+                    className={`px-2.5 py-0.5 rounded-full text-xs font-medium flex items-center gap-1.5 transition-all border ${
                       isMe 
-                        ? 'bg-cyan-950/90 border border-cyan-500/70 text-cyan-200' 
-                        : 'bg-purple-950/90 border border-purple-500/70 text-purple-200 hover:border-purple-300'
+                        ? isDark ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-200' : 'bg-cyan-50 border-cyan-300 text-cyan-900 font-semibold'
+                        : isDark ? 'bg-purple-500/15 border-purple-500/40 text-purple-200' : 'bg-purple-50 border-purple-200 text-purple-900'
                     }`}
                     title={`Click to focus on ${p.pilotName} in ${p.systemName}`}
                   >
-                    <span className={`w-2 h-2 rounded-full ${isMe ? 'bg-cyan-400' : 'bg-emerald-400 animate-pulse'}`}></span>
+                    <span className={`w-1.5 h-1.5 rounded-full ${isMe ? 'bg-cyan-400' : 'bg-purple-400 animate-pulse'}`}></span>
                     <span>{p.pilotName}</span>
-                    <span className="text-[10px] opacity-75 font-mono">@{p.systemName}</span>
+                    <span className="text-[10px] opacity-70">@{p.systemName}</span>
                   </button>
                 );
               })}
@@ -479,135 +476,137 @@ export const ChainMapperView: React.FC = () => {
           )}
         </div>
 
-        {/* Top Controls */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* GalaxyFinder Follow-Me Mode */}
-          <button
-            onClick={() => {
-              const next = !followMe;
-              setFollowMe(next);
-              if (next && activeSystem) {
-                centerOnSystem(activeSystem.id);
-              }
-            }}
-            className={`px-2.5 py-1 rounded-lg border text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm ${
-              followMe
-                ? 'bg-emerald-950/90 border-emerald-500/80 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.3)]'
-                : isDark
-                ? 'bg-gray-900 border-gray-800 text-gray-400 hover:text-white'
-                : 'bg-slate-100 border-slate-300 text-slate-600 hover:text-slate-900'
-            }`}
-            title={followMe ? 'Follow Me: ON (Auto-pans canvas on jump)' : 'Follow Me: OFF (Click to enable auto-tracking)'}
-          >
-            <Navigation className={`w-3.5 h-3.5 ${followMe ? 'text-emerald-400 animate-pulse' : ''}`} />
-            <span>{followMe ? 'FOLLOW: ON' : 'FOLLOW: OFF'}</span>
-          </button>
+        {/* Top Controls (Apple Segmented Pill Toolbar) */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {/* Segmented Controls Group */}
+          <div className={`flex items-center p-0.5 rounded-full border ${
+            isDark ? 'bg-black/40 border-white/10' : 'bg-slate-100 border-slate-200'
+          }`}>
+            {/* Follow-Me */}
+            <button
+              onClick={() => {
+                const next = !followMe;
+                setFollowMe(next);
+                if (next && activeSystem) {
+                  centerOnSystem(activeSystem.id);
+                }
+              }}
+              className={`px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 transition-all ${
+                followMe
+                  ? isDark ? 'bg-emerald-500/20 text-emerald-300 font-semibold shadow-sm' : 'bg-emerald-500 text-white font-semibold shadow-sm'
+                  : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+              }`}
+              title={followMe ? 'Follow Me: ON' : 'Follow Me: OFF'}
+            >
+              <Navigation className={`w-3 h-3 ${followMe ? 'animate-pulse' : ''}`} />
+              <span>{followMe ? 'Follow' : 'Follow: Off'}</span>
+            </button>
 
-          {/* GalaxyFinder Tidy Tree */}
-          <button
-            onClick={() => mapperService.autoOrganizeTreeLayout()}
-            className={`px-2.5 py-1 rounded-lg border text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm ${
-              isDark
-                ? 'bg-cyan-950/70 border-cyan-700/60 text-cyan-300 hover:bg-cyan-900 shadow-[0_0_10px_rgba(6,182,212,0.15)]'
-                : 'bg-sky-50 border-sky-300 text-sky-800 hover:bg-sky-100'
-            }`}
-            title="GalaxyFinder Tidy Tree: Auto-organize hierarchical system layout"
-          >
-            <FolderTree className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="hidden sm:inline">TIDY TREE</span>
-          </button>
+            {/* Tidy Tree */}
+            <button
+              onClick={() => mapperService.autoOrganizeTreeLayout()}
+              className={`px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 transition-all ${
+                isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+              }`}
+              title="Auto-organize tree layout"
+            >
+              <FolderTree className="w-3 h-3 text-cyan-400" />
+              <span className="hidden sm:inline">Tidy Tree</span>
+            </button>
 
-          {/* GalaxyFinder Collapse All */}
-          <button
-            onClick={() => mapperService.toggleCollapseAll()}
-            className={`px-2.5 py-1 rounded-lg border text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm ${
-              isDark
-                ? 'bg-gray-900 hover:bg-gray-800 text-gray-300 border-gray-800'
-                : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300'
-            }`}
-            title="Toggle Collapse / Expand all branches across map"
-          >
-            <GitFork className="w-3.5 h-3.5 text-amber-400" />
-            <span className="hidden sm:inline">COLLAPSE ALL</span>
-          </button>
+            {/* Collapse All */}
+            <button
+              onClick={() => mapperService.toggleCollapseAll()}
+              className={`px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 transition-all ${
+                isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+              }`}
+              title="Toggle Collapse / Expand all branches"
+            >
+              <GitFork className="w-3 h-3 text-amber-400" />
+              <span className="hidden sm:inline">Fold All</span>
+            </button>
+          </div>
 
-          {/* GalaxyFinder Live Jita Jump Count */}
+          {/* Jita Jump Count Pill */}
           <div
             onClick={() => {
               setSelectedSystemId('Jita');
               centerOnSystem('Jita');
             }}
-            className={`px-2.5 py-1 rounded-lg border text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all ${
+            className={`px-3 py-1 rounded-full border text-xs font-medium flex items-center gap-1.5 cursor-pointer transition-all ${
               jitaRoute.jumps !== null
-                ? 'bg-blue-950/80 border-blue-500/60 text-blue-300 hover:border-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.2)]'
-                : 'bg-gray-900/60 border-gray-800 text-gray-500'
+                ? isDark ? 'bg-blue-500/15 border-blue-500/30 text-blue-300' : 'bg-blue-50 border-blue-200 text-blue-700 font-semibold'
+                : isDark ? 'bg-white/5 border-white/5 text-slate-500' : 'bg-slate-100 border-slate-200 text-slate-500'
             }`}
-            title={`Shortest route to Jita 4-4: ${jitaRoute.jumps !== null ? `${jitaRoute.jumps} jumps via [${jitaRoute.path.join(' -> ')}]` : 'No connection in current chain'}`}
+            title={`Shortest route to Jita 4-4: ${jitaRoute.jumps !== null ? `${jitaRoute.jumps} jumps` : 'No route'}`}
           >
-            <Route className="w-3.5 h-3.5 text-blue-400" />
-            <span>JITA: {jitaRoute.jumps !== null ? `${jitaRoute.jumps} J` : '∞'}</span>
+            <Route className="w-3 h-3 text-blue-400" />
+            <span>Jita: {jitaRoute.jumps !== null ? `${jitaRoute.jumps} J` : '—'}</span>
           </div>
 
-          {/* Structure Timers Quick Button */}
+          {/* Timers Button */}
           <button
             onClick={() => setIsTimerModalOpen(true)}
-            className={`px-2.5 py-1 rounded-lg border text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm ${
+            className={`px-3 py-1 rounded-full border text-xs font-medium flex items-center gap-1.5 transition-all ${
               (mapState.timers || []).length > 0
-                ? 'bg-amber-950/80 border-amber-500/70 text-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.25)]'
-                : isDark
-                ? 'bg-gray-900 border-gray-800 text-gray-400 hover:text-white'
-                : 'bg-slate-100 border-slate-300 text-slate-700'
+                ? isDark ? 'bg-amber-500/15 border-amber-500/30 text-amber-300' : 'bg-amber-50 border-amber-200 text-amber-800 font-semibold'
+                : isDark ? 'bg-white/5 border-white/5 text-slate-400 hover:text-white' : 'bg-slate-100 border-slate-200 text-slate-600'
             }`}
             title="Create or View Structure Timers"
           >
-            <Hourglass className={`w-3.5 h-3.5 ${(mapState.timers || []).length > 0 ? 'text-amber-400 animate-pulse' : ''}`} />
-            <span>TIMERS: {(mapState.timers || []).length}</span>
+            <Hourglass className="w-3 h-3 text-amber-400" />
+            <span>Timers: {(mapState.timers || []).length}</span>
           </button>
 
+          {/* Share Link Pill */}
           <button
             onClick={handleCopyBuddyLink}
-            className="px-2.5 py-1 rounded bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 border border-cyan-700/60 flex items-center gap-1.5 transition-all shadow-[0_0_10px_rgba(6,182,212,0.15)] text-xs"
+            className={`px-3 py-1 rounded-full border text-xs font-medium flex items-center gap-1.5 transition-all ${
+              isDark ? 'bg-white/5 border-white/10 text-slate-300 hover:text-white' : 'bg-slate-100 border-slate-200 text-slate-700 hover:text-slate-900'
+            }`}
             title="Copy live tunnel link for fleet buddy"
           >
-            {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
-            <span className="hidden md:inline">{copiedLink ? 'COPIED!' : 'SHARE LINK'}</span>
+            {copiedLink ? <Check className="w-3 h-3 text-emerald-400" /> : <Share2 className="w-3 h-3" />}
+            <span className="hidden md:inline">{copiedLink ? 'Copied' : 'Share'}</span>
           </button>
 
+          {/* Inspector Toggle */}
           <button
             onClick={() => setShowInspector(!showInspector)}
-            className={`p-1.5 rounded border transition-colors ${
+            className={`p-1.5 rounded-full border transition-colors ${
               showInspector 
-                ? isDark ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50' : 'bg-sky-100 text-sky-800 border-sky-400'
-                : isDark ? 'bg-gray-900 text-gray-400 border-gray-800' : 'bg-slate-100 text-slate-600 border-slate-300'
+                ? isDark ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' : 'bg-cyan-50 text-cyan-700 border-cyan-200'
+                : isDark ? 'bg-white/5 text-slate-400 border-white/5 hover:text-white' : 'bg-slate-100 text-slate-600 border-slate-200'
             }`}
             title="Toggle System Inspector"
           >
-            <Layers className="w-4 h-4" />
+            <Layers className="w-3.5 h-3.5" />
           </button>
 
-          {/* Theme Toggle (Light / Dark) */}
+          {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
-            className={`p-1.5 rounded border transition-colors ${
+            className={`p-1.5 rounded-full border transition-colors ${
               isDark 
-                ? 'bg-gray-900 hover:bg-gray-800 text-amber-300 border-gray-800 shadow-sm' 
-                : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300 shadow-sm'
+                ? 'bg-white/5 border-white/10 text-amber-300 hover:bg-white/10' 
+                : 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200'
             }`}
-            title={isDark ? 'Switch to Daylight / Clean Mode' : 'Switch to Tactical Night Mode'}
+            title={isDark ? 'Switch to Daylight Clean Mode' : 'Switch to Dark Mode'}
           >
-            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5 text-cyan-600" />}
           </button>
 
+          {/* Fullscreen Toggle */}
           <button
             onClick={toggleFullscreen}
-            className={`p-1.5 rounded border transition-colors ${
+            className={`p-1.5 rounded-full border transition-colors ${
               isDark 
-                ? 'bg-gray-900 hover:bg-gray-800 text-gray-400 hover:text-white border-gray-800' 
-                : 'bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-950 border-slate-300'
+                ? 'bg-white/5 border-white/10 text-slate-400 hover:text-white' 
+                : 'bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900'
             }`}
             title="Toggle Fullscreen"
           >
-            <Maximize2 className="w-4 h-4" />
+            <Maximize2 className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
@@ -840,24 +839,24 @@ export const ChainMapperView: React.FC = () => {
                     height: `${NODE_H}px`
                   }}
                 >
-                  {/* Card Container */}
+                  {/* Card Container (Apple VisionOS / macOS Sequoia Frosted Glass Node) */}
                   <div
-                    className={`w-full h-full rounded-md px-2.5 py-1.5 flex flex-col justify-between relative transition-all ${
+                    className={`w-full h-full rounded-2xl px-3 py-2 flex flex-col justify-between relative transition-all duration-150 backdrop-blur-md ${
                       isActivePlayer
                         ? isDark
-                          ? 'bg-[#0f172a] shadow-[0_0_20px_rgba(255,255,255,0.9),inset_0_0_10px_rgba(6,182,212,0.35)]'
-                          : 'bg-white shadow-[0_0_16px_rgba(2,132,199,0.35)] ring-2 ring-sky-500'
+                          ? 'bg-[#101a2e]/90 shadow-[0_0_24px_rgba(56,189,248,0.45),0_0_8px_rgba(255,255,255,0.7)] ring-2 ring-white/90'
+                          : 'bg-white/95 shadow-[0_0_20px_rgba(2,132,199,0.35)] ring-2 ring-sky-500'
                         : isSelected
                         ? isDark
-                          ? 'bg-[#11192d] shadow-[0_0_14px_rgba(6,182,212,0.3)]'
-                          : 'bg-sky-50 shadow-md ring-1 ring-sky-400'
+                          ? 'bg-[#0f172a]/90 shadow-[0_0_16px_rgba(6,182,212,0.3)] ring-1.5 ring-cyan-400'
+                          : 'bg-sky-50/95 shadow-md ring-1.5 ring-sky-400'
                         : isDark
-                        ? 'bg-[#0d121f] hover:bg-[#121929]'
-                        : 'bg-white hover:bg-slate-50 shadow-sm border'
+                        ? 'bg-[#0c1222]/85 hover:bg-[#10172b] border border-white/10 shadow-lg shadow-black/20'
+                        : 'bg-white/90 hover:bg-slate-50 shadow-sm border border-slate-200/80'
                     }`}
                     style={{
-                      borderWidth: isActivePlayer ? '2px' : '1px',
-                      borderColor: isActivePlayer ? (isDark ? '#ffffff' : '#0284c7') : isSelected ? '#38bdf8' : borderColor
+                      borderWidth: (isActivePlayer || isSelected) ? '0px' : '1px',
+                      borderColor: borderColor
                     }}
                   >
                     {/* Top Row: Security or WH Class + Statics + Fold Control */}
@@ -867,7 +866,7 @@ export const ChainMapperView: React.FC = () => {
                       <div className="flex items-center gap-1">
                         {nodeTimers.length > 0 && (
                           <span 
-                            className="text-[9px] flex items-center gap-0.5 px-1 py-0.2 rounded font-bold bg-amber-950/80 border border-amber-500/70 text-amber-300 shadow-sm animate-pulse"
+                            className="text-[9px] flex items-center gap-0.5 px-1.5 py-0.5 rounded-full font-bold bg-amber-500/15 border border-amber-500/40 text-amber-300 shadow-sm animate-pulse"
                             title={`${nodeTimers.length} active structure timer(s) in ${node.name}`}
                           >
                             <Hourglass className="w-2.5 h-2.5" />
@@ -877,7 +876,7 @@ export const ChainMapperView: React.FC = () => {
 
                         {kills24h > 0 && (
                           <span 
-                            className="text-[9px] flex items-center gap-0.5 px-1 py-0.2 rounded font-bold bg-red-950/80 border border-red-500/70 text-red-300 shadow-sm"
+                            className="text-[9px] flex items-center gap-0.5 px-1.5 py-0.5 rounded-full font-bold bg-red-500/15 border border-red-500/40 text-red-300 shadow-sm"
                             title={`${kills24h} kill(s) in last 24h on zKillboard`}
                           >
                             <Skull className="w-2.5 h-2.5" />
@@ -898,11 +897,11 @@ export const ChainMapperView: React.FC = () => {
                               e.stopPropagation();
                               mapperService.toggleSystemCollapse(node.id);
                             }}
-                            className={`p-0.5 rounded transition-all pointer-events-auto ${
+                            className={`p-0.5 rounded-full transition-all pointer-events-auto ${
                               node.isCollapsed
-                                ? 'bg-amber-500/20 text-amber-500 hover:bg-amber-500/30 border border-amber-500/50 text-[9px] font-bold px-1 flex items-center gap-0.5 shadow-sm'
+                                ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 border border-amber-500/40 text-[9px] font-bold px-1.5 flex items-center gap-0.5 shadow-sm'
                                 : isDark
-                                ? 'hover:bg-cyan-950 text-gray-400 hover:text-cyan-300'
+                                ? 'hover:bg-white/10 text-slate-400 hover:text-white'
                                 : 'hover:bg-slate-200 text-slate-500 hover:text-slate-900'
                             }`}
                             title={node.isCollapsed ? 'Click to expand folded branch' : 'Click to compress / fold this branch'}
@@ -926,7 +925,7 @@ export const ChainMapperView: React.FC = () => {
                                 mapperService.deleteSystem(node.id);
                               }
                             }}
-                            className="p-0.5 rounded text-gray-400 hover:text-red-400 hover:bg-red-950/40 transition-colors pointer-events-auto"
+                            className="p-0.5 rounded-full text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors pointer-events-auto"
                             title="Delete this system from the map"
                           >
                             <Trash2 className="w-2.5 h-2.5" />
@@ -937,17 +936,17 @@ export const ChainMapperView: React.FC = () => {
 
                     {/* Middle Row: System Name */}
                     <div className="flex items-center justify-between leading-tight mt-0.5">
-                      <span className={`text-xs font-bold tracking-wide truncate ${
+                      <span className={`text-xs font-bold tracking-tight truncate ${
                         isActivePlayer 
                           ? isDark ? 'text-white' : 'text-slate-950 font-black'
-                          : isDark ? 'text-gray-100' : 'text-slate-900'
+                          : isDark ? 'text-slate-100' : 'text-slate-900'
                       }`}>
                         {node.name}
                       </span>
                     </div>
 
                     {/* Bottom Row: Region / Constellation (GalaxyFinder style) */}
-                    <div className="text-[9.5px] text-gray-400 font-sans tracking-tight truncate leading-tight mt-0.5">
+                    <div className="text-[9.5px] text-slate-400 font-sans tracking-normal truncate leading-tight mt-0.5">
                       {node.region || (node.systemClass.startsWith('C') ? 'W-Space' : 'Known Space')}
                     </div>
 
@@ -956,22 +955,22 @@ export const ChainMapperView: React.FC = () => {
                       <div className="absolute -top-2 -right-2 group/pilot z-30">
                         {/* Purple Circular Count Badge */}
                         <div 
-                          className="w-5 h-5 rounded-full bg-purple-600 border border-purple-300 text-white font-bold text-[10px] flex items-center justify-center shadow-[0_0_10px_rgba(168,85,247,0.9)] cursor-pointer hover:scale-110 transition-transform"
+                          className="w-5 h-5 rounded-full bg-purple-600 border border-purple-300 text-white font-bold text-[10px] flex items-center justify-center shadow-[0_0_12px_rgba(168,85,247,0.8)] cursor-pointer hover:scale-110 transition-transform"
                         >
                           {pilotCount}
                         </div>
 
                         {/* Stacked Pilots in Alphabetical Order on Hover */}
-                        <div className={`opacity-0 group-hover/pilot:opacity-100 pointer-events-none group-hover/pilot:pointer-events-auto transition-all duration-150 absolute top-full right-0 mt-1 min-w-[190px] p-2.5 rounded-2xl backdrop-blur-xl border shadow-2xl z-50 animate-in fade-in zoom-in-95 ${
+                        <div className={`opacity-0 group-hover/pilot:opacity-100 pointer-events-none group-hover/pilot:pointer-events-auto transition-all duration-150 absolute top-full right-0 mt-1 min-w-[200px] p-3 rounded-2xl backdrop-blur-2xl border shadow-2xl z-50 animate-in fade-in zoom-in-95 ${
                           isDark 
-                            ? 'bg-[#0a0f1d]/95 border-purple-500/50 text-white shadow-[0_0_20px_rgba(168,85,247,0.3)]' 
-                            : 'bg-white/95 border-purple-300 text-slate-900 shadow-xl'
+                            ? 'bg-[#0a0f1d]/95 border-purple-500/40 text-white shadow-[0_0_24px_rgba(168,85,247,0.25)]' 
+                            : 'bg-white/95 border-purple-200 text-slate-900 shadow-xl'
                         }`}>
-                          <div className={`text-[9px] font-mono font-bold uppercase tracking-wider pb-1.5 mb-2 border-b flex items-center justify-between ${
-                            isDark ? 'text-purple-300 border-purple-500/30' : 'text-purple-700 border-purple-200'
+                          <div className={`text-[9px] font-sans font-bold uppercase tracking-wider pb-1.5 mb-2 border-b flex items-center justify-between ${
+                            isDark ? 'text-purple-300 border-purple-500/20' : 'text-purple-700 border-purple-100'
                           }`}>
-                            <span>PILOTS IN {node.name}</span>
-                            <span className="px-1.5 py-0.2 rounded-full bg-purple-500/20 text-purple-300 font-bold">{pilotCount}</span>
+                            <span>Pilots in {node.name}</span>
+                            <span className="px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-bold">{pilotCount}</span>
                           </div>
                           
                           <div className="space-y-1.5">
@@ -980,21 +979,21 @@ export const ChainMapperView: React.FC = () => {
                               return (
                                 <div
                                   key={pIdx}
-                                  className={`px-2.5 py-1.5 rounded-xl text-xs font-mono flex items-center gap-2 border transition-colors ${
+                                  className={`px-2.5 py-1.5 rounded-xl text-xs font-sans flex items-center gap-2 border transition-colors ${
                                     isMe
                                       ? isDark
-                                        ? 'bg-cyan-950/70 border-cyan-500/60 text-cyan-200'
-                                        : 'bg-cyan-50 border-cyan-400 text-cyan-900 font-bold'
+                                        ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-200'
+                                        : 'bg-cyan-50 border-cyan-300 text-cyan-900 font-semibold'
                                       : isDark
-                                      ? 'bg-purple-950/40 border-purple-800/50 text-gray-200'
-                                      : 'bg-purple-50 border-purple-200 text-purple-950'
+                                      ? 'bg-white/5 border-white/5 text-slate-200'
+                                      : 'bg-slate-50 border-slate-200 text-slate-800'
                                   }`}
                                 >
-                                  <span className={`w-2 h-2 rounded-full shrink-0 ${isMe ? 'bg-cyan-400' : 'bg-emerald-500 animate-pulse'}`}></span>
-                                  <User className={`w-3.5 h-3.5 shrink-0 ${isMe ? 'text-cyan-400' : 'text-purple-500'}`} />
+                                  <span className={`w-2 h-2 rounded-full shrink-0 ${isMe ? 'bg-cyan-400' : 'bg-purple-400 animate-pulse'}`}></span>
+                                  <User className={`w-3.5 h-3.5 shrink-0 ${isMe ? 'text-cyan-400' : 'text-purple-400'}`} />
                                   <span className="font-semibold truncate flex-1">{pilotName}</span>
                                   {isMe && (
-                                    <span className="text-[8px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold uppercase">
+                                    <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-bold uppercase">
                                       YOU
                                     </span>
                                   )}
@@ -1501,18 +1500,21 @@ export const ChainMapperView: React.FC = () => {
           </div>
         )}
 
-        {/* Floating GalaxyFinder Timers & Jumps (Bottom-Right when inspector is closed) */}
+        {/* Floating GalaxyFinder Timers & Jumps (Bottom-Right Apple Frosted Glass Panel) */}
         {!showInspector && (
-          <div className="canvas-control absolute bottom-4 right-4 z-20 w-72 bg-[#0c101c]/95 backdrop-blur-md border border-[#232938] rounded-xl shadow-2xl overflow-hidden font-mono text-xs">
-            {/* Trade Hub Jump Table (SHORTEST | SECURE) */}
-            <div className="p-2.5 border-b border-[#232938] bg-[#090d18]">
-              <div className="flex items-center justify-between pb-1 mb-1 text-[10px] text-gray-400 font-bold">
-                <div className="flex items-center gap-2">
-                  <span className="text-cyan-400">SHORTEST</span>
-                  <span className="opacity-40">|</span>
-                  <span className="opacity-60">SECURE</span>
+          <div className={`canvas-control absolute bottom-4 right-4 z-20 w-72 backdrop-blur-2xl border rounded-2xl shadow-2xl overflow-hidden font-sans text-xs transition-all ${
+            isDark ? 'bg-[#090d16]/85 border-white/10 text-slate-200' : 'bg-white/90 border-slate-200 text-slate-800'
+          }`}>
+            {/* Trade Hub Jump Table (SHORTEST | SECURE Segmented Control) */}
+            <div className={`p-3 border-b ${isDark ? 'border-white/5 bg-white/5' : 'border-slate-100 bg-slate-50/50'}`}>
+              <div className="flex items-center justify-between pb-2 mb-1">
+                <div className={`flex items-center p-0.5 rounded-full border text-[10px] font-medium ${
+                  isDark ? 'bg-black/40 border-white/10' : 'bg-slate-200/60 border-slate-300'
+                }`}>
+                  <span className={`px-2 py-0.5 rounded-full ${isDark ? 'bg-cyan-500/20 text-cyan-300 font-semibold' : 'bg-white text-slate-900 font-semibold shadow-sm'}`}>Shortest</span>
+                  <span className="px-2 py-0.5 text-slate-400">Secure</span>
                 </div>
-                <span className="text-gray-500 text-[9px] uppercase">{selectedSystem?.name || 'Jita'}</span>
+                <span className="text-[10px] text-slate-400 font-medium">{selectedSystem?.name || 'Jita'}</span>
               </div>
 
               <div className="space-y-1">
@@ -1527,13 +1529,15 @@ export const ChainMapperView: React.FC = () => {
                           centerOnSystem(hub.hubName);
                         }
                       }}
-                      className={`flex items-center justify-between px-2 py-0.5 rounded transition-colors ${
-                        hasPath ? 'hover:bg-cyan-950/40 cursor-pointer text-gray-200' : 'text-gray-600'
+                      className={`flex items-center justify-between px-2.5 py-1 rounded-xl transition-colors ${
+                        hasPath 
+                          ? isDark ? 'hover:bg-white/5 cursor-pointer text-slate-200' : 'hover:bg-slate-100 cursor-pointer text-slate-800' 
+                          : 'text-slate-500'
                       }`}
                     >
-                      <span className="font-semibold text-[11px]">{hub.hubName}</span>
-                      <span className={`font-bold font-mono text-[11px] ${hasPath ? 'text-cyan-400' : 'text-gray-600'}`}>
-                        {hasPath ? hub.jumps : '—'}
+                      <span className="font-semibold text-xs">{hub.hubName}</span>
+                      <span className={`font-semibold tabular-nums text-xs ${hasPath ? 'text-cyan-400' : 'text-slate-500'}`}>
+                        {hasPath ? `${hub.jumps} J` : '—'}
                       </span>
                     </div>
                   );
@@ -1542,32 +1546,34 @@ export const ChainMapperView: React.FC = () => {
             </div>
 
             {/* Timers Section (Exact GalaxyFinder style from screenshot) */}
-            <div className="p-2.5 bg-[#0c101c]">
-              <div className="flex items-center justify-between pb-1.5 border-b border-[#232938]">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-gray-300">
+            <div className="p-3">
+              <div className="flex items-center justify-between pb-2 border-b border-white/5">
+                <div className="flex items-center gap-1.5 text-xs font-semibold">
                   <Hourglass className="w-3.5 h-3.5 text-amber-400" />
                   <span>Timers</span>
-                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-950/60 text-amber-300 font-bold border border-amber-800/40">
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                    isDark ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30' : 'bg-amber-100 text-amber-800'
+                  }`}>
                     {(mapState.timers || []).length}
                   </span>
                 </div>
 
                 <button
                   onClick={() => setIsTimerModalOpen(true)}
-                  className="p-1 rounded hover:bg-cyan-950 text-cyan-400 hover:text-cyan-300 transition-colors"
+                  className="p-1 rounded-full bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 transition-colors"
                   title="Create Structure Timer"
                 >
-                  <Plus className="w-4 h-4 stroke-[2.5]" />
+                  <Plus className="w-3.5 h-3.5" />
                 </button>
               </div>
 
               {/* Timer List */}
               {(!mapState.timers || mapState.timers.length === 0) ? (
-                <div className="py-2.5 text-center text-gray-500 text-[10px]">
+                <div className="py-2.5 text-center text-slate-400 text-[10px] font-medium">
                   No active structure timers.
                   <button
                     onClick={() => setIsTimerModalOpen(true)}
-                    className="block mx-auto mt-1 text-cyan-400 hover:underline text-[10px] font-bold"
+                    className="block mx-auto mt-1 text-cyan-400 hover:underline text-[10px] font-semibold"
                   >
                     + Add Timer
                   </button>
@@ -1583,7 +1589,9 @@ export const ChainMapperView: React.FC = () => {
                     return (
                       <div 
                         key={timer.id}
-                        className="p-1.5 rounded-lg bg-[#080c16] border border-gray-800 hover:border-cyan-500/50 transition-all flex items-center justify-between"
+                        className={`p-2 rounded-xl border transition-all flex items-center justify-between ${
+                          isDark ? 'bg-white/5 border-white/5 hover:border-cyan-500/40' : 'bg-slate-50 border-slate-200'
+                        }`}
                       >
                         <div 
                           className="cursor-pointer min-w-0 flex-1 pr-1.5"
@@ -1593,15 +1601,15 @@ export const ChainMapperView: React.FC = () => {
                           }}
                         >
                           <div className="flex items-center gap-1.5 leading-tight">
-                            <span className="font-bold text-white text-[10.5px] truncate">{timer.name}</span>
+                            <span className="font-semibold text-xs truncate">{timer.name}</span>
                             <span className={`text-[8.5px] px-1 py-0.2 rounded border font-bold uppercase ${stageColor}`}>
                               {timer.timerType}
                             </span>
                           </div>
-                          <div className="flex items-center gap-1.5 text-[9.5px] text-gray-400 mt-0.5">
-                            <span className="font-bold text-cyan-400">{timer.systemName}</span>
+                          <div className="flex items-center gap-1.5 text-[9.5px] text-slate-400 mt-0.5">
+                            <span className="font-semibold text-cyan-400">{timer.systemName}</span>
                             <span>•</span>
-                            <span className={rem.isUrgent ? 'text-red-400 font-bold animate-pulse' : 'text-amber-300'}>
+                            <span className={rem.isUrgent ? 'text-red-400 font-semibold animate-pulse' : 'text-amber-300'}>
                               {rem.text}
                             </span>
                           </div>
@@ -1612,7 +1620,7 @@ export const ChainMapperView: React.FC = () => {
                             e.stopPropagation();
                             mapperService.deleteStructureTimer(timer.id);
                           }}
-                          className="p-1 rounded text-gray-500 hover:text-red-400 hover:bg-red-950/40 transition-colors"
+                          className="p-1 rounded-full text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                           title="Delete timer"
                         >
                           <Trash2 className="w-3 h-3" />

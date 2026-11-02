@@ -50,202 +50,235 @@ export const Header: React.FC<HeaderProps> = ({
     return () => clearInterval(interval);
   }, []);
 
+  const isDark = theme === 'dark';
+
   return (
-    <header className="border-b border-cyan-900/30 bg-[#0c101c]/90 backdrop-blur sticky top-0 z-40 shadow-lg shadow-black/50">
+    <header className={`border-b sticky top-0 z-40 transition-colors duration-200 backdrop-blur-2xl ${
+      isDark 
+        ? 'bg-[#090d16]/85 border-white/10 text-gray-200 shadow-lg shadow-black/40' 
+        : 'bg-white/85 border-slate-200/80 text-slate-800 shadow-sm'
+    }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo & Brand */}
-          <div className="flex items-center gap-3">
-            <div className="relative flex items-center justify-center w-10 h-10 rounded-lg bg-cyan-950/60 border border-cyan-500/40 text-cyan-400 overflow-hidden shadow-[0_0_15px_rgba(6,182,212,0.25)]">
-              <div className="absolute inset-0 radar-sweep"></div>
-              <Radar className="w-5 h-5 z-10 animate-pulse text-cyan-400" />
+        <div className="flex items-center justify-between h-14">
+          {/* Logo & Brand (Apple Minimalist Glass) */}
+          <div className="flex items-center gap-2.5">
+            <div className={`relative flex items-center justify-center w-8 h-8 rounded-xl overflow-hidden transition-all shadow-sm ${
+              isDark 
+                ? 'bg-gradient-to-br from-cyan-500/20 to-blue-600/30 border border-cyan-500/40 text-cyan-400' 
+                : 'bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-cyan-500/20 shadow-md'
+            }`}>
+              <Radar className="w-4 h-4 z-10 text-current" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="font-mono font-bold text-lg tracking-wider text-cyan-300">
-                  SYND<span className="text-amber-400">.NET</span>
+              <div className="flex items-center gap-1.5 leading-none">
+                <span className={`font-sans font-bold text-base tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  Synd<span className="text-cyan-500">.net</span>
                 </span>
-                <span className="px-2 py-0.5 text-[10px] font-mono font-semibold uppercase bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 rounded">
-                  CHAIN &amp; ORE
+                <span className={`px-1.5 py-0.5 text-[9px] font-sans font-semibold uppercase tracking-wider rounded-full ${
+                  isDark 
+                    ? 'bg-cyan-500/10 text-cyan-300 border border-cyan-500/20' 
+                    : 'bg-cyan-50 text-cyan-700 border border-cyan-200'
+                }`}>
+                  PRO
                 </span>
               </div>
-              <p className="text-[11px] text-gray-400 tracking-wide font-mono">
-                SYND.NET TACTICAL RECON
+              <p className={`text-[10px] tracking-tight font-sans mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                Tactical Recon &amp; Mapping
               </p>
             </div>
           </div>
 
-          {/* Navigation Tabs */}
-          <nav className="hidden md:flex items-center gap-1 bg-black/40 p-1 rounded-2xl border border-gray-800">
+          {/* Navigation Tabs (Apple macOS / iOS Segmented Pill Control) */}
+          <nav className={`hidden md:flex items-center gap-0.5 p-1 rounded-full border transition-all ${
+            isDark 
+              ? 'bg-black/40 border-white/10 shadow-inner' 
+              : 'bg-slate-100/80 border-slate-200/70 shadow-inner'
+          }`}>
             <button
               onClick={() => setActiveTab('dashboard')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all ${
                 activeTab === 'dashboard'
-                  ? 'bg-gradient-to-r from-cyan-600 to-cyan-500 text-black font-bold shadow-[0_0_12px_rgba(6,182,212,0.3)]'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/40'
+                  ? isDark 
+                    ? 'bg-white/15 text-white font-semibold shadow-sm' 
+                    : 'bg-white text-slate-900 font-semibold shadow-sm border border-slate-200/60'
+                  : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <LayoutDashboard className="w-4 h-4" />
+              <LayoutDashboard className="w-3.5 h-3.5" />
               <span>Overview</span>
             </button>
 
             <button
               onClick={() => setActiveTab('mapper')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all ${
                 activeTab === 'mapper'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-[0_0_12px_rgba(6,182,212,0.2)]'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/40'
+                  ? isDark 
+                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-semibold shadow-sm' 
+                    : 'bg-white text-cyan-600 font-semibold shadow-sm border border-slate-200/60'
+                  : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <Network className="w-4 h-4 text-cyan-400" />
+              <Network className="w-3.5 h-3.5 text-cyan-400" />
               <span>Chain Mapper</span>
             </button>
 
             <button
               onClick={() => setActiveTab('dscan')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all ${
                 activeTab === 'dscan'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-[0_0_12px_rgba(6,182,212,0.2)]'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/40'
+                  ? isDark 
+                    ? 'bg-white/15 text-white font-semibold shadow-sm' 
+                    : 'bg-white text-slate-900 font-semibold shadow-sm border border-slate-200/60'
+                  : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <Radar className="w-4 h-4" />
+              <Radar className="w-3.5 h-3.5" />
               <span>D-Scan</span>
             </button>
 
             <button
               onClick={() => setActiveTab('ore')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all ${
                 activeTab === 'ore'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-[0_0_12px_rgba(6,182,212,0.2)]'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/40'
+                  ? isDark 
+                    ? 'bg-white/15 text-amber-300 font-semibold shadow-sm' 
+                    : 'bg-white text-amber-600 font-semibold shadow-sm border border-slate-200/60'
+                  : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <Pickaxe className="w-4 h-4 text-amber-400" />
-              <span>Ore &amp; Gas Valuator</span>
+              <Pickaxe className="w-3.5 h-3.5 text-amber-400" />
+              <span>Ore &amp; Gas</span>
             </button>
 
             <button
               onClick={() => setActiveTab('local')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all ${
                 activeTab === 'local'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-[0_0_12px_rgba(6,182,212,0.2)]'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/40'
+                  ? isDark 
+                    ? 'bg-white/15 text-white font-semibold shadow-sm' 
+                    : 'bg-white text-slate-900 font-semibold shadow-sm border border-slate-200/60'
+                  : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <Users className="w-4 h-4" />
+              <Users className="w-3.5 h-3.5" />
               <span>Local Intel</span>
             </button>
 
             <button
               onClick={() => setActiveTab('killfeed')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all ${
                 activeTab === 'killfeed'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-[0_0_12px_rgba(6,182,212,0.2)]'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/40'
+                  ? isDark 
+                    ? 'bg-white/15 text-orange-400 font-semibold shadow-sm' 
+                    : 'bg-white text-orange-600 font-semibold shadow-sm border border-slate-200/60'
+                  : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <Flame className="w-4 h-4 text-orange-400" />
-              <span>Live Killfeed</span>
+              <Flame className="w-3.5 h-3.5 text-orange-400" />
+              <span>Killfeed</span>
             </button>
 
             <button
               onClick={() => setActiveTab('eft')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all ${
                 activeTab === 'eft'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-[0_0_12px_rgba(6,182,212,0.2)]'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/40'
+                  ? isDark 
+                    ? 'bg-white/15 text-indigo-300 font-semibold shadow-sm' 
+                    : 'bg-white text-indigo-600 font-semibold shadow-sm border border-slate-200/60'
+                  : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <Cpu className="w-4 h-4 text-indigo-400" />
+              <Cpu className="w-3.5 h-3.5 text-indigo-400" />
               <span>EFT Analyzer</span>
             </button>
           </nav>
 
-          {/* Controls: Auto-Watch, Audio, Time */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div
-              className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 text-xs font-mono shadow-[0_0_10px_rgba(16,185,129,0.15)]"
-              title="Official CCP ESI Tranquility Market Feed (Jita 4-4)"
-            >
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span className="font-semibold">CCP ESI: JITA 4-4</span>
-            </div>
+          {/* Controls: Auto-Watch, Audio, Time, Theme, Profile */}
+          <div className="flex items-center gap-2">
             <button
               onClick={() => setAutoWatchEnabled(!autoWatchEnabled)}
               title={autoWatchEnabled ? 'Auto-Watch is Active' : 'Click to enable Auto-Watch'}
-              className={`px-2.5 py-1.5 rounded-lg border text-xs font-mono flex items-center gap-1.5 transition-all ${
+              className={`px-2.5 py-1 rounded-full text-[11px] font-sans flex items-center gap-1.5 transition-all ${
                 autoWatchEnabled
-                  ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.3)]'
-                  : 'bg-gray-900 border-gray-800 text-gray-500 hover:text-gray-300'
+                  ? isDark 
+                    ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-300' 
+                    : 'bg-emerald-50 border border-emerald-200 text-emerald-700 font-semibold'
+                  : isDark ? 'bg-white/5 border border-white/5 text-slate-500 hover:text-slate-300' : 'bg-slate-100 border border-slate-200 text-slate-500'
               }`}
             >
-              <Radio className={`w-3.5 h-3.5 ${autoWatchEnabled ? 'animate-pulse text-cyan-400' : ''}`} />
-              <span className="hidden sm:inline font-bold">
-                {autoWatchEnabled ? 'AUTO-SCOUT: ON' : 'AUTO-SCOUT: OFF'}
+              <span className={`w-1.5 h-1.5 rounded-full ${autoWatchEnabled ? 'bg-emerald-400 animate-pulse' : 'bg-slate-400'}`}></span>
+              <span className="hidden sm:inline font-medium">
+                {autoWatchEnabled ? 'Auto-Scout' : 'Paused'}
               </span>
             </button>
 
             <button
               onClick={() => setAudioAlertsEnabled(!audioAlertsEnabled)}
               title={audioAlertsEnabled ? 'Disable Tactical Audio Alarms' : 'Enable Tactical Audio Alarms'}
-              className={`p-2 rounded-lg border text-xs font-mono flex items-center gap-1.5 transition-colors ${
+              className={`p-1.5 rounded-full border text-xs flex items-center transition-colors ${
                 audioAlertsEnabled
-                  ? 'bg-amber-500/10 border-amber-500/40 text-amber-300'
-                  : 'bg-gray-900 border-gray-800 text-gray-500 hover:text-gray-400'
+                  ? isDark ? 'bg-white/5 border-white/10 text-amber-300' : 'bg-amber-50 border-amber-200 text-amber-700'
+                  : isDark ? 'bg-transparent border-transparent text-slate-500' : 'bg-transparent border-transparent text-slate-400'
               }`}
             >
-              {audioAlertsEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+              {audioAlertsEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
             </button>
 
             {/* Theme Toggle (Light / Dark) */}
             {onToggleTheme && (
               <button
                 onClick={onToggleTheme}
-                title={theme === 'dark' ? 'Switch to Daylight / Clean Mode' : 'Switch to Tactical Night Mode'}
-                className="p-2 rounded-lg border text-xs font-mono flex items-center gap-1.5 transition-colors bg-gray-900 border-gray-800 text-amber-300 hover:text-amber-200"
+                title={theme === 'dark' ? 'Switch to Daylight Clean Mode' : 'Switch to Dark Mode'}
+                className={`p-1.5 rounded-full border text-xs flex items-center transition-colors ${
+                  isDark 
+                    ? 'bg-white/5 border-white/10 text-amber-300 hover:bg-white/10' 
+                    : 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200'
+                }`}
               >
-                {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4 text-cyan-400" />}
+                {theme === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5 text-cyan-600" />}
               </button>
             )}
 
-            <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 bg-black/60 border border-cyan-950/80 rounded-lg text-cyan-400/90 font-mono text-xs">
-              <Clock className="w-3.5 h-3.5 text-cyan-500" />
+            <div className={`hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-sans font-medium tabular-nums ${
+              isDark ? 'bg-white/5 border-white/5 text-slate-400' : 'bg-slate-100 border-slate-200 text-slate-600'
+            }`}>
+              <Clock className="w-3 h-3 text-cyan-500" />
               <span>{eveTime} EVE</span>
             </div>
 
             {/* Pilot Profile & SSO Sign In */}
             {currentPilot ? (
-              <div className="flex items-center gap-2 pl-1.5 pr-2.5 py-1 bg-[#090e1a] border border-cyan-500/50 rounded-xl text-xs font-mono shadow-[0_0_12px_rgba(6,182,212,0.2)]">
+              <div className={`flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full border transition-all ${
+                isDark 
+                  ? 'bg-white/5 border-white/10 text-white' 
+                  : 'bg-slate-100 border-slate-200 text-slate-900'
+              }`}>
                 <img
                   src={currentPilot.avatarUrl}
                   alt={currentPilot.characterName}
-                  className="w-7 h-7 rounded-lg border border-cyan-400/60 object-cover"
+                  className="w-5 h-5 rounded-full border border-cyan-400/50 object-cover"
                 />
-                <div className="hidden sm:block text-left leading-tight">
-                  <div className="text-white font-bold truncate max-w-[120px]">
+                <div className="hidden sm:block text-left leading-none">
+                  <div className="font-semibold text-xs truncate max-w-[100px]">
                     {currentPilot.characterName}
-                  </div>
-                  <div className="text-[10px] text-cyan-300/80 truncate max-w-[120px]">
-                    {currentPilot.corporationTicker ? `[${currentPilot.corporationTicker}]` : currentPilot.corporationName}
                   </div>
                 </div>
                 <button
                   onClick={() => authService.logout()}
-                  className="p-1 text-gray-400 hover:text-red-400 transition-colors ml-1"
+                  className="p-0.5 text-slate-400 hover:text-red-400 transition-colors ml-0.5"
                   title="Log Out / Switch Pilot"
                 >
-                  <LogOut className="w-3.5 h-3.5" />
+                  <LogOut className="w-3 h-3" />
                 </button>
               </div>
             ) : (
               <button
                 onClick={() => setIsLoginModalOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-black font-bold text-xs font-mono shadow-[0_0_12px_rgba(6,182,212,0.3)] transition-all"
+                className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500 hover:bg-cyan-400 text-black font-semibold text-xs shadow-sm transition-all"
                 title="Sign in with your EVE Online Character"
               >
-                <KeyRound className="w-3.5 h-3.5" />
-                <span>PILOT SIGN IN</span>
+                <KeyRound className="w-3 h-3" />
+                <span>Sign In</span>
               </button>
             )}
           </div>
