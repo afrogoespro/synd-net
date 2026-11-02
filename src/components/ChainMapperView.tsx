@@ -418,6 +418,17 @@ export const ChainMapperView: React.FC = () => {
     }
   };
 
+  // Global window listener so mouse releases outside the canvas release panning & dragging cleanly
+  useEffect(() => {
+    const onGlobalMouseUp = () => {
+      if (isPanning || draggingNodeId || boxSelectRect) {
+        handleMouseUp();
+      }
+    };
+    window.addEventListener('mouseup', onGlobalMouseUp);
+    return () => window.removeEventListener('mouseup', onGlobalMouseUp);
+  }, [isPanning, draggingNodeId, boxSelectRect]);
+
   // Node Drag Start (supports single drag & multi-selection drag)
   const handleNodeDragStart = (e: React.MouseEvent, node: WormholeNode) => {
     e.stopPropagation();
@@ -882,7 +893,7 @@ export const ChainMapperView: React.FC = () => {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onWheel={handleWheel}
-        className={`flex-1 relative overflow-hidden cursor-${isPanning ? 'grabbing' : 'grab'} ${
+        className={`flex-1 relative overflow-hidden ${isPanning ? 'cursor-grabbing select-none' : 'cursor-grab'} ${
           isDark 
             ? 'bg-[#040711]' 
             : 'bg-slate-100'
