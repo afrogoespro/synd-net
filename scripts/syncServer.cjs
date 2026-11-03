@@ -447,6 +447,47 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+// Intelligent collision-free coordinate resolver for newly discovered chain systems
+function getFreeNodePosition(previousSysId) {
+  const existingNodes = Object.values(chainMap.systems).filter(s => typeof s.x === 'number' && typeof s.y === 'number');
+  if (existingNodes.length === 0) return { x: 578, y: 160 };
+
+  const prevNode = previousSysId && chainMap.systems[previousSysId];
+  let candidateX = 578;
+  let candidateY = 160;
+
+  if (prevNode && typeof prevNode.x === 'number' && typeof prevNode.y === 'number') {
+    candidateY = prevNode.y + 110;
+    // Find all siblings already connected to prevNode
+    const siblings = chainMap.connections
+      .filter(c => c.from === previousSysId || c.to === previousSysId)
+      .map(c => c.from === previousSysId ? c.to : c.from)
+      .filter(id => id !== previousSysId && chainMap.systems[id] && typeof chainMap.systems[id].x === 'number');
+
+    if (siblings.length > 0) {
+      const maxX = Math.max(...siblings.map(id => chainMap.systems[id].x));
+      candidateX = maxX + 180;
+    } else {
+      candidateX = prevNode.x;
+    }
+  } else {
+    const maxX = Math.max(...existingNodes.map(s => s.x));
+    candidateX = maxX + 180;
+    candidateY = 160;
+  }
+
+  // Prevent overlap with ANY existing node
+  let attempts = 0;
+  while (attempts < 40) {
+    const hit = existingNodes.some(s => Math.abs(s.x - candidateX) < 165 && Math.abs(s.y - candidateY) < 85);
+    if (!hit) break;
+    candidateX += 180;
+    attempts++;
+  }
+
+  return { x: candidateX, y: candidateY };
+}
+
   // Update pilot location (e.g. buddy sets their location or moves)
   if (req.url === '/api/map/pilot' && req.method === 'POST') {
     let body = '';
@@ -483,22 +524,8 @@ const server = http.createServer((req, res) => {
           else whClass = 'C2';
         }
 
-        // Determine coordinates
-        const prevNode = previousSys && chainMap.systems[previousSys];
-        let newX = 578;
-        let newY = 160;
-
-        if (prevNode && prevNode.x !== undefined && prevNode.y !== undefined) {
-          newX = prevNode.x;
-          newY = prevNode.y + 100;
-        } else {
-          const existingNodes = Object.values(chainMap.systems).filter(s => s.x !== undefined && s.y !== undefined);
-          if (existingNodes.length > 0) {
-            const rightmostX = Math.max(...existingNodes.map(s => s.x || 0));
-            newX = rightmostX + 190;
-            newY = 160;
-          }
-        }
+        // Determine smart collision-free coordinates
+        const { x: newX, y: newY } = getFreeNodePosition(previousSys);
 
         // Ensure system exists with proper coordinates
         if (!chainMap.systems[cleanSys]) {
@@ -552,6 +579,11 @@ const server = http.createServer((req, res) => {
 
         saveState();
         broadcastUpdate('MAP_UPDATE', chainMap);
+        broadcastUpdate('JUMP', { 
+          systemName: cleanSys, 
+          fromSystem: previousSys, 
+          pilot: pilotName 
+        });
         console.log(`[Pilot Location Updated] ${pilotName} -> ${cleanSys}`);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true, chainMap }));
@@ -777,9 +809,7 @@ function handleSystemTransition(newSys, fromSys, customPilot) {
   });
 
   const hostTag = `${activePilot}`;
-  const prevNode = previous && chainMap.systems[previous];
-  const newX = prevNode && prevNode.x !== undefined ? prevNode.x : 650;
-  const newY = prevNode && prevNode.y !== undefined ? prevNode.y + 98 : 140;
+  const { x: newX, y: newY } = getFreeNodePosition(previous);
 
   if (!chainMap.systems[newSys]) {
     chainMap.systems[newSys] = {

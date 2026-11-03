@@ -1,7 +1,7 @@
 import { ChainMapState, WormholeNode, WormholeConnection, ScannedStructure, WormholeSignature, StructureTimer } from '../types/mapper';
 
 export type MapUpdateCallback = (state: ChainMapState) => void;
-export type JumpCallback = (jumpData: { systemName: string; fromSystem?: string; isWormhole?: boolean }) => void;
+export type JumpCallback = (jumpData: { systemName: string; fromSystem?: string; pilot?: string; shipName?: string; isWormhole?: boolean }) => void;
 
 function getEveTime(): string {
   return new Date().toISOString().slice(11, 16);
@@ -390,6 +390,22 @@ class MapperService {
       if (!this.state.systems[systemName].activePilots.includes(pilotEntry)) {
         this.state.systems[systemName].activePilots.push(pilotEntry);
       }
+    } else {
+      const isWh = systemName.startsWith('J');
+      const existing = Object.values(this.state.systems).filter(s => typeof s.x === 'number');
+      const maxX = existing.length > 0 ? Math.max(...existing.map(s => s.x || 0)) : 578;
+      this.state.systems[systemName] = {
+        id: systemName,
+        name: systemName,
+        systemClass: isWh ? 'C2' : 'Highsec',
+        statics: [],
+        structures: [],
+        activePilots: [pilotEntry],
+        signatures: [],
+        lastUpdated: getEveTime(),
+        x: maxX + 180,
+        y: 160
+      };
     }
     this.notify();
 

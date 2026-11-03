@@ -34,13 +34,13 @@
         }
       ],
       "activePilots": [
-        "Ennis Urbanski",
-        "Syndra en Tilavine"
+        "Ennis Urbanski"
       ],
       "signatures": [],
-      "lastUpdated": "01:23",
-      "x": 576,
-      "y": -20
+      "lastUpdated": "01:31",
+      "x": 577,
+      "y": -3,
+      "isCollapsed": false
     },
     "Uemisaisen": {
       "id": "Uemisaisen",
@@ -53,8 +53,9 @@
       ],
       "signatures": [],
       "lastUpdated": "04:39",
-      "x": 773,
-      "y": 160
+      "x": 758,
+      "y": 160,
+      "isCollapsed": false
     },
     "Ansila": {
       "id": "Ansila",
@@ -66,7 +67,8 @@
       "signatures": [],
       "lastUpdated": "07:49",
       "x": 218,
-      "y": 270
+      "y": 270,
+      "isCollapsed": false
     },
     "Hirtamon": {
       "id": "Hirtamon",
@@ -78,7 +80,8 @@
       "signatures": [],
       "lastUpdated": "07:49",
       "x": 398,
-      "y": 270
+      "y": 270,
+      "isCollapsed": false
     },
     "Ikuchi": {
       "id": "Ikuchi",
@@ -90,7 +93,8 @@
       "signatures": [],
       "lastUpdated": "07:49",
       "x": 308,
-      "y": 160
+      "y": 160,
+      "isCollapsed": false
     },
     "New Caldari": {
       "id": "New Caldari",
@@ -102,7 +106,8 @@
       "signatures": [],
       "lastUpdated": "07:49",
       "x": 578,
-      "y": 160
+      "y": 160,
+      "isCollapsed": false
     },
     "Josameto": {
       "id": "Josameto",
@@ -117,7 +122,22 @@
       "signatures": [],
       "lastUpdated": "07:49",
       "x": 578,
-      "y": 270
+      "y": 270,
+      "isCollapsed": false
+    },
+    "Sobaseki": {
+      "id": "Sobaseki",
+      "name": "Sobaseki",
+      "systemClass": "Highsec",
+      "statics": [],
+      "structures": [],
+      "activePilots": [
+        "Syndra en Tilavine"
+      ],
+      "signatures": [],
+      "lastUpdated": "01:32",
+      "x": 938,
+      "y": 160
     }
   },
   "connections": [
@@ -157,6 +177,14 @@
       "id": "conn-1793594784962",
       "from": "New Caldari",
       "to": "Josameto",
+      "wormholeType": "Wormhole",
+      "massStatus": "stable",
+      "timeStatus": "stable"
+    },
+    {
+      "id": "conn-1793669564661",
+      "from": "Jita",
+      "to": "Sobaseki",
       "wormholeType": "Wormhole",
       "massStatus": "stable",
       "timeStatus": "stable"

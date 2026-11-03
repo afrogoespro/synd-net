@@ -546,11 +546,13 @@ class AuthService {
     const checkLocation = async () => {
       if (!this.currentPilot || !this.ssoTokens?.accessToken) return;
       const charId = this.currentPilot.characterId;
+      const token = await this.getValidAccessToken();
+      if (!token) return;
 
       try {
         // 1. Check Location (esi-location.read_location.v1)
         const locRes = await fetch(`https://esi.evetech.net/latest/characters/${charId}/location/`, {
-          headers: { 'Authorization': `Bearer ${this.ssoTokens.accessToken}` }
+          headers: { 'Authorization': `Bearer ${token}` }
         });
 
         if (locRes.ok) {
@@ -565,11 +567,13 @@ class AuthService {
               this.locationListeners.forEach(cb => cb({ systemId, systemName, shipName: this.currentPilot?.activeShip }));
             }
           }
+        } else if (locRes.status === 403) {
+          console.warn('[EVE SSO] ESI location returned 403 Forbidden. Ensure esi-location.read_location.v1 scope is checked in your CCP Developer application settings.');
         }
 
         // 2. Check Ship (esi-location.read_ship_type.v1)
         const shipRes = await fetch(`https://esi.evetech.net/latest/characters/${charId}/ship/`, {
-          headers: { 'Authorization': `Bearer ${this.ssoTokens.accessToken}` }
+          headers: { 'Authorization': `Bearer ${token}` }
         });
         if (shipRes.ok) {
           const shipData = await shipRes.json();

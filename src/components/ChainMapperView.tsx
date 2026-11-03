@@ -120,6 +120,21 @@ export const ChainMapperView: React.FC = () => {
   // GalaxyFinder Follow-Me Mode
   const [followMe, setFollowMe] = useState<boolean>(true);
 
+  // Live Jump HUD Notification
+  const [lastJumpAlert, setLastJumpAlert] = useState<{
+    systemName: string;
+    fromSystem?: string;
+    pilotName?: string;
+    shipName?: string;
+    timestamp: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!lastJumpAlert) return;
+    const t = setTimeout(() => setLastJumpAlert(null), 8000);
+    return () => clearTimeout(t);
+  }, [lastJumpAlert]);
+
   // Calculate hidden / collapsed descendant nodes
   const hiddenNodeIds = useMemo(() => {
     const hidden = new Set<string>();
@@ -156,6 +171,13 @@ export const ChainMapperView: React.FC = () => {
       const pilot = authService.getPilot();
       if (pilot && systemName) {
         mapperService.setPilotLocation(pilot.characterName, systemName, shipName);
+        setSelectedSystemId(systemName);
+        setLastJumpAlert({
+          systemName,
+          pilotName: pilot.characterName,
+          shipName: shipName || pilot.activeShip,
+          timestamp: Date.now()
+        });
         if (followMe) {
           centerOnSystem(systemName);
         }
@@ -218,10 +240,16 @@ export const ChainMapperView: React.FC = () => {
   useEffect(() => {
     const unsubJump = mapperService.onJump((jump) => {
       setSelectedSystemId(jump.systemName);
+      setLastJumpAlert({
+        systemName: jump.systemName,
+        fromSystem: jump.fromSystem,
+        pilotName: jump.pilot,
+        timestamp: Date.now()
+      });
       if (followMe) {
         setTimeout(() => {
           centerOnSystem(jump.systemName);
-        }, 100);
+        }, 120);
       }
     });
     return () => unsubJump();
@@ -935,6 +963,54 @@ export const ChainMapperView: React.FC = () => {
           backgroundColor: isDark ? '#121620' : '#f8fafc'
         }}
       >
+        {/* LIVE JUMP DETECTED FLOATING HUD BANNER */}
+        {lastJumpAlert && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-auto animate-in fade-in slide-in-from-top-3 duration-200">
+            <div className={`px-4 py-2 rounded-2xl border backdrop-blur-2xl shadow-2xl flex items-center gap-3 font-sans ${
+              isDark 
+                ? 'bg-[#161c28]/95 border-emerald-500/40 text-white shadow-[0_8px_32px_rgba(16,185,129,0.25)]' 
+                : 'bg-white/95 border-emerald-400 text-slate-900 shadow-xl'
+            }`}>
+              <div className="w-7 h-7 rounded-xl bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center text-emerald-400 shrink-0">
+                <Navigation className="w-3.5 h-3.5 animate-pulse" />
+              </div>
+              <div className="text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-emerald-400 text-[11px] tracking-wide">JUMP DETECTED</span>
+                  <span className="text-[10px] text-slate-400">Live Pilot Follower</span>
+                </div>
+                <div className="text-slate-200 text-xs mt-0.5">
+                  <span className="font-semibold text-white">{lastJumpAlert.pilotName || 'Pilot'}</span>
+                  {lastJumpAlert.fromSystem ? (
+                    <> jumped from <span className="text-cyan-300 font-mono font-medium">{lastJumpAlert.fromSystem}</span> to </>
+                  ) : (
+                    <> entered </>
+                  )}
+                  <span className="text-emerald-300 font-bold font-mono text-sm underline decoration-emerald-500/40">{lastJumpAlert.systemName}</span>
+                  {lastJumpAlert.shipName && (
+                    <span className="text-slate-400 text-[11px] ml-1.5">({lastJumpAlert.shipName})</span>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setSelectedSystemId(lastJumpAlert.systemName);
+                  centerOnSystem(lastJumpAlert.systemName);
+                }}
+                className="px-2.5 py-1 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-xs ml-2 cursor-pointer shadow-sm transition-all"
+              >
+                Focus
+              </button>
+              <button
+                onClick={() => setLastJumpAlert(null)}
+                className="p-1 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Transformable Canvas Layer */}
         <div
           className="absolute inset-0 origin-top-left pointer-events-none"
