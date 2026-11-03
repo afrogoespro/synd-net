@@ -4,7 +4,8 @@ import {
   Check, Share2, ZoomIn, ZoomOut, Maximize2, Crosshair, Grid,
   User, MapPin, Eye, Radio, ExternalLink, Layers, Sparkles, KeyRound, LogOut,
   Sun, Moon, ChevronDown, ChevronRight, FolderTree, GitFork, Copy, Route, Navigation, Zap,
-  Clock, Hourglass, Skull, ShieldAlert, X, Cpu, BoxSelect, ArrowRight
+  Clock, Hourglass, Skull, ShieldAlert, X, Cpu, BoxSelect, ArrowRight,
+  Link2, ClipboardCheck, ClipboardPaste
 } from 'lucide-react';
 import { mapperService } from '../services/mapperService';
 import { ChainMapState, WormholeNode, WormholeConnection, WormholeSignature, StructureTimer } from '../types/mapper';
@@ -72,6 +73,22 @@ export const ChainMapperView: React.FC = () => {
   const [multiSelectedIds, setMultiSelectedIds] = useState<Set<string>>(new Set());
   const [boxSelectMode, setBoxSelectMode] = useState<boolean>(false);
   const [boxSelectRect, setBoxSelectRect] = useState<{ startX: number; startY: number; currX: number; currY: number } | null>(null);
+
+  // Interactive Linking Mode (Click Node A -> Click Node B to connect)
+  const [linkingFromId, setLinkingFromId] = useState<string | null>(null);
+  const [quickConnectTarget, setQuickConnectTarget] = useState<string>('');
+  const [quickConnectType, setQuickConnectType] = useState<string>('Wormhole');
+
+  // Wireless Clipboard State & Quick Paste Drawer
+  const [isPasteModalOpen, setIsPasteModalOpen] = useState<boolean>(false);
+  const [manualPasteText, setManualPasteText] = useState<string>('');
+  const [lastClipboardNotice, setLastClipboardNotice] = useState<{
+    text: string;
+    systemName?: string;
+    sigCount?: number;
+    dscanCount?: number;
+    timestamp: number;
+  } | null>(null);
   const dragInitialPositionsRef = useRef<Record<string, { x: number; y: number }>>({});
   const dragStartMouseRef = useRef<{ clientX: number; clientY: number }>({ clientX: 0, clientY: 0 });
   const hasDraggedRef = useRef<boolean>(false);
@@ -134,6 +151,47 @@ export const ChainMapperView: React.FC = () => {
     const t = setTimeout(() => setLastJumpAlert(null), 8000);
     return () => clearTimeout(t);
   }, [lastJumpAlert]);
+
+  // Wireless Clipboard Listener & Parser for Live Scanning
+  useEffect(() => {
+    let unsubClip: (() => void) | null = null;
+    import('../services/scoutWatcher').then(({ scoutWatcher }) => {
+      scoutWatcher.startClipboardPolling();
+      unsubClip = scoutWatcher.onClipboardText((rawText) => {
+        const clean = rawText.trim();
+        if (clean.length < 3) return;
+
+        // Check for signatures
+        const isSigs = clean.includes('\t') && /[A-Z]{3}-\d{3}/.test(clean);
+        // Check for D-Scan
+        const isDscan = clean.includes('\t') && (clean.includes('km') || clean.includes('AU') || clean.includes('m'));
+        // Check for J-System
+        const jMatch = clean.match(/\b(J\d{6})\b/i);
+        // Check for known system name
+        const known = Object.keys(mapState.systems).find(s => s.toLowerCase() === clean.toLowerCase());
+        const systemName = jMatch ? jMatch[1].toUpperCase() : (known || (/^[A-Z][a-z0-9\- ]{2,18}$/.test(clean) && !clean.includes('\t') && !clean.includes('\n') ? clean : undefined));
+
+        setLastClipboardNotice({
+          text: clean.slice(0, 80),
+          systemName,
+          sigCount: isSigs ? clean.split('\n').filter(l => /[A-Z]{3}-\d{3}/.test(l)).length : undefined,
+          dscanCount: isDscan ? clean.split('\n').filter(l => l.includes('\t')).length : undefined,
+          timestamp: Date.now()
+        });
+      });
+    });
+
+    return () => {
+      if (unsubClip) unsubClip();
+    };
+  }, [mapState.systems]);
+
+  // Auto-dismiss clipboard notification after 10s
+  useEffect(() => {
+    if (!lastClipboardNotice) return;
+    const t = setTimeout(() => setLastClipboardNotice(null), 10000);
+    return () => clearTimeout(t);
+  }, [lastClipboardNotice]);
 
   // Calculate hidden / collapsed descendant nodes
   const hiddenNodeIds = useMemo(() => {
@@ -489,6 +547,16 @@ export const ChainMapperView: React.FC = () => {
   const handleNodeDragStart = (e: React.MouseEvent, node: WormholeNode) => {
     e.stopPropagation();
 
+    // If Linking Mode is active, clicking this node completes the link!
+    if (linkingFromId) {
+      if (linkingFromId !== node.id) {
+        mapperService.addWormholeConnection(linkingFromId, node.id);
+        setSelectedSystemId(node.id);
+      }
+      setLinkingFromId(null);
+      return;
+    }
+
     // If Shift or Ctrl is pressed: toggle selection without starting pan/drag
     if (e.shiftKey || e.ctrlKey || e.metaKey) {
       setMultiSelectedIds(prev => {
@@ -739,6 +807,20 @@ export const ChainMapperView: React.FC = () => {
             <span className="opacity-40">|</span>
             <span>{Object.keys(mapState.systems).length} Systems</span>
           </div>
+
+          {/* Wireless Clipboard Sync Button */}
+          <button
+            onClick={() => setIsPasteModalOpen(true)}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-sans transition-all cursor-pointer ${
+              isDark 
+                ? 'bg-purple-500/15 border-purple-500/30 text-purple-300 hover:bg-purple-500/25 shadow-sm' 
+                : 'bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100'
+            }`}
+            title="Wireless Clipboard: Auto-syncs copied D-Scan, Cosmic Signatures, and System names. Click to paste manually."
+          >
+            <ClipboardCheck className="w-3.5 h-3.5 text-purple-400" />
+            <span className="font-semibold">Wireless Clipboard</span>
+          </button>
 
           {/* Active Fleet in Chain */}
           {allActivePilots.length > 0 && (
@@ -1003,6 +1085,103 @@ export const ChainMapperView: React.FC = () => {
               </button>
               <button
                 onClick={() => setLastJumpAlert(null)}
+                className="p-1 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* INTERACTIVE LINKING MODE HUD BANNER */}
+        {linkingFromId && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-auto animate-in fade-in slide-in-from-top-3 duration-200">
+            <div className={`px-4 py-2 rounded-2xl border backdrop-blur-2xl shadow-2xl flex items-center gap-3 font-sans ${
+              isDark 
+                ? 'bg-[#151c28]/95 border-cyan-500/50 text-white shadow-[0_8px_32px_rgba(6,182,212,0.35)]' 
+                : 'bg-white/95 border-cyan-400 text-slate-900 shadow-xl'
+            }`}>
+              <div className="w-7 h-7 rounded-xl bg-cyan-500/20 border border-cyan-400/50 flex items-center justify-center text-cyan-300 shrink-0">
+                <Link2 className="w-4 h-4 animate-pulse" />
+              </div>
+              <div className="text-xs">
+                <div className="font-bold text-cyan-400 text-[11px] tracking-wide">CONNECTING SYSTEMS</div>
+                <div className="text-slate-200 mt-0.5">
+                  Click any other system card to link with <span className="text-cyan-300 font-bold font-mono">{linkingFromId}</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setLinkingFromId(null)}
+                className="px-3 py-1 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white font-semibold text-xs ml-2 cursor-pointer shadow-sm transition-all"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* WIRELESS CLIPBOARD REAL-TIME FLOATING HUD */}
+        {lastClipboardNotice && (
+          <div className="absolute top-16 left-1/2 -translate-x-1/2 z-50 pointer-events-auto animate-in fade-in slide-in-from-top-3 duration-200">
+            <div className={`px-4 py-2 rounded-2xl border backdrop-blur-2xl shadow-2xl flex items-center gap-3 font-sans ${
+              isDark 
+                ? 'bg-[#161c28]/95 border-purple-500/40 text-white shadow-[0_8px_32px_rgba(168,85,247,0.25)]' 
+                : 'bg-white/95 border-purple-400 text-slate-900 shadow-xl'
+            }`}>
+              <div className="w-7 h-7 rounded-xl bg-purple-500/20 border border-purple-400/50 flex items-center justify-center text-purple-300 shrink-0">
+                <ClipboardCheck className="w-3.5 h-3.5 animate-pulse" />
+              </div>
+              <div className="text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-purple-400 text-[11px] tracking-wide">WIRELESS CLIPBOARD</span>
+                  <span className="text-[10px] text-slate-400">Live Hands-Free Scanner</span>
+                </div>
+                <div className="text-slate-200 text-xs mt-0.5">
+                  {lastClipboardNotice.systemName ? (
+                    <>
+                      System <span className="text-cyan-300 font-bold font-mono">{lastClipboardNotice.systemName}</span> detected in clipboard!
+                    </>
+                  ) : lastClipboardNotice.sigCount ? (
+                    <>
+                      <span className="text-amber-300 font-bold">{lastClipboardNotice.sigCount} Cosmic Signatures</span> synced to {selectedSystem?.name || 'Active System'}!
+                    </>
+                  ) : lastClipboardNotice.dscanCount ? (
+                    <>
+                      <span className="text-emerald-300 font-bold">D-Scan ({lastClipboardNotice.dscanCount} objects)</span> updated!
+                    </>
+                  ) : (
+                    <span className="text-slate-300 font-mono truncate max-w-xs block">{lastClipboardNotice.text}</span>
+                  )}
+                </div>
+              </div>
+
+              {lastClipboardNotice.systemName && (
+                <div className="flex items-center gap-1.5 ml-2">
+                  <button
+                    onClick={() => {
+                      mapperService.addWormholeConnection(selectedSystem?.id || 'Jita', lastClipboardNotice.systemName!);
+                      setLastClipboardNotice(null);
+                    }}
+                    className="px-2.5 py-1 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs cursor-pointer shadow-sm transition-all"
+                  >
+                    Link to {selectedSystem?.name || 'Jita'}
+                  </button>
+                  {!mapState.systems[lastClipboardNotice.systemName] && (
+                    <button
+                      onClick={() => {
+                        mapperService.setPilotLocation('Scout', lastClipboardNotice.systemName!);
+                        setLastClipboardNotice(null);
+                      }}
+                      className="px-2 py-1 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 text-xs cursor-pointer transition-all"
+                    >
+                      Add Node
+                    </button>
+                  )}
+                </div>
+              )}
+
+              <button
+                onClick={() => setLastClipboardNotice(null)}
                 className="p-1 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
@@ -1314,7 +1493,11 @@ export const ChainMapperView: React.FC = () => {
                   {/* Card Container (Apple VisionOS / macOS Sequoia Frosted Glass Node) */}
                   <div
                     className={`w-full h-full rounded-2xl px-3 py-2 flex flex-col justify-between relative transition-all duration-150 backdrop-blur-md ${
-                      isActivePlayer
+                      linkingFromId === node.id
+                        ? 'bg-[#0f2438]/95 shadow-[0_0_24px_rgba(6,182,212,0.85)] ring-2 ring-cyan-400 animate-pulse'
+                        : linkingFromId
+                        ? 'bg-[#0c1626]/85 hover:bg-[#10243c] border border-cyan-500/40 hover:ring-2 hover:ring-emerald-400 hover:scale-[1.03] cursor-pointer'
+                        : isActivePlayer
                         ? isDark
                           ? 'bg-[#101a2e]/90 shadow-[0_0_24px_rgba(56,189,248,0.45),0_0_8px_rgba(255,255,255,0.7)] ring-2 ring-white/90'
                           : 'bg-white/95 shadow-[0_0_20px_rgba(2,132,199,0.35)] ring-2 ring-sky-500'
@@ -1331,7 +1514,7 @@ export const ChainMapperView: React.FC = () => {
                         : 'bg-white/90 hover:bg-slate-50 shadow-sm border border-slate-200/80'
                     }`}
                     style={{
-                      borderWidth: (isActivePlayer || isSelected || isMultiSelected) ? '0px' : '1px',
+                      borderWidth: (isActivePlayer || isSelected || isMultiSelected || linkingFromId === node.id) ? '0px' : '1px',
                       borderColor: borderColor
                     }}
                   >
@@ -1419,6 +1602,37 @@ export const ChainMapperView: React.FC = () => {
                             )}
                           </button>
                         )}
+
+                        {/* Interactive Link / Connect Handle */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (linkingFromId === node.id) {
+                              setLinkingFromId(null);
+                            } else if (linkingFromId) {
+                              mapperService.addWormholeConnection(linkingFromId, node.id);
+                              setLinkingFromId(null);
+                            } else {
+                              setLinkingFromId(node.id);
+                            }
+                          }}
+                          className={`p-1 rounded-full transition-all pointer-events-auto cursor-pointer ${
+                            linkingFromId === node.id
+                              ? 'bg-cyan-400 text-black shadow-lg shadow-cyan-400/60 ring-2 ring-cyan-300 animate-pulse'
+                              : linkingFromId
+                              ? 'hover:bg-cyan-500/20 text-cyan-400 hover:text-white'
+                              : 'hover:bg-white/10 text-slate-400 hover:text-cyan-300'
+                          }`}
+                          title={
+                            linkingFromId === node.id 
+                              ? 'Cancel linking' 
+                              : linkingFromId 
+                              ? `Click to connect with ${linkingFromId}` 
+                              : `Link / connect ${node.name} to another system`
+                          }
+                        >
+                          <Link2 className="w-2.5 h-2.5" />
+                        </button>
 
                         {isSelected && node.id !== 'Jita' && (
                           <button
@@ -1558,6 +1772,31 @@ export const ChainMapperView: React.FC = () => {
                 {multiSelectedIds.size} {multiSelectedIds.size === 1 ? 'System' : 'Systems'} Selected
               </span>
             </div>
+
+            {/* Quick Connect 2 Selected Systems */}
+            {multiSelectedIds.size === 2 && (() => {
+              const [sysA, sysB] = Array.from(multiSelectedIds);
+              const isConnected = mapState.connections.some(
+                c => (c.from === sysA && c.to === sysB) || (c.from === sysB && c.to === sysA)
+              );
+              return (
+                <button
+                  onClick={() => {
+                    mapperService.addWormholeConnection(sysA, sysB);
+                    setMultiSelectedIds(new Set());
+                  }}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md cursor-pointer whitespace-nowrap ${
+                    isConnected
+                      ? 'bg-amber-600/90 hover:bg-amber-500 text-white shadow-amber-950/40'
+                      : 'bg-emerald-600/90 hover:bg-emerald-500 text-white shadow-emerald-950/40'
+                  }`}
+                  title={isConnected ? `Update link between ${sysA} and ${sysB}` : `Connect ${sysA} ↔ ${sysB}`}
+                >
+                  <Link2 className="w-3.5 h-3.5" />
+                  <span>{isConnected ? `Linked (${sysA} ↔ ${sysB})` : `Connect ${sysA} ↔ ${sysB}`}</span>
+                </button>
+              );
+            })()}
 
             {/* Mass Delete */}
             <button
@@ -2705,11 +2944,61 @@ export const ChainMapperView: React.FC = () => {
                 })()}
               </div>
 
+              {/* Quick Connect to Existing System on Map */}
+              <div className="bg-[#070b14] border border-gray-800/80 rounded-xl p-3 mb-2.5">
+                <div className="text-[10px] text-gray-400 font-bold uppercase mb-2 flex items-center gap-1">
+                  <Link2 className="w-3 h-3 text-emerald-400" />
+                  Connect {selectedSystem.name} to System on Map
+                </div>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={quickConnectTarget}
+                    onChange={(e) => setQuickConnectTarget(e.target.value)}
+                    className="bg-black/80 border border-gray-800 focus:border-cyan-500 rounded px-2 py-1.5 text-xs text-white focus:outline-none flex-1 font-mono cursor-pointer"
+                  >
+                    <option value="">Select target system...</option>
+                    {Object.values(mapState.systems)
+                      .filter(s => s.id !== selectedSystem.id)
+                      .map(s => {
+                        const isConnected = mapState.connections.some(
+                          c => (c.from === selectedSystem.id && c.to === s.id) || (c.from === s.id && c.to === selectedSystem.id)
+                        );
+                        return (
+                          <option key={s.id} value={s.id}>
+                            {s.name} ({s.systemClass}) {isConnected ? '✓ Linked' : ''}
+                          </option>
+                        );
+                      })
+                    }
+                  </select>
+                  <select
+                    value={quickConnectType}
+                    onChange={(e) => setQuickConnectType(e.target.value)}
+                    className="bg-black/80 border border-gray-800 focus:border-cyan-500 rounded px-1.5 py-1.5 text-xs text-cyan-300 focus:outline-none w-24 font-mono cursor-pointer"
+                  >
+                    <option value="Wormhole">Wormhole</option>
+                    <option value="Stargate">Stargate</option>
+                  </select>
+                  <button
+                    onClick={() => {
+                      if (quickConnectTarget) {
+                        mapperService.addWormholeConnection(selectedSystem.id, quickConnectTarget, quickConnectType);
+                        setQuickConnectTarget('');
+                      }
+                    }}
+                    disabled={!quickConnectTarget}
+                    className="px-3 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 disabled:bg-gray-800 disabled:text-gray-500 text-white font-bold text-xs transition-all shadow-sm cursor-pointer whitespace-nowrap"
+                  >
+                    Link
+                  </button>
+                </div>
+              </div>
+
               {/* Add New Child Wormhole Form */}
               <div className="bg-[#070b14] border border-gray-800/80 rounded-xl p-3">
                 <div className="text-[10px] text-gray-400 font-bold uppercase mb-2 flex items-center gap-1">
                   <Plus className="w-3 h-3 text-cyan-400" />
-                  Link New Wormhole from {selectedSystem.name}
+                  Link New System by Name
                 </div>
                 <div className="flex items-center gap-2">
                   <input
@@ -2717,7 +3006,7 @@ export const ChainMapperView: React.FC = () => {
                     value={newSystemInput}
                     onChange={(e) => setNewSystemInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleAddConnection()}
-                    placeholder="System (e.g. J152438)"
+                    placeholder="System (e.g. Veisto or J152438)"
                     className="bg-black/80 border border-gray-800 focus:border-cyan-500 rounded px-2 py-1 text-xs text-white placeholder-gray-600 focus:outline-none flex-1 font-mono"
                   />
                   <input
@@ -2730,7 +3019,7 @@ export const ChainMapperView: React.FC = () => {
                   <button
                     onClick={handleAddConnection}
                     disabled={!newSystemInput.trim()}
-                    className="px-2.5 py-1 rounded bg-cyan-600 hover:bg-cyan-500 disabled:bg-gray-800 text-black font-bold text-xs transition-all shadow-[0_0_10px_rgba(6,182,212,0.3)]"
+                    className="px-2.5 py-1 rounded bg-cyan-600 hover:bg-cyan-500 disabled:bg-gray-800 text-black font-bold text-xs transition-all shadow-[0_0_10px_rgba(6,182,212,0.3)] cursor-pointer"
                   >
                     Add
                   </button>
@@ -2768,6 +3057,76 @@ export const ChainMapperView: React.FC = () => {
           </aside>
         )}
       </div>
+
+      {/* Wireless Clipboard Manual Scan Paste Modal */}
+      {isPasteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in duration-150">
+          <div className={`w-full max-w-lg rounded-2xl border shadow-2xl p-5 font-sans ${
+            isDark ? 'bg-[#121622] border-purple-500/30 text-white shadow-[0_12px_48px_rgba(0,0,0,0.85)]' : 'bg-white border-slate-200 text-slate-900 shadow-xl'
+          }`}>
+            <div className="flex items-center justify-between pb-3 mb-3 border-b border-white/10">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center text-purple-300">
+                  <ClipboardCheck className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-white">Wireless Clipboard Bridge</h3>
+                  <p className="text-[11px] text-slate-400">Share D-Scan, Cosmic Signatures, or Systems wirelessly with fleet</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsPasteModalOpen(false)}
+                className="p-1 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-300 mb-2 leading-relaxed">
+              In EVE Online, copy any <strong className="text-purple-300">D-Scan window</strong> (Ctrl+A, Ctrl+C), <strong className="text-cyan-300">Probe Scanner signatures</strong>, or <strong className="text-emerald-300">System Name</strong>. Paste below to broadcast to all connected fleet members:
+            </p>
+
+            <textarea
+              value={manualPasteText}
+              onChange={(e) => setManualPasteText(e.target.value)}
+              placeholder="Paste EVE clipboard text here (Ctrl+V)..."
+              rows={6}
+              className="w-full bg-black/60 border border-white/10 rounded-xl p-3 font-mono text-xs text-slate-200 focus:outline-none focus:border-purple-400 resize-none mb-4"
+              autoFocus
+            />
+
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] text-slate-400 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                OS Auto-Listener Active
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setIsPasteModalOpen(false)}
+                  className="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-slate-300 text-xs font-semibold cursor-pointer transition-all"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    if (manualPasteText.trim()) {
+                      import('../services/scoutWatcher').then(({ scoutWatcher }) => {
+                        scoutWatcher.evaluateText(manualPasteText.trim(), 'dscan_paste');
+                      });
+                      setManualPasteText('');
+                      setIsPasteModalOpen(false);
+                    }
+                  }}
+                  disabled={!manualPasteText.trim()}
+                  className="px-4 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:bg-gray-800 disabled:text-gray-500 text-white font-bold text-xs shadow-lg shadow-purple-600/30 cursor-pointer transition-all"
+                >
+                  Broadcast Scan
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Ship Fittings Window Modal */}
       <ShipFittingsModal

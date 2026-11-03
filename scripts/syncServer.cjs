@@ -268,7 +268,13 @@ const server = http.createServer((req, res) => {
     req.on('end', () => {
       try {
         const update = JSON.parse(body);
-        const { connectionId, from, to, sigFrom, sigTo, wormholeType, massStatus, timeStatus, tactical, isFrig } = update;
+        let { connectionId, from, to, sigFrom, sigTo, wormholeType, massStatus, timeStatus, tactical, isFrig } = update;
+
+        // Resolve case-insensitive system names from current chainMap
+        const fromKey = from ? (Object.keys(chainMap.systems).find(k => k.toLowerCase() === from.trim().toLowerCase()) || from.trim()) : from;
+        const toKey = to ? (Object.keys(chainMap.systems).find(k => k.toLowerCase() === to.trim().toLowerCase()) || to.trim()) : to;
+        from = fromKey;
+        to = toKey;
 
         let conn = null;
         if (connectionId) {
@@ -276,16 +282,18 @@ const server = http.createServer((req, res) => {
         }
         if (!conn && from && to) {
           conn = chainMap.connections.find(
-            c => (c.from === from && c.to === to) || (c.from === to && c.to === from)
+            c => (c.from.toLowerCase() === from.toLowerCase() && c.to.toLowerCase() === to.toLowerCase()) || 
+                 (c.from.toLowerCase() === to.toLowerCase() && c.to.toLowerCase() === from.toLowerCase())
           );
         }
 
         if (!conn && from && to) {
+          const isWh = from.startsWith('J') || to.startsWith('J');
           conn = {
             id: `conn-${Date.now()}`,
             from,
             to,
-            wormholeType: wormholeType || 'Wormhole',
+            wormholeType: wormholeType || (isWh ? 'Wormhole' : 'Stargate'),
             massStatus: massStatus || 'stable',
             timeStatus: timeStatus || 'stable'
           };
@@ -316,6 +324,29 @@ const server = http.createServer((req, res) => {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: err.message }));
       }
+    });
+    return;
+  }
+
+  // Wireless Clipboard Sharing between pilots
+  if (req.url === '/api/map/clipboard' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try {
+        const { text, pilotName } = JSON.parse(body);
+        if (text && typeof text === 'string') {
+          const cleanText = text.trim();
+          lastSeenClipboard = cleanText;
+          console.log(`\n📋 [WIRELESS CLIPBOARD] Shared by ${pilotName || 'Pilot'}: ${cleanText.replace(/\r?\n/g, ' ').slice(0, 60)}...`);
+          broadcastUpdate('CLIPBOARD_TEXT', { text: cleanText, pilot: pilotName || 'Buddy' });
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true }));
+          return;
+        }
+      } catch (err) {}
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Invalid clipboard payload' }));
     });
     return;
   }

@@ -95,18 +95,48 @@ class ScoutWatcherService {
   }
 
   /**
+   * Broadcasts text to backend wireless clipboard bridge so all connected buddies receive it
+   */
+  public async broadcastClipboard(text: string, pilotName: string = 'Fleet Scout') {
+    if (!text || !text.trim()) return;
+    try {
+      await fetch('/api/map/clipboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: text.trim(), pilotName })
+      });
+    } catch {}
+  }
+
+  /**
    * Evaluates text from clipboard, global paste, user gesture, or SSE log bridge.
    */
   public evaluateText(text: string, source: ScoutAlertEvent['source'] = 'clipboard_auto'): boolean {
     if (!text || text.trim() === '') return false;
     const clean = text.trim();
 
+    // If local manual paste or direct clipboard read, broadcast wirelessly to fleet
+    if (source === 'dscan_paste' || source === 'clipboard_auto') {
+      this.broadcastClipboard(clean);
+    }
+
     // Notify raw clipboard subscribers (e.g. D-Scan live view)
     this.notifyRawClipboard(clean);
 
     // 1. Check for J-System directly (e.g. J152438, J103955)
     const jMatch = clean.match(/\b(J\d{6})\b/i);
-    const systemName = jMatch ? jMatch[1].toUpperCase() : '';
+    let systemName = jMatch ? jMatch[1].toUpperCase() : '';
+
+    // Check for known K-space solar systems if not a J-system
+    if (!systemName) {
+      const knownSystems = Object.keys(mapperService.getState().systems);
+      const match = knownSystems.find(s => s.toLowerCase() === clean.toLowerCase());
+      if (match) {
+        systemName = match;
+      } else if (/^[A-Z][a-z0-9\- ]{2,18}$/.test(clean) && !clean.includes('\t') && !clean.includes('\n')) {
+        systemName = clean;
+      }
+    }
 
     // 2. Check for Probe Scanner Cosmic Signatures (EVE Probe Scan copy format)
     const signatures: WormholeSignature[] = [];

@@ -230,64 +230,81 @@ class MapperService {
     } catch {}
   }
 
-  // Manually add or connect a new wormhole system
+  // Manually add or connect two systems (supports both existing nodes and creating new ones)
   public async addWormholeConnection(fromSystem: string, toSystem: string, wormholeType?: string, sigFrom?: string) {
     if (!toSystem.trim()) return;
-    const cleanTo = toSystem.trim().toUpperCase();
 
-    const payload = {
-      system: {
-        id: cleanTo,
-        name: cleanTo,
-        systemClass: cleanTo.startsWith('J') ? 'C3' : 'Highsec'
-      },
-      fromSystem,
-      wormholeType: wormholeType || 'Wormhole',
-      pilotName: 'You'
-    };
+    // Resolve case-insensitive target system ID from current state
+    const matchId = Object.keys(this.state.systems).find(
+      k => k.toLowerCase() === toSystem.trim().toLowerCase()
+    );
+    const fromMatchId = Object.keys(this.state.systems).find(
+      k => k.toLowerCase() === (fromSystem || '').trim().toLowerCase()
+    ) || fromSystem.trim();
 
-    // Update local state
+    const cleanTo = matchId || (toSystem.trim().startsWith('J') ? toSystem.trim().toUpperCase() : toSystem.trim());
+    const cleanFrom = fromMatchId;
+
+    // Update local state if target system doesn't exist yet
     if (!this.state.systems[cleanTo]) {
+      const isWh = cleanTo.startsWith('J');
+      const prevNode = this.state.systems[cleanFrom];
+      const newX = prevNode && typeof prevNode.x === 'number' ? prevNode.x + 180 : 750;
+      const newY = prevNode && typeof prevNode.y === 'number' ? prevNode.y + 110 : 160;
+
       this.state.systems[cleanTo] = {
         id: cleanTo,
         name: cleanTo,
-        systemClass: cleanTo.startsWith('J') ? 'C3' : 'Highsec',
+        systemClass: isWh ? 'C2' : 'Highsec',
         statics: [],
         structures: [],
-        activePilots: ['You'],
+        activePilots: [],
         signatures: [],
-        lastUpdated: getEveTime()
+        lastUpdated: getEveTime(),
+        x: newX,
+        y: newY
       };
     }
 
-    if (fromSystem && fromSystem !== cleanTo) {
+    let createdConn = null;
+    if (cleanFrom && cleanFrom !== cleanTo) {
       const exists = this.state.connections.find(
-        c => (c.from === fromSystem && c.to === cleanTo) || (c.from === cleanTo && c.to === fromSystem)
+        c => (c.from.toLowerCase() === cleanFrom.toLowerCase() && c.to.toLowerCase() === cleanTo.toLowerCase()) || 
+             (c.from.toLowerCase() === cleanTo.toLowerCase() && c.to.toLowerCase() === cleanFrom.toLowerCase())
       );
       if (!exists) {
-        this.state.connections.push({
+        const isWh = cleanTo.startsWith('J') || cleanFrom.startsWith('J');
+        createdConn = {
           id: `conn-${Date.now()}`,
-          from: fromSystem,
+          from: cleanFrom,
           to: cleanTo,
-          wormholeType: wormholeType || 'Wormhole',
+          wormholeType: wormholeType || (isWh ? 'Wormhole' : 'Stargate'),
           sigFrom: sigFrom ? sigFrom.trim().toUpperCase() : undefined,
-          massStatus: 'stable',
-          timeStatus: 'stable'
-        });
-      } else if (sigFrom) {
-        exists.sigFrom = sigFrom.trim().toUpperCase();
+          massStatus: 'stable' as const,
+          timeStatus: 'stable' as const
+        };
+        this.state.connections.push(createdConn);
+      } else {
+        if (wormholeType) exists.wormholeType = wormholeType;
+        if (sigFrom) exists.sigFrom = sigFrom.trim().toUpperCase();
+        createdConn = exists;
       }
     }
 
     this.activeSystemId = cleanTo;
     this.notify();
 
-    // Post to server for buddy
+    // Post connection to server so all fleet buddies receive the live link
     try {
-      await fetch('/api/map/update', {
+      await fetch('/api/map/connection/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          from: cleanFrom,
+          to: cleanTo,
+          wormholeType: wormholeType || (cleanTo.startsWith('J') || cleanFrom.startsWith('J') ? 'Wormhole' : 'Stargate'),
+          sigFrom: sigFrom ? sigFrom.trim().toUpperCase() : undefined
+        })
       });
     } catch {}
   }
