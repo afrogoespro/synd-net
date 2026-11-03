@@ -204,6 +204,13 @@ class AuthService {
     this.listeners.forEach(cb => cb(this.currentPilot));
   }
 
+  private getRedirectUri(): string {
+    if (typeof window === 'undefined') return 'http://localhost:3000';
+    const origin = window.location.origin.replace(/\/$/, '');
+    const pathname = window.location.pathname.replace(/\/$/, '');
+    return pathname ? `${origin}${pathname}` : origin;
+  }
+
   /**
    * Generates EVE SSO PKCE URL and redirects to CCP login.
    * Scopes: esi-location.read_location.v1, esi-location.read_ship_type.v1, esi-location.read_online.v1, esi-ui.write_waypoint.v1
@@ -232,7 +239,7 @@ class AuthService {
     localStorage.setItem(STORAGE_KEY_STATE, state);
     localStorage.setItem(STORAGE_KEY_PKCE_VERIFIER, codeVerifier);
 
-    const redirectUri = window.location.origin + window.location.pathname;
+    const redirectUri = this.getRedirectUri();
     const scopeParam = encodeURIComponent(EVE_SSO_SCOPES.join(' '));
 
     const ssoUrl = `https://login.eveonline.com/v2/oauth/authorize/?response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&client_id=${encodeURIComponent(clientId)}&scope=${scopeParam}&code_challenge=${codeChallenge}&code_challenge_method=S256&state=${state}`;
@@ -271,7 +278,7 @@ class AuthService {
     }
 
     try {
-      const redirectUri = cleanUrl;
+      const redirectUri = this.getRedirectUri();
       const body = new URLSearchParams({
         grant_type: 'authorization_code',
         client_id: clientId,
