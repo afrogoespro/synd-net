@@ -430,22 +430,29 @@ export const ChainMapperView: React.FC = () => {
         }, 120);
       }
 
-      // Automatically prompt signature & origin modal when pilot jumps out or between systems!
+      // Automatically prompt signature & origin modal ONLY when jumping through an actual WORMHOLE!
+      // In Known Space (Stargates between K-space systems), NEVER ask for signatures.
       const prevSys = jump.fromSystem || (activeSystem && activeSystem.id !== jump.systemName ? activeSystem.id : null);
       if (prevSys && jump.systemName && prevSys !== jump.systemName) {
         const isWh = jump.isWormhole || jump.systemName.startsWith('J') || prevSys.startsWith('J');
         const existingConn = mapState.connections.find(
           c => (c.from === prevSys && c.to === jump.systemName) || (c.from === jump.systemName && c.to === prevSys)
         );
-        setSelectedConnection(existingConn || {
-          id: `conn-${Date.now()}`,
-          from: prevSys,
-          to: jump.systemName,
-          wormholeType: isWh ? 'Wormhole' : 'Stargate',
-          massStatus: 'stable',
-          timeStatus: 'stable'
-        });
-        setIsConnModalOpen(true);
+        
+        const isMe = !currentPilot || !jump.pilot || jump.pilot.toLowerCase().includes(currentPilot.characterName.toLowerCase());
+
+        // Stargates in known space NEVER ask for signatures; only actual wormhole jumps prompt for signature ID
+        if (isWh && isMe) {
+          setSelectedConnection(existingConn || {
+            id: `conn-${Date.now()}`,
+            from: prevSys,
+            to: jump.systemName,
+            wormholeType: 'Wormhole',
+            massStatus: 'stable',
+            timeStatus: 'stable'
+          });
+          setIsConnModalOpen(true);
+        }
       }
     });
     return () => unsubJump();
