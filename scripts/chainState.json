@@ -33,9 +33,7 @@
           "timestamp": "02:50"
         }
       ],
-      "activePilots": [
-        "Syndra en Tilavine"
-      ],
+      "activePilots": [],
       "signatures": [
         {
           "id": "sig-1793682764930-BDI-439",
@@ -231,8 +229,19 @@
       "statics": [],
       "structures": [],
       "activePilots": [],
-      "signatures": [],
-      "lastUpdated": "05:13",
+      "signatures": [
+        {
+          "id": "sig-1793683131062-EYK-128",
+          "sigId": "EYK-128",
+          "type": "Anomaly",
+          "name": "Cosmic Signature",
+          "group": "Cosmic Signature",
+          "distance": "13.79 AU",
+          "signalPercent": 57.9,
+          "createdTime": "05:18"
+        }
+      ],
+      "lastUpdated": "05:18",
       "x": 955,
       "y": 35
     },
@@ -345,7 +354,7 @@
           "createdTime": "05:12"
         }
       ],
-      "lastUpdated": "05:13",
+      "lastUpdated": "05:18",
       "x": 960,
       "y": 159
     },
@@ -373,7 +382,8 @@
         }
       ],
       "activePilots": [
-        "USS Hauler"
+        "USS Hauler",
+        "Syndra en Tilavine"
       ],
       "signatures": [
         {
@@ -467,7 +477,7 @@
           "createdTime": "02:03"
         }
       ],
-      "lastUpdated": "05:11",
+      "lastUpdated": "05:19",
       "x": 1289,
       "y": 146
     },
@@ -667,8 +677,8 @@
         }
       ],
       "lastUpdated": "02:30",
-      "x": 960,
-      "y": 280
+      "x": 1144,
+      "y": 285
     },
     "Sagain": {
       "id": "Sagain",

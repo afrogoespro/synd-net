@@ -11,7 +11,7 @@ import { mapperService } from '../services/mapperService';
 import { ChainMapState, WormholeNode, WormholeConnection, WormholeSignature, StructureTimer } from '../types/mapper';
 import { KillmailItem } from '../types/killmail';
 import { authService, PilotProfile } from '../services/authService';
-import { calculateTradeHubRoutes, findShortestRoute, WH_SYSTEM_EFFECTS, TradeHubRoute } from '../services/routeService';
+import { calculateTradeHubRoutes, findShortestRoute, WH_SYSTEM_EFFECTS, TradeHubRoute, resolveSolarSystemId } from '../services/routeService';
 import { fetchLiveSystemKills } from '../services/zkillService';
 import { PilotLoginModal } from './PilotLoginModal';
 import { SignaturePromptModal } from './SignaturePromptModal';
@@ -260,6 +260,10 @@ export const ChainMapperView: React.FC = () => {
     timestamp: number;
   } | null>(null);
 
+  // Pilot In-Game Autopilot Destination & Route Highlighting
+  const [destinationSystemId, setDestinationSystemId] = useState<string | null>(null);
+  const [navToast, setNavToast] = useState<{ message: string; type: 'success' | 'info' | 'error' } | null>(null);
+
   useEffect(() => {
     if (!lastJumpAlert) return;
     const t = setTimeout(() => setLastJumpAlert(null), 8000);
@@ -491,6 +495,58 @@ export const ChainMapperView: React.FC = () => {
     const sysId = selectedSystem?.id || 'J103955';
     return calculateTradeHubRoutes(mapState.connections, sysId);
   }, [mapState.connections, selectedSystem?.id]);
+
+  // Active destination route path across the chain
+  const destinationRoute = useMemo(() => {
+    if (!destinationSystemId) return null;
+    const fromSys = activeSystem?.id || selectedSystem?.id;
+    if (!fromSys || fromSys.toLowerCase() === destinationSystemId.toLowerCase()) return null;
+    return findShortestRoute(mapState.connections, fromSys, destinationSystemId);
+  }, [mapState.connections, activeSystem?.id, selectedSystem?.id, destinationSystemId]);
+
+  const isRouteEdge = useMemo(() => {
+    if (!destinationRoute || destinationRoute.path.length < 2) return () => false;
+    const p = destinationRoute.path;
+    const edgeSet = new Set<string>();
+    for (let i = 0; i < p.length - 1; i++) {
+      edgeSet.add(`${p[i].toLowerCase()}->${p[i+1].toLowerCase()}`);
+      edgeSet.add(`${p[i+1].toLowerCase()}->${p[i].toLowerCase()}`);
+    }
+    return (from: string, to: string) => edgeSet.has(`${from.toLowerCase()}->${to.toLowerCase()}`);
+  }, [destinationRoute]);
+
+  const handleSetDestination = async (targetSystemName: string, clearOther: boolean = true) => {
+    setDestinationSystemId(targetSystemName);
+    try {
+      soundManager.playAlert(880);
+    } catch {}
+
+    // 1. Try setting directly via ESI waypoint in EVE client
+    const systemId = await resolveSolarSystemId(targetSystemName);
+    if (systemId && authService.getPilot()) {
+      const ok = await authService.setInGameWaypoint(systemId, clearOther);
+      if (ok) {
+        setNavToast({
+          message: `🎯 In-Game Autopilot set to ${targetSystemName}!`,
+          type: 'success'
+        });
+        setTimeout(() => setNavToast(null), 4000);
+        return;
+      }
+    }
+
+    // 2. Fallback: Copy to clipboard for easy in-game search/set
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        await navigator.clipboard.writeText(targetSystemName);
+        setNavToast({
+          message: `📋 Copied "${targetSystemName}" to clipboard for in-game destination!`,
+          type: 'info'
+        });
+        setTimeout(() => setNavToast(null), 4000);
+      }
+    } catch {}
+  };
 
   // Helper to format remaining timer time
   const formatTimeRemaining = (isoDateString: string): { text: string; isPast: boolean; isUrgent: boolean } => {
@@ -1353,6 +1409,60 @@ export const ChainMapperView: React.FC = () => {
           </div>
         )}
 
+        {/* IN-GAME AUTOPILOT DESTINATION FLOATING HUD BANNER (User requested: set destination for pilot) */}
+        {destinationSystemId && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 pointer-events-auto animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className={`px-4 py-2 rounded-2xl border backdrop-blur-2xl shadow-2xl flex items-center gap-3 font-sans ${
+              isDark 
+                ? 'bg-[#0a1424]/95 border-emerald-500/50 text-white shadow-[0_8px_32px_rgba(16,185,129,0.35)]' 
+                : 'bg-white/95 border-emerald-400 text-slate-900 shadow-xl'
+            }`}>
+              <div className="w-7 h-7 rounded-xl bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center text-emerald-400 shrink-0">
+                <Crosshair className="w-4 h-4 animate-pulse" />
+              </div>
+              <div className="text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="font-black text-[10.5px] text-emerald-400 tracking-wide uppercase">AUTOPILOT DESTINATION</span>
+                  {destinationRoute?.jumps !== null && destinationRoute?.jumps !== undefined && (
+                    <span className="px-1.5 py-0.2 rounded text-[9.5px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold">
+                      {destinationRoute.jumps} Jumps via Chain
+                    </span>
+                  )}
+                </div>
+                <div className="font-bold text-white text-xs mt-0.5">
+                  {activeSystem?.name || 'Your System'} ➔ <span className="text-emerald-300 font-mono text-sm underline decoration-emerald-500/40">{destinationSystemId}</span>
+                </div>
+              </div>
+              <button
+                onClick={() => handleSetDestination(destinationSystemId, true)}
+                className="px-2.5 py-1 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs ml-2 cursor-pointer shadow-sm transition-all"
+                title="Send waypoint directly into EVE Online client via ESI"
+              >
+                Set in EVE
+              </button>
+              <button
+                onClick={() => setDestinationSystemId(null)}
+                className="p-1 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                title="Clear Destination"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* NAVIGATION TOAST ALERT */}
+        {navToast && (
+          <div className="absolute top-16 left-1/2 -translate-x-1/2 z-50 pointer-events-none animate-in fade-in zoom-in-95 duration-150">
+            <div className={`px-4 py-2 rounded-xl border backdrop-blur-2xl shadow-xl font-sans text-xs font-bold flex items-center gap-2 ${
+              navToast.type === 'success' ? 'bg-emerald-950/95 border-emerald-500 text-emerald-200' : 'bg-cyan-950/95 border-cyan-500 text-cyan-200'
+            }`}>
+              <Crosshair className="w-3.5 h-3.5" />
+              <span>{navToast.message}</span>
+            </div>
+          </div>
+        )}
+
         {/* WIRELESS CLIPBOARD REAL-TIME FLOATING HUD */}
         {lastClipboardNotice && (
           <div className="absolute top-16 left-1/2 -translate-x-1/2 z-50 pointer-events-auto animate-in fade-in slide-in-from-top-3 duration-200">
@@ -1465,6 +1575,26 @@ export const ChainMapperView: React.FC = () => {
                 <feGaussianBlur stdDeviation="2" result="blur" />
                 <feComposite in="SourceGraphic" in2="blur" operator="over" />
               </filter>
+              {/* Active Hole Neon Purple / Cyan Glow Filter */}
+              <filter id="active-hole-glow" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur stdDeviation="3.5" result="blur" />
+                <feFlood floodColor="#c084fc" floodOpacity="0.85" result="glowColor" />
+                <feComposite in="glowColor" in2="blur" operator="in" result="glow" />
+                <feMerge>
+                  <feMergeNode in="glow" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              {/* Route Destination Cyan Glow Filter */}
+              <filter id="route-glow" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur stdDeviation="3.5" result="blur" />
+                <feFlood floodColor="#06b6d4" floodOpacity="0.85" result="glowColor" />
+                <feComposite in="glowColor" in2="blur" operator="in" result="glow" />
+                <feMerge>
+                  <feMergeNode in="glow" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
               {/* EOL Glowing Red Pulse Filter */}
               <filter id="eol-glow" x="-30%" y="-30%" width="160%" height="160%">
                 <feGaussianBlur stdDeviation="3.5" result="blur" />
@@ -1567,8 +1697,14 @@ export const ChainMapperView: React.FC = () => {
                 strokeColor = '#eab308'; // Amber Destabilized Mass
               }
 
+              // User requirement: "highlight the active hole" & In-Game Destination Route
+              const isConnectedToActivePlayer = activeSystem && (conn.from.toLowerCase() === activeSystem.id.toLowerCase() || conn.to.toLowerCase() === activeSystem.id.toLowerCase());
+              const isActiveHole = isConnectedToActivePlayer && isActualWormhole;
+              const isSelectedHole = selectedConnection?.id === conn.id;
+              const isRouteHole = isRouteEdge(conn.from, conn.to);
+
               // User requirement: "dont show wormhole tag"
-              // Never show generic "Wormhole" or "Wormhole [>4h]". Only show badge if there is a real signature, EOL, critical/destab mass, or tactical alert.
+              // Never show generic "Wormhole" or "Wormhole [>4h]". Only show badge if there is a real signature, EOL, critical/destab mass, active hole, or tactical alert.
               const sigLabel = conn.sigFrom 
                 ? (toSys.systemClass?.startsWith('C') ? `TC [${conn.sigFrom}]` : `[${conn.sigFrom}]`)
                 : '';
@@ -1582,10 +1718,14 @@ export const ChainMapperView: React.FC = () => {
                 badgeText = sigLabel ? `${sigLabel} [Destab]` : `[Destab]`;
               } else if (sigLabel) {
                 badgeText = sigLabel;
+              } else if (isRouteHole) {
+                badgeText = `🎯 ROUTE`;
+              } else if (isActiveHole) {
+                badgeText = `⚡ ACTIVE HOLE`;
               }
 
               const hasBadge = !!badgeText || !!conn.tactical || !!conn.isFrig;
-              const badgeWidth = Math.max(48, badgeText.length * 7.2 + (isEOL ? 16 : 10));
+              const badgeWidth = Math.max(52, badgeText.length * 7.2 + (isEOL ? 16 : 12));
 
               return (
                 <g key={conn.id} className="cursor-pointer group pointer-events-auto">
@@ -1604,6 +1744,29 @@ export const ChainMapperView: React.FC = () => {
                   >
                     <title>{`Click to assign features: ${conn.from} ➔ ${conn.to} (${conn.wormholeType || 'Wormhole'}) [${isEOL ? 'EOL <4h' : 'Stable >4h'}]`}</title>
                   </path>
+
+                  {/* ACTIVE HOLE & IN-GAME DESTINATION ROUTE ENERGETIC GLOW (User requested: highlight the active hole) */}
+                  {(isActiveHole || isRouteHole || isSelectedHole) && (
+                    <>
+                      <path
+                        d={pathData}
+                        fill="none"
+                        stroke={isRouteHole ? '#06b6d4' : isActualWormhole ? '#a855f7' : '#22c55e'}
+                        strokeWidth={isRouteHole ? '10' : '8'}
+                        strokeOpacity="0.32"
+                        className="animate-pulse pointer-events-none"
+                      />
+                      <path
+                        d={pathData}
+                        fill="none"
+                        stroke={isRouteHole ? '#67e8f9' : isActualWormhole ? '#e879f9' : '#86efac'}
+                        strokeWidth={isRouteHole ? '3' : '2.5'}
+                        strokeDasharray="8 6"
+                        className="active-hole-energy-beam pointer-events-none"
+                        filter={isRouteHole ? 'url(#route-glow)' : 'url(#active-hole-glow)'}
+                      />
+                    </>
+                  )}
 
                   {/* Hover highlight glow */}
                   <path
@@ -1767,6 +1930,9 @@ export const ChainMapperView: React.FC = () => {
               const posX = node.x !== undefined ? node.x : (578 + ((nodeIdx % 3) - 1) * 190);
               const posY = node.y !== undefined ? node.y : (160 + Math.floor(nodeIdx / 3) * 110);
 
+              const isDestination = destinationSystemId?.toLowerCase() === node.name.toLowerCase() || destinationSystemId?.toLowerCase() === node.id.toLowerCase();
+              const isRouteNode = destinationRoute?.path?.some(p => p.toLowerCase() === node.name.toLowerCase() || p.toLowerCase() === node.id.toLowerCase());
+
               return (
                 <div
                   key={node.id}
@@ -1784,12 +1950,16 @@ export const ChainMapperView: React.FC = () => {
                     className={`w-full h-full rounded-2xl px-3 py-2 flex flex-col justify-between relative transition-all duration-150 backdrop-blur-md ${
                       linkingFromId === node.id
                         ? 'bg-[#0f2438]/95 shadow-[0_0_24px_rgba(6,182,212,0.85)] ring-2 ring-cyan-400 animate-pulse'
+                        : isDestination
+                        ? 'bg-[#0a201c]/95 shadow-[0_0_28px_rgba(16,185,129,0.7)] ring-2 ring-emerald-400 animate-pulse'
                         : linkingFromId
                         ? 'bg-[#0c1626]/85 hover:bg-[#10243c] border border-cyan-500/40 hover:ring-2 hover:ring-emerald-400 hover:scale-[1.03] cursor-pointer'
                         : isActivePlayer
                         ? isDark
                           ? 'bg-[#101a2e]/90 shadow-[0_0_24px_rgba(56,189,248,0.45),0_0_8px_rgba(255,255,255,0.7)] ring-2 ring-white/90'
                           : 'bg-white/95 shadow-[0_0_20px_rgba(2,132,199,0.35)] ring-2 ring-sky-500'
+                        : isRouteNode
+                        ? 'bg-[#091829]/95 shadow-[0_0_20px_rgba(6,182,212,0.5)] ring-1.5 ring-cyan-400'
                         : isMultiSelected
                         ? isDark
                           ? 'bg-[#0b192e]/95 shadow-[0_0_24px_rgba(6,182,212,0.65)] ring-2 ring-cyan-400'
@@ -1803,7 +1973,7 @@ export const ChainMapperView: React.FC = () => {
                         : 'bg-white/90 hover:bg-slate-50 shadow-sm border border-slate-200/80'
                     }`}
                     style={{
-                      borderWidth: (isActivePlayer || isSelected || isMultiSelected || linkingFromId === node.id) ? '0px' : '1px',
+                      borderWidth: (isActivePlayer || isSelected || isMultiSelected || linkingFromId === node.id || isDestination) ? '0px' : '1px',
                       borderColor: borderColor
                     }}
                   >
@@ -1921,6 +2091,22 @@ export const ChainMapperView: React.FC = () => {
                           }
                         >
                           <Link2 className="w-2.5 h-2.5" />
+                        </button>
+
+                        {/* 1-Click Set In-Game Autopilot Destination Button (User requested: set destination for pilot) */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSetDestination(node.name);
+                          }}
+                          className={`p-0.5 rounded-full transition-all pointer-events-auto cursor-pointer ${
+                            isDestination
+                              ? 'bg-emerald-400 text-black shadow-md shadow-emerald-400/60 ring-1 ring-emerald-300'
+                              : 'hover:bg-emerald-500/20 text-slate-400 hover:text-emerald-300'
+                          }`}
+                          title={`Set ${node.name} as in-game autopilot destination`}
+                        >
+                          <Crosshair className="w-2.5 h-2.5" />
                         </button>
 
                         {isSelected && node.id !== 'Jita' && (
@@ -2671,6 +2857,31 @@ export const ChainMapperView: React.FC = () => {
                   className="text-gray-500 hover:text-gray-300 text-sm font-bold p-1"
                 >
                   ✕
+                </button>
+              </div>
+
+              {/* In-Game Autopilot Destination Action Buttons (User requested: set destination in mapper) */}
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <button
+                  onClick={() => handleSetDestination(selectedSystem.name, true)}
+                  className={`py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-md transition-all cursor-pointer ${
+                    destinationSystemId?.toLowerCase() === selectedSystem.name.toLowerCase()
+                      ? 'bg-emerald-500 text-black ring-2 ring-emerald-300 shadow-emerald-500/40'
+                      : 'bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/50'
+                  }`}
+                  title="Set in-game autopilot destination in EVE client via ESI or copy name"
+                >
+                  <Crosshair className="w-3.5 h-3.5" />
+                  <span>{destinationSystemId?.toLowerCase() === selectedSystem.name.toLowerCase() ? 'Destination Set' : 'Set Destination'}</span>
+                </button>
+
+                <button
+                  onClick={() => handleSetDestination(selectedSystem.name, false)}
+                  className="py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 bg-cyan-950/40 hover:bg-cyan-900/50 text-cyan-300 border border-cyan-500/40 shadow-sm transition-all cursor-pointer"
+                  title="Add as in-game autopilot waypoint"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Waypoint</span>
                 </button>
               </div>
 

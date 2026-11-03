@@ -100,3 +100,43 @@ export const WH_SYSTEM_EFFECTS: Record<string, { effect: string; color: string; 
     desc: '+Ship Velocity, +Missile Velocity, -Inertia (Faster Align)'
   }
 };
+
+const SOLAR_SYSTEM_ID_CACHE = new Map<string, number>([
+  ['jita', 30000142],
+  ['amarr', 30002187],
+  ['dodixie', 30002659],
+  ['rens', 30002510],
+  ['sobaseki', 30001363],
+  ['veisto', 30001364],
+  ['iidoken', 30001365],
+  ['uemisaisen', 30001366],
+  ['sagain', 30002693],
+  ['ikuchi', 30000140],
+  ['new caldari', 30000144],
+  ['thera', 31000005],
+]);
+
+export async function resolveSolarSystemId(systemName: string): Promise<number | null> {
+  if (!systemName) return null;
+  const key = systemName.trim().toLowerCase();
+  if (SOLAR_SYSTEM_ID_CACHE.has(key)) return SOLAR_SYSTEM_ID_CACHE.get(key)!;
+
+  try {
+    const res = await fetch('https://esi.evetech.net/latest/universe/ids/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify([systemName.trim()])
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.systems && data.systems.length > 0) {
+        const id = data.systems[0].id;
+        SOLAR_SYSTEM_ID_CACHE.set(key, id);
+        return id;
+      }
+    }
+  } catch (e) {
+    console.error('Failed to resolve solarSystemId:', e);
+  }
+  return null;
+}

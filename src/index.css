@@ -68,6 +68,20 @@
   animation: eolGlowPulse 1.8s ease-in-out infinite;
 }
 
+/* Animated Traveling Energy Beam for Active Wormhole & In-Game Destination Route */
+@keyframes activeHoleDash {
+  from {
+    stroke-dashoffset: 28;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.active-hole-energy-beam {
+  animation: activeHoleDash 1.2s linear infinite;
+}
+
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(148, 163, 184, 0.4);
 }
