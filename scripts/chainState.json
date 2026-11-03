@@ -612,8 +612,8 @@
       "activePilots": [],
       "signatures": [],
       "lastUpdated": "03:34",
-      "x": 1614,
-      "y": 414
+      "x": 1328,
+      "y": 507
     },
     "J135827": {
       "id": "J135827",
@@ -627,8 +627,8 @@
       "activePilots": [],
       "signatures": [],
       "lastUpdated": "06:27",
-      "x": 1794,
-      "y": 332
+      "x": 1057,
+      "y": 488
     },
     "Hykkota": {
       "id": "Hykkota",
@@ -639,8 +639,8 @@
       "activePilots": [],
       "signatures": [],
       "lastUpdated": "06:27",
-      "x": 1974,
-      "y": -36
+      "x": 1938,
+      "y": -178
     },
     "Oimmo": {
       "id": "Oimmo",
@@ -651,8 +651,8 @@
       "activePilots": [],
       "signatures": [],
       "lastUpdated": "06:27",
-      "x": 1974,
-      "y": 332
+      "x": 1947,
+      "y": 226
     },
     "J212504": {
       "id": "J212504",
@@ -666,8 +666,8 @@
       "activePilots": [],
       "signatures": [],
       "lastUpdated": "06:27",
-      "x": 2154,
-      "y": -36
+      "x": 2181,
+      "y": -269
     },
     "Kisogo": {
       "id": "Kisogo",
@@ -678,8 +678,8 @@
       "activePilots": [],
       "signatures": [],
       "lastUpdated": "06:27",
-      "x": 1786,
-      "y": 442
+      "x": 1671,
+      "y": 590
     },
     "Ajanen": {
       "id": "Ajanen",
@@ -690,8 +690,8 @@
       "activePilots": [],
       "signatures": [],
       "lastUpdated": "06:27",
-      "x": 2334,
-      "y": -36
+      "x": 2347,
+      "y": -347
     }
   },
   "connections": [

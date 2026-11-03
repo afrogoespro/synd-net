@@ -311,6 +311,106 @@ export const ORE_AND_GAS_SITES: Record<string, OreSiteDefinition> = {
   }
 };
 
+export interface MineralYield {
+  mineral: string;
+  amount: number;
+  isKey?: boolean;
+}
+
+export const ORE_MINERAL_YIELDS: Record<string, MineralYield[]> = {
+  // Wormhole & High Value Ores
+  'Gneiss': [
+    { mineral: 'Isogen', amount: 2000, isKey: true },
+    { mineral: 'Mexallon', amount: 2200 },
+    { mineral: 'Zydrine', amount: 175 }
+  ],
+  'Kernite': [
+    { mineral: 'Isogen', amount: 386, isKey: true },
+    { mineral: 'Mexallon', amount: 267 },
+    { mineral: 'Tritanium', amount: 134 }
+  ],
+  'Bistot': [
+    { mineral: 'Pyerite', amount: 12000 },
+    { mineral: 'Zydrine', amount: 340 },
+    { mineral: 'Megacyte', amount: 170, isKey: true }
+  ],
+  'Arkonor': [
+    { mineral: 'Tritanium', amount: 22000 },
+    { mineral: 'Zydrine', amount: 166 },
+    { mineral: 'Megacyte', amount: 320, isKey: true }
+  ],
+  'Omber': [
+    { mineral: 'Isogen', amount: 85, isKey: true },
+    { mineral: 'Tritanium', amount: 800 },
+    { mineral: 'Pyerite', amount: 100 }
+  ],
+  'Pyroxeres': [
+    { mineral: 'Pyerite', amount: 2500 },
+    { mineral: 'Mexallon', amount: 800 },
+    { mineral: 'Nocxium', amount: 120 },
+    { mineral: 'Tritanium', amount: 351 }
+  ],
+  'Dark Ochre': [
+    { mineral: 'Isogen', amount: 1360, isKey: true },
+    { mineral: 'Mexallon', amount: 1200 },
+    { mineral: 'Nocxium', amount: 320 }
+  ],
+  'Hedbergite': [
+    { mineral: 'Isogen', amount: 708, isKey: true },
+    { mineral: 'Pyerite', amount: 450 },
+    { mineral: 'Nocxium', amount: 200 },
+    { mineral: 'Zydrine', amount: 19 }
+  ],
+  'Hemorphite': [
+    { mineral: 'Isogen', amount: 212, isKey: true },
+    { mineral: 'Tritanium', amount: 2120 },
+    { mineral: 'Nocxium', amount: 212 },
+    { mineral: 'Zydrine', amount: 100 }
+  ],
+  'Spodumain': [
+    { mineral: 'Isogen', amount: 400, isKey: true },
+    { mineral: 'Tritanium', amount: 48000 },
+    { mineral: 'Pyerite', amount: 9600 },
+    { mineral: 'Mexallon', amount: 1000 }
+  ],
+  'Crokite': [
+    { mineral: 'Tritanium', amount: 21000 },
+    { mineral: 'Pyerite', amount: 20000 },
+    { mineral: 'Zydrine', amount: 331 }
+  ],
+  'Mercoxit': [
+    { mineral: 'Morphite', amount: 300, isKey: true }
+  ],
+  'Veldspar': [
+    { mineral: 'Tritanium', amount: 400 }
+  ],
+  'Scordite': [
+    { mineral: 'Tritanium', amount: 346 },
+    { mineral: 'Pyerite', amount: 173 }
+  ],
+  'Plagioclase': [
+    { mineral: 'Tritanium', amount: 107 },
+    { mineral: 'Pyerite', amount: 213 },
+    { mineral: 'Mexallon', amount: 107 }
+  ],
+  'Jaspet': [
+    { mineral: 'Mexallon', amount: 350 },
+    { mineral: 'Pyerite', amount: 350 },
+    { mineral: 'Nocxium', amount: 175 },
+    { mineral: 'Zydrine', amount: 8 }
+  ]
+};
+
+export function getOreMineralYields(oreName: string): MineralYield[] {
+  const clean = oreName.trim().toLowerCase();
+  for (const [key, yields] of Object.entries(ORE_MINERAL_YIELDS)) {
+    if (clean.includes(key.toLowerCase())) {
+      return yields;
+    }
+  }
+  return [];
+}
+
 export interface EvaluatedOreSite {
   siteName: string;
   category: string;
@@ -322,6 +422,8 @@ export interface EvaluatedOreSite {
   hasBistot: boolean;
   hasArkonor: boolean;
   hasGneiss: boolean;
+  hasIsogen: boolean;
+  isogenRockNames: string[];
   highValueRocks: { name: string; units: number; totalValue: number }[];
   rankedResources: {
     rank: number;
@@ -336,6 +438,9 @@ export interface EvaluatedOreSite {
     priorityNote: string;
     rockHighlightType?: 'bistot' | 'arkonor' | 'gneiss' | 'rare' | null;
     highlightBadge?: string | null;
+    minerals: MineralYield[];
+    hasIsogen: boolean;
+    isogenAmount?: number;
   }[];
 }
 
@@ -375,6 +480,8 @@ export function evaluateOreSite(siteName: string): EvaluatedOreSite | null {
   let hasBistot = false;
   let hasArkonor = false;
   let hasGneiss = false;
+  let hasIsogen = false;
+  const isogenRockNames: string[] = [];
 
   const rankedResources = resourcesEvaluated.map((r, index) => {
     const percentOfSiteValue = totalSiteValue > 0 ? (r.totalValue / totalSiteValue) * 100 : 0;
@@ -386,6 +493,17 @@ export function evaluateOreSite(siteName: string): EvaluatedOreSite | null {
     const nameLower = r.name.toLowerCase();
     let rockHighlightType: 'bistot' | 'arkonor' | 'gneiss' | 'rare' | null = null;
     let highlightBadge: string | null = null;
+
+    // Retrieve reprocessed mineral breakdown
+    const minerals = getOreMineralYields(r.name);
+    const isogenEntry = minerals.find(m => m.mineral.toLowerCase() === 'isogen');
+    const rockHasIsogen = !!isogenEntry;
+    if (rockHasIsogen) {
+      hasIsogen = true;
+      if (!isogenRockNames.includes(r.name)) {
+        isogenRockNames.push(r.name);
+      }
+    }
 
     if (nameLower.includes('bistot')) {
       hasBistot = true;
@@ -400,7 +518,7 @@ export function evaluateOreSite(siteName: string): EvaluatedOreSite | null {
     } else if (nameLower.includes('gneiss')) {
       hasGneiss = true;
       rockHighlightType = 'gneiss';
-      highlightBadge = '💎 TOP PROFIT DENSITY: GNEISS';
+      highlightBadge = '⚡ TOP ISOGEN & PROFIT: GNEISS';
       highValueRocks.push({ name: 'Gneiss', units: r.estimatedUnits, totalValue: r.totalValue });
     } else if (nameLower.includes('mercoxit') || nameLower.includes('spodumain') || nameLower.includes('crokite')) {
       rockHighlightType = 'rare';
@@ -418,7 +536,10 @@ export function evaluateOreSite(siteName: string): EvaluatedOreSite | null {
       percentOfSiteValue,
       priorityNote,
       rockHighlightType,
-      highlightBadge
+      highlightBadge,
+      minerals,
+      hasIsogen: rockHasIsogen,
+      isogenAmount: isogenEntry ? isogenEntry.amount : undefined
     };
   });
 
@@ -433,6 +554,8 @@ export function evaluateOreSite(siteName: string): EvaluatedOreSite | null {
     hasBistot,
     hasArkonor,
     hasGneiss,
+    hasIsogen,
+    isogenRockNames,
     highValueRocks,
     rankedResources
   };

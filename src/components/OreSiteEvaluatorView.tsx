@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { 
   Pickaxe, Search, AlertTriangle, ShieldCheck, Copy, Check, 
   ChevronRight, Target, Radio, Layers, Sword, ClipboardCheck,
-  Sparkles, RefreshCw, Volume2, Coins, ExternalLink
+  Sparkles, RefreshCw, Volume2, Coins, ExternalLink,
+  Zap, FlaskConical, Database, Info, X, Filter
 } from 'lucide-react';
-import { ORE_AND_GAS_SITES, evaluateOreSite, EvaluatedOreSite } from '../data/oreDatabase';
+import { ORE_AND_GAS_SITES, evaluateOreSite, EvaluatedOreSite, ORE_MINERAL_YIELDS, MineralYield } from '../data/oreDatabase';
 import { parseProbeScanner, ProbeScanReport, ScannedSiteItem } from '../services/probeScannerParser';
 import { scoutWatcher } from '../services/scoutWatcher';
 import { playJackpotSound } from '../services/soundEffects';
@@ -18,6 +19,9 @@ export const OreSiteEvaluatorView: React.FC = () => {
   const [copied, setCopied] = useState<boolean>(false);
   const [classFilter, setClassFilter] = useState<'all' | 'C2' | 'gas' | 'ore'>('ore');
   const [searchFilter, setSearchFilter] = useState<string>('');
+  const [mineralFilter, setMineralFilter] = useState<string>('all');
+  const [showMineralMatrixModal, setShowMineralMatrixModal] = useState<boolean>(false);
+  const [matrixSearch, setMatrixSearch] = useState<string>('');
   
   // Scanned sites from EVE probe scanner (live clipboard or pasted)
   const [scanReport, setScanReport] = useState<ProbeScanReport | null>(null);
@@ -361,7 +365,7 @@ TPK-381\tOutpost Frontier Stronghold\tCombat Site\t100.0%\t0.49 AU`;
                     </span>
                   </div>
 
-                  {/* High Value Rock Highlights (Bistot, Arkonor, Gneiss) */}
+                  {/* High Value Rock Highlights (Bistot, Arkonor, Gneiss, Isogen) */}
                   <div className="flex flex-wrap gap-1 mt-2">
                     {site.evaluatedOre?.hasBistot && (
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.3)] animate-pulse">
@@ -370,12 +374,17 @@ TPK-381\tOutpost Frontier Stronghold\tCombat Site\t100.0%\t0.49 AU`;
                     )}
                     {site.evaluatedOre?.hasGneiss && (
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-600">
-                        ⭐ Gneiss
+                        ⚡ Gneiss
                       </span>
                     )}
                     {site.evaluatedOre?.hasArkonor && (
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-600">
                         ⭐ Arkonor
+                      </span>
+                    )}
+                    {site.evaluatedOre?.hasIsogen && (
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.3)] flex items-center gap-0.5">
+                        <Zap className="w-2.5 h-2.5 text-cyan-400 fill-cyan-400" /> Isogen
                       </span>
                     )}
                   </div>
@@ -601,7 +610,7 @@ TPK-381\tOutpost Frontier Stronghold\tCombat Site\t100.0%\t0.49 AU`;
 
             {/* Simple Ranked Mining Priority Card */}
             <div className="bg-[#0f1422] border border-gray-800 rounded-2xl p-5 shadow-xl">
-              <div className="flex items-center justify-between pb-3 mb-4 border-b border-gray-800">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 mb-4 border-b border-gray-800">
                 <div>
                   <h3 className="text-lg font-bold text-white flex items-center gap-2">
                     {selectedScanSig ? `${selectedScanSig} • ` : ''}{evaluatedSite.siteName}
@@ -613,10 +622,99 @@ TPK-381\tOutpost Frontier Stronghold\tCombat Site\t100.0%\t0.49 AU`;
                     Highest profit per cargo hold listed at top. Cherry-pick the top resources before filling up.
                   </p>
                 </div>
+
+                <button
+                  onClick={() => setShowMineralMatrixModal(true)}
+                  className="self-start sm:self-center px-3 py-1.5 rounded-xl text-xs font-bold font-mono bg-cyan-950/60 hover:bg-cyan-900/80 text-cyan-300 border border-cyan-500/40 shadow-sm flex items-center gap-1.5 transition-all cursor-pointer"
+                  title="View complete mineral content breakdown for all EVE Online rocks"
+                >
+                  <FlaskConical className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Mineral Yield Matrix</span>
+                </button>
+              </div>
+
+              {/* Isogen Mineral Intel Alert Banner (User requested: which rock has what materials, such as isogen) */}
+              {evaluatedSite.hasIsogen && (
+                <div className="mb-4 p-3.5 rounded-xl bg-gradient-to-r from-cyan-950/80 via-[#071c26] to-[#090d16] border border-cyan-500/50 shadow-[0_0_20px_rgba(6,182,212,0.2)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-cyan-500/20 border border-cyan-400 flex items-center justify-center shrink-0">
+                      <Zap className="w-5 h-5 text-cyan-400 fill-cyan-400 animate-pulse" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-extrabold text-cyan-300 uppercase tracking-wide flex items-center gap-1.5">
+                        ⚡ HIGH-VALUE ISOGEN ROCKS IN SITE!
+                      </div>
+                      <div className="text-xs text-slate-300 font-sans mt-0.5">
+                        Found rocks yielding <strong className="text-cyan-300">Isogen</strong>: <strong className="text-white">{evaluatedSite.isogenRockNames.join(', ')}</strong>.
+                        Gneiss is the top Isogen powerhouse (~2,000 units per batch)!
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => setMineralFilter(mineralFilter === 'isogen' ? 'all' : 'isogen')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold font-mono transition-all flex items-center gap-1.5 cursor-pointer ${
+                        mineralFilter === 'isogen'
+                          ? 'bg-cyan-400 text-black shadow-md shadow-cyan-400/50 ring-2 ring-cyan-300'
+                          : 'bg-cyan-950 hover:bg-cyan-900 text-cyan-300 border border-cyan-500/40'
+                      }`}
+                    >
+                      <Filter className="w-3.5 h-3.5" />
+                      <span>{mineralFilter === 'isogen' ? 'Showing Isogen Rocks' : 'Show Isogen Only'}</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Interactive Mineral Filter Pill Bar */}
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-4 pb-3 border-b border-gray-800/80">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wide flex items-center gap-1 mr-1">
+                    <Filter className="w-3 h-3 text-cyan-400" /> Filter Mineral:
+                  </span>
+                  {[
+                    { id: 'all', label: 'All Rocks', isSpecial: false },
+                    { id: 'isogen', label: '⚡ Isogen', isSpecial: true },
+                    { id: 'mexallon', label: 'Mexallon', isSpecial: false },
+                    { id: 'zydrine', label: 'Zydrine', isSpecial: false },
+                    { id: 'megacyte', label: 'Megacyte', isSpecial: false },
+                    { id: 'nocxium', label: 'Nocxium', isSpecial: false }
+                  ].map(m => (
+                    <button
+                      key={m.id}
+                      onClick={() => setMineralFilter(m.id)}
+                      className={`px-2.5 py-1 rounded-full text-xs font-mono font-medium transition-all cursor-pointer ${
+                        mineralFilter === m.id
+                          ? m.isSpecial
+                            ? 'bg-cyan-400 text-black font-bold shadow-md shadow-cyan-400/50'
+                            : 'bg-white text-slate-900 font-bold shadow-sm'
+                          : m.isSpecial
+                          ? 'bg-cyan-950/60 hover:bg-cyan-900/80 text-cyan-300 border border-cyan-500/40'
+                          : 'bg-black/40 hover:bg-white/5 text-slate-400 hover:text-slate-200 border border-white/5'
+                      }`}
+                    >
+                      {m.label}
+                    </button>
+                  ))}
+                </div>
+
+                {mineralFilter !== 'all' && (
+                  <button
+                    onClick={() => setMineralFilter('all')}
+                    className="text-[11px] text-slate-400 hover:text-white flex items-center gap-1 cursor-pointer"
+                  >
+                    <X className="w-3 h-3" /> Reset Filter
+                  </button>
+                )}
               </div>
 
               <div className="space-y-3">
-                {evaluatedSite.rankedResources.map(r => {
+                {evaluatedSite.rankedResources
+                  .filter(r => {
+                    if (mineralFilter === 'all') return true;
+                    return r.minerals && r.minerals.some(m => m.mineral.toLowerCase() === mineralFilter.toLowerCase());
+                  })
+                  .map(r => {
                   const isBistot = r.rockHighlightType === 'bistot';
                   const isGneiss = r.rockHighlightType === 'gneiss';
                   const isArkonor = r.rockHighlightType === 'arkonor';
@@ -625,7 +723,7 @@ TPK-381\tOutpost Frontier Stronghold\tCombat Site\t100.0%\t0.49 AU`;
                   return (
                     <div
                       key={r.name}
-                      className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all ${
+                      className={`p-4 rounded-xl border flex flex-col gap-3 transition-all ${
                         isBistot
                           ? 'bg-gradient-to-r from-amber-950/60 via-[#181308] to-[#0f1422] border-2 border-amber-400 shadow-[0_0_25px_rgba(245,158,11,0.3)] ring-1 ring-amber-400/40'
                           : isGneiss
@@ -639,98 +737,131 @@ TPK-381\tOutpost Frontier Stronghold\tCombat Site\t100.0%\t0.49 AU`;
                           : 'bg-[#090d16] border-gray-800'
                       }`}
                     >
-                      <div className="flex items-center gap-3.5">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${
-                          isBistot
-                            ? 'bg-amber-400 text-black shadow-[0_0_12px_rgba(245,158,11,0.6)] animate-pulse'
-                            : isGneiss
-                            ? 'bg-emerald-400 text-black shadow-[0_0_10px_rgba(16,185,129,0.5)]'
-                            : isArkonor
-                            ? 'bg-indigo-400 text-black shadow-[0_0_10px_rgba(99,102,241,0.5)]'
-                            : r.rank === 1
-                            ? 'bg-cyan-400 text-black shadow-[0_0_10px_rgba(6,182,212,0.5)]'
-                            : 'bg-gray-800 text-gray-300'
-                        }`}>
-                          #{r.rank}
-                        </div>
-
-                        <img
-                          src={`https://images.evetech.net/types/${r.typeId}/icon?size=32`}
-                          alt={r.name}
-                          className={`w-9 h-9 rounded bg-black/60 shrink-0 border ${
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-3.5">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${
                             isBistot
-                              ? 'border-amber-400 ring-2 ring-amber-500/40'
+                              ? 'bg-amber-400 text-black shadow-[0_0_12px_rgba(245,158,11,0.6)] animate-pulse'
                               : isGneiss
-                              ? 'border-emerald-400'
+                              ? 'bg-emerald-400 text-black shadow-[0_0_10px_rgba(16,185,129,0.5)]'
                               : isArkonor
-                              ? 'border-indigo-400'
-                              : 'border-gray-800'
-                          }`}
-                          onError={(e) => {
-                            (e.target as HTMLElement).style.display = 'none';
-                          }}
-                        />
-
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className={`font-bold text-base ${isBistot ? 'text-amber-200 text-lg font-mono' : isGneiss ? 'text-emerald-200' : isArkonor ? 'text-indigo-200' : 'text-white'}`}>
-                              {r.name}
-                            </span>
-                            {r.highlightBadge ? (
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
-                                isBistot
-                                  ? 'bg-amber-950 text-amber-300 border-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.3)] animate-pulse'
-                                  : isGneiss
-                                  ? 'bg-emerald-950 text-emerald-300 border-emerald-500'
-                                  : isArkonor
-                                  ? 'bg-indigo-950 text-indigo-300 border-indigo-500'
-                                  : 'bg-purple-950 text-purple-300 border-purple-500'
-                              }`}>
-                                {r.highlightBadge}
-                              </span>
-                            ) : (
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
-                                r.rank === 1
-                                  ? 'bg-cyan-950 text-cyan-300 border-cyan-700'
-                                  : 'bg-black/60 text-gray-400 border-gray-800'
-                              }`}>
-                                {r.priorityNote}
-                              </span>
-                            )}
+                              ? 'bg-indigo-400 text-black shadow-[0_0_10px_rgba(99,102,241,0.5)]'
+                              : r.rank === 1
+                              ? 'bg-cyan-400 text-black shadow-[0_0_10px_rgba(6,182,212,0.5)]'
+                              : 'bg-gray-800 text-gray-300'
+                          }`}>
+                            #{r.rank}
                           </div>
-                          <div className="text-xs text-gray-400 font-sans mt-0.5 flex flex-wrap items-center gap-3">
-                            <span>{r.estimatedUnits.toLocaleString()} units ({ (r.estimatedUnits * r.unitVolumeM3).toLocaleString() } m³)</span>
-                            {isBistot && <span className="text-amber-400 font-bold font-mono">⭐ CHERRY-PICK THIS ROCK FIRST!</span>}
-                            <span className="text-[10px] text-emerald-400/90 font-mono bg-emerald-950/60 border border-emerald-800/40 px-2 py-0.5 rounded flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                              Jita 4-4 ESI
-                            </span>
+
+                          <img
+                            src={`https://images.evetech.net/types/${r.typeId}/icon?size=32`}
+                            alt={r.name}
+                            className={`w-9 h-9 rounded bg-black/60 shrink-0 border ${
+                              isBistot
+                                ? 'border-amber-400 ring-2 ring-amber-500/40'
+                                : isGneiss
+                                ? 'border-emerald-400'
+                                : isArkonor
+                                ? 'border-indigo-400'
+                                : 'border-gray-800'
+                            }`}
+                            onError={(e) => {
+                              (e.target as HTMLElement).style.display = 'none';
+                            }}
+                          />
+
+                          <div>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className={`font-bold text-base ${isBistot ? 'text-amber-200 text-lg font-mono' : isGneiss ? 'text-emerald-200' : isArkonor ? 'text-indigo-200' : 'text-white'}`}>
+                                {r.name}
+                              </span>
+                              {r.highlightBadge ? (
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                                  isBistot
+                                    ? 'bg-amber-950 text-amber-300 border-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.3)] animate-pulse'
+                                    : isGneiss
+                                    ? 'bg-emerald-950 text-emerald-300 border-emerald-500'
+                                    : isArkonor
+                                    ? 'bg-indigo-950 text-indigo-300 border-indigo-500'
+                                    : 'bg-purple-950 text-purple-300 border-purple-500'
+                                }`}>
+                                  {r.highlightBadge}
+                                </span>
+                              ) : (
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                                  r.rank === 1
+                                    ? 'bg-cyan-950 text-cyan-300 border-cyan-700'
+                                    : 'bg-black/60 text-gray-400 border-gray-800'
+                                }`}>
+                                  {r.priorityNote}
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-xs text-gray-400 font-sans mt-0.5 flex flex-wrap items-center gap-3">
+                              <span>{r.estimatedUnits.toLocaleString()} units ({ (r.estimatedUnits * r.unitVolumeM3).toLocaleString() } m³)</span>
+                              {isBistot && <span className="text-amber-400 font-bold font-mono">⭐ CHERRY-PICK THIS ROCK FIRST!</span>}
+                              <span className="text-[10px] text-emerald-400/90 font-mono bg-emerald-950/60 border border-emerald-800/40 px-2 py-0.5 rounded flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                Jita 4-4 ESI
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between sm:justify-end gap-6 text-right font-mono">
+                          <div>
+                            <div className="text-[10px] text-gray-500 uppercase">Unit Price</div>
+                            <div className={`text-xs font-bold ${isBistot ? 'text-amber-300' : 'text-gray-300'}`}>
+                              {r.unitPrice.toLocaleString()} ISK
+                            </div>
+                          </div>
+
+                          <div>
+                            <div className="text-[10px] text-gray-500 uppercase">Profit Density</div>
+                            <div className={`text-base font-bold ${isBistot ? 'text-amber-300 font-extrabold text-lg' : isGneiss ? 'text-emerald-400' : 'text-green-400'}`}>
+                              {Math.round(r.iskPerM3).toLocaleString()} <span className="text-xs font-normal text-gray-400">ISK/m³</span>
+                            </div>
+                          </div>
+
+                          <div>
+                            <div className="text-[10px] text-gray-500 uppercase">Total Value</div>
+                            <div className={`text-base font-bold ${isBistot ? 'text-amber-300 font-extrabold text-lg' : 'text-amber-300'}`}>
+                              {formatIsk(r.totalValue)}
+                            </div>
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between sm:justify-end gap-6 text-right font-mono">
-                        <div>
-                          <div className="text-[10px] text-gray-500 uppercase">Unit Price</div>
-                          <div className={`text-xs font-bold ${isBistot ? 'text-amber-300' : 'text-gray-300'}`}>
-                            {r.unitPrice.toLocaleString()} ISK
-                          </div>
+                      {/* Reprocess Mineral Breakdown Pills (User requested: which rock has what materials, such as isogen) */}
+                      {r.minerals && r.minerals.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1.5 pt-2.5 border-t border-white/5">
+                          <span className="text-[10px] text-slate-400 font-sans uppercase font-bold flex items-center gap-1 mr-1">
+                            <FlaskConical className="w-3 h-3 text-cyan-400" /> Reprocess (100 units):
+                          </span>
+                          {r.minerals.map(m => {
+                            const isIso = m.mineral.toLowerCase() === 'isogen';
+                            return (
+                              <span
+                                key={m.mineral}
+                                className={`text-[11px] font-mono px-2 py-0.5 rounded-md flex items-center gap-1 transition-all ${
+                                  isIso
+                                    ? 'bg-cyan-950 text-cyan-200 border border-cyan-400 font-bold shadow-[0_0_10px_rgba(6,182,212,0.35)] ring-1 ring-cyan-400/40'
+                                    : m.isKey
+                                    ? 'bg-amber-950/70 text-amber-200 border border-amber-500/60 font-bold'
+                                    : 'bg-black/50 text-slate-300 border border-white/10'
+                                }`}
+                                title={`${r.name} yields ~${m.amount.toLocaleString()} ${m.mineral} per 100 units base`}
+                              >
+                                {isIso && <Zap className="w-3 h-3 text-cyan-400 fill-cyan-400 animate-pulse" />}
+                                <span>{m.mineral}:</span>
+                                <span className={isIso ? 'text-cyan-300 font-bold' : 'text-slate-100'}>
+                                  ~{m.amount.toLocaleString()}
+                                </span>
+                              </span>
+                            );
+                          })}
                         </div>
-
-                        <div>
-                          <div className="text-[10px] text-gray-500 uppercase">Profit Density</div>
-                          <div className={`text-base font-bold ${isBistot ? 'text-amber-300 font-extrabold text-lg' : isGneiss ? 'text-emerald-400' : 'text-green-400'}`}>
-                            {Math.round(r.iskPerM3).toLocaleString()} <span className="text-xs font-normal text-gray-400">ISK/m³</span>
-                          </div>
-                        </div>
-
-                        <div>
-                          <div className="text-[10px] text-gray-500 uppercase">Total Value</div>
-                          <div className={`text-base font-bold ${isBistot ? 'text-amber-300 font-extrabold text-lg' : 'text-amber-300'}`}>
-                            {formatIsk(r.totalValue)}
-                          </div>
-                        </div>
-                      </div>
+                      )}
                     </div>
                   );
                 })}
@@ -738,6 +869,181 @@ TPK-381\tOutpost Frontier Stronghold\tCombat Site\t100.0%\t0.49 AU`;
             </div>
           </div>
         )}
+
+      {/* New Eden Ore & Mineral Reprocess Matrix Modal */}
+      {showMineralMatrixModal && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+          onClick={() => setShowMineralMatrixModal(false)}
+        >
+          <div 
+            className="w-full max-w-4xl bg-[#090d16] border border-cyan-500/30 rounded-2xl p-6 shadow-2xl flex flex-col max-h-[88vh] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-white/10 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-400 flex items-center justify-center">
+                  <FlaskConical className="w-6 h-6 text-cyan-400" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                    New Eden Ore &amp; Mineral Matrix
+                    <span className="text-xs px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500 font-mono">
+                      100-Unit Batch Yields
+                    </span>
+                  </h2>
+                  <p className="text-xs text-slate-400 font-sans mt-0.5">
+                    Which rock gives what materials? Easily track Isogen, Mexallon, Megacyte, and Zydrine sources.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowMineralMatrixModal(false)}
+                className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Search & Filter */}
+            <div className="py-3 flex flex-col sm:flex-row gap-3 border-b border-white/5 shrink-0">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={matrixSearch}
+                  onChange={(e) => setMatrixSearch(e.target.value)}
+                  placeholder="Search rock (e.g. Gneiss, Bistot) or mineral (e.g. Isogen, Zydrine)..."
+                  className="w-full pl-9 pr-3 py-2 rounded-xl bg-black/50 border border-white/10 text-xs text-white placeholder:text-slate-500 outline-none focus:border-cyan-400 font-mono"
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center gap-1.5">
+                {['Isogen', 'Mexallon', 'Zydrine', 'Megacyte', 'Nocxium'].map(min => (
+                  <button
+                    key={min}
+                    onClick={() => setMatrixSearch(matrixSearch.toLowerCase() === min.toLowerCase() ? '' : min)}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+                      matrixSearch.toLowerCase() === min.toLowerCase()
+                        ? min === 'Isogen'
+                          ? 'bg-cyan-400 text-black font-bold shadow-md shadow-cyan-400/50'
+                          : 'bg-white text-black font-bold'
+                        : min === 'Isogen'
+                        ? 'bg-cyan-950/60 hover:bg-cyan-900/80 text-cyan-300 border border-cyan-500/40'
+                        : 'bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    {min === 'Isogen' ? '⚡ ' + min : min}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Matrix Table */}
+            <div className="flex-1 overflow-y-auto mt-3 pr-1 space-y-2.5">
+              {Object.entries(ORE_MINERAL_YIELDS)
+                .filter(([oreName, yields]) => {
+                  if (!matrixSearch.trim()) return true;
+                  const q = matrixSearch.toLowerCase().trim();
+                  if (oreName.toLowerCase().includes(q)) return true;
+                  return yields.some(y => y.mineral.toLowerCase().includes(q));
+                })
+                .map(([oreName, yields]) => {
+                  const hasIso = yields.some(y => y.mineral.toLowerCase() === 'isogen');
+                  const isGneiss = oreName.toLowerCase().includes('gneiss');
+                  const isBistot = oreName.toLowerCase().includes('bistot');
+                  const isArkonor = oreName.toLowerCase().includes('arkonor');
+
+                  // Location hints
+                  let locationHint = 'Known Space & Highsec';
+                  if (isGneiss) locationHint = '🌌 Wormhole (C1–C3) & Lowsec';
+                  else if (isBistot) locationHint = '🌌 Wormhole (C1–C3) & Nullsec';
+                  else if (isArkonor) locationHint = '🌌 Wormhole (C1–C3) & Nullsec';
+                  else if (oreName === 'Kernite') locationHint = '🌌 Wormhole & High/Lowsec';
+                  else if (oreName === 'Omber') locationHint = '🌌 Wormhole & High/Lowsec';
+                  else if (oreName === 'Dark Ochre') locationHint = 'Deep Nullsec & WH';
+                  else if (oreName === 'Hedbergite' || oreName === 'Hemorphite') locationHint = 'Lowsec & WH';
+                  else if (oreName === 'Spodumain') locationHint = 'Nullsec & High-Class WH';
+
+                  return (
+                    <div
+                      key={oreName}
+                      className={`p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all ${
+                        isGneiss
+                          ? 'bg-gradient-to-r from-emerald-950/40 via-cyan-950/20 to-black/40 border-emerald-500/60 ring-1 ring-cyan-500/30'
+                          : hasIso
+                          ? 'bg-cyan-950/20 border-cyan-500/40'
+                          : isBistot
+                          ? 'bg-amber-950/30 border-amber-500/50'
+                          : isArkonor
+                          ? 'bg-indigo-950/30 border-indigo-500/50'
+                          : 'bg-black/40 border-white/5'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-black/60 border border-white/10 flex items-center justify-center font-bold text-sm shrink-0">
+                          ⛏️
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-sm text-white">{oreName}</span>
+                            {hasIso && (
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.3)] flex items-center gap-0.5">
+                                <Zap className="w-2.5 h-2.5 text-cyan-400 fill-cyan-400" /> High Isogen
+                              </span>
+                            )}
+                            {isGneiss && (
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-400">
+                                ⭐ Top Pick
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[11px] text-slate-400 font-sans mt-0.5">
+                            {locationHint}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Yields Breakdown */}
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {yields.map(y => {
+                          const isIso = y.mineral.toLowerCase() === 'isogen';
+                          return (
+                            <span
+                              key={y.mineral}
+                              className={`text-xs font-mono px-2 py-0.5 rounded-md flex items-center gap-1 ${
+                                isIso
+                                  ? 'bg-cyan-950 text-cyan-200 border border-cyan-400 font-bold shadow-sm'
+                                  : y.isKey
+                                  ? 'bg-amber-950/70 text-amber-200 border border-amber-500/60 font-bold'
+                                  : 'bg-black/60 text-slate-300 border border-white/10'
+                              }`}
+                            >
+                              <span>{y.mineral}:</span>
+                              <strong className={isIso ? 'text-cyan-300' : 'text-white'}>~{y.amount.toLocaleString()}</strong>
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+
+            <div className="pt-3 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-500 font-mono shrink-0">
+              <span>* Base yields calculated per 100 units of ore before reprocessing skills / structure rigs.</span>
+              <button
+                onClick={() => setShowMineralMatrixModal(false)}
+                className="text-cyan-400 hover:text-cyan-300 font-bold cursor-pointer"
+              >
+                Close Matrix
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
     </div>
   );
