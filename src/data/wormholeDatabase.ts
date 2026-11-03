@@ -167,6 +167,19 @@ export function getWormholeSystemMetadata(systemName: string): WormholeSystemInf
     return KNOWN_WORMHOLES[cleanName];
   }
 
+  const isJSystem = cleanName.startsWith('J') && /^J\d{6}$/.test(cleanName);
+  if (!isJSystem) {
+    return {
+      systemName: cleanName,
+      wormholeClass: 'Unknown',
+      effect: 'No Effect',
+      effectDescription: 'Known Space system',
+      statics: [],
+      topGasSites: [],
+      topOreSites: []
+    };
+  }
+
   const num = parseInt(cleanName.replace(/\D/g, ''), 10) || 0;
   let whClass: WormholeSystemInfo['wormholeClass'] = 'C3';
 

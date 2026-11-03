@@ -33,9 +33,7 @@
           "timestamp": "02:50"
         }
       ],
-      "activePilots": [
-        "Ennis Urbanski"
-      ],
+      "activePilots": [],
       "signatures": [
         {
           "id": "sig-1793674090447-GFV-740",
@@ -118,7 +116,7 @@
           "createdTime": "02:48"
         }
       ],
-      "lastUpdated": "02:48",
+      "lastUpdated": "03:34",
       "x": 415,
       "y": -32,
       "isCollapsed": false
@@ -212,7 +210,7 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "01:32",
+      "lastUpdated": "03:34",
       "x": 970,
       "y": 31
     },
@@ -224,7 +222,7 @@
       "structures": [],
       "activePilots": [],
       "signatures": [],
-      "lastUpdated": "01:51",
+      "lastUpdated": "03:34",
       "x": 961,
       "y": 152
     },
@@ -251,7 +249,10 @@
           "timestamp": "01:59"
         }
       ],
-      "activePilots": [],
+      "activePilots": [
+        "USS Hauler",
+        "Syndra en Tilavine"
+      ],
       "signatures": [
         {
           "id": "sig-1793671427504-OQO-022",
@@ -344,9 +345,9 @@
           "createdTime": "02:03"
         }
       ],
-      "lastUpdated": "02:03",
-      "x": 1141,
-      "y": 160
+      "lastUpdated": "03:34",
+      "x": 1319,
+      "y": 54
     },
     "J121452": {
       "id": "J121452",
@@ -357,9 +358,7 @@
         "Highsec"
       ],
       "structures": [],
-      "activePilots": [
-        "Syndra en Tilavine"
-      ],
+      "activePilots": [],
       "signatures": [
         {
           "id": "sig-1793674090447-0.16495396499039972",
@@ -452,9 +451,9 @@
           "createdTime": "02:14"
         }
       ],
-      "lastUpdated": "02:52",
-      "x": 1321,
-      "y": 160
+      "lastUpdated": "03:34",
+      "x": 1318,
+      "y": 175
     },
     "Sotrentaira": {
       "id": "Sotrentaira",
@@ -462,9 +461,7 @@
       "systemClass": "Highsec",
       "statics": [],
       "structures": [],
-      "activePilots": [
-        "USS Hauler"
-      ],
+      "activePilots": [],
       "signatures": [
         {
           "id": "sig-1793673025209-0.6981878736447801",
@@ -640,9 +637,24 @@
           "createdTime": "02:49"
         }
       ],
-      "lastUpdated": "02:49",
-      "x": 1501,
-      "y": 160
+      "lastUpdated": "03:34",
+      "x": 1539,
+      "y": 168
+    },
+    "J105319": {
+      "id": "J105319",
+      "name": "J105319",
+      "systemClass": "C2",
+      "statics": [
+        "C2",
+        "Highsec"
+      ],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "03:34",
+      "x": 1719,
+      "y": 285
     }
   },
   "connections": [
@@ -706,6 +718,46 @@
       "id": "conn-1793674148000",
       "from": "J121452",
       "to": "Sagain",
+      "wormholeType": "Wormhole",
+      "massStatus": "stable",
+      "timeStatus": "stable"
+    },
+    {
+      "id": "conn-1793675340258",
+      "from": "Iidoken",
+      "to": "J121452",
+      "wormholeType": "Wormhole",
+      "massStatus": "stable",
+      "timeStatus": "stable"
+    },
+    {
+      "id": "conn-1793676667241-53",
+      "from": "Sobaseki",
+      "to": "Veisto",
+      "wormholeType": "Stargate",
+      "massStatus": "stable",
+      "timeStatus": "stable"
+    },
+    {
+      "id": "conn-1793676667241-891",
+      "from": "Veisto",
+      "to": "Iidoken",
+      "wormholeType": "Stargate",
+      "massStatus": "stable",
+      "timeStatus": "stable"
+    },
+    {
+      "id": "conn-1793676855429",
+      "from": "J121452",
+      "to": "J105319",
+      "wormholeType": "Wormhole",
+      "massStatus": "stable",
+      "timeStatus": "stable"
+    },
+    {
+      "id": "conn-1793676855437",
+      "from": "Iidoken",
+      "to": "Jita",
       "wormholeType": "Wormhole",
       "massStatus": "stable",
       "timeStatus": "stable"

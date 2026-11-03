@@ -685,10 +685,17 @@ class MapperService {
 
     this.notify();
 
+    const positions: Record<string, { x: number; y: number }> = {};
+    Object.entries(this.state.systems).forEach(([id, sys]) => {
+      if (typeof sys.x === 'number' && typeof sys.y === 'number') {
+        positions[id] = { x: sys.x, y: sys.y };
+      }
+    });
+
     fetch('/api/map/update', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chainMap: this.state })
+      body: JSON.stringify({ positions })
     }).catch(() => {});
   }
 

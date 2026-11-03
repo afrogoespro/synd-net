@@ -121,6 +121,49 @@ function broadcastUpdate(type, payload) {
   });
 }
 
+// Intelligent collision-free coordinate resolver for newly discovered chain systems
+function getFreeNodePosition(previousSysId) {
+  const existingNodes = Object.values(chainMap.systems).filter(s => typeof s.x === 'number' && typeof s.y === 'number');
+  if (existingNodes.length === 0) return { x: 578, y: 160 };
+
+  const prevNode = previousSysId && chainMap.systems[previousSysId];
+  let candidateX = 578;
+  let candidateY = 160;
+
+  if (prevNode && typeof prevNode.x === 'number' && typeof prevNode.y === 'number') {
+    candidateY = prevNode.y + 110;
+    // Find all siblings already connected to prevNode
+    const siblings = chainMap.connections
+      .filter(c => c.from === previousSysId || c.to === previousSysId)
+      .map(c => c.from === previousSysId ? c.to : c.from)
+      .filter(id => id !== previousSysId && chainMap.systems[id] && typeof chainMap.systems[id].x === 'number');
+
+    if (siblings.length > 0) {
+      const maxX = Math.max(...siblings.map(id => chainMap.systems[id].x));
+      candidateX = maxX + 180;
+    } else {
+      candidateX = prevNode.x;
+    }
+  } else {
+    const maxX = Math.max(...existingNodes.map(s => s.x));
+    candidateX = maxX + 180;
+    candidateY = 160;
+  }
+
+  // Prevent overlap with ANY existing node
+  let attempts = 0;
+  while (attempts < 40) {
+    const hit = existingNodes.some(s => Math.abs(s.x - candidateX) < 165 && Math.abs(s.y - candidateY) < 85);
+    if (!hit) break;
+    candidateX += 180;
+    attempts++;
+  }
+
+  return { x: candidateX, y: candidateY };
+}
+
+
+
 const server = http.createServer((req, res) => {
   // Allow LAN access so your buddy can connect from their laptop/PC
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -489,46 +532,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-// Intelligent collision-free coordinate resolver for newly discovered chain systems
-function getFreeNodePosition(previousSysId) {
-  const existingNodes = Object.values(chainMap.systems).filter(s => typeof s.x === 'number' && typeof s.y === 'number');
-  if (existingNodes.length === 0) return { x: 578, y: 160 };
 
-  const prevNode = previousSysId && chainMap.systems[previousSysId];
-  let candidateX = 578;
-  let candidateY = 160;
-
-  if (prevNode && typeof prevNode.x === 'number' && typeof prevNode.y === 'number') {
-    candidateY = prevNode.y + 110;
-    // Find all siblings already connected to prevNode
-    const siblings = chainMap.connections
-      .filter(c => c.from === previousSysId || c.to === previousSysId)
-      .map(c => c.from === previousSysId ? c.to : c.from)
-      .filter(id => id !== previousSysId && chainMap.systems[id] && typeof chainMap.systems[id].x === 'number');
-
-    if (siblings.length > 0) {
-      const maxX = Math.max(...siblings.map(id => chainMap.systems[id].x));
-      candidateX = maxX + 180;
-    } else {
-      candidateX = prevNode.x;
-    }
-  } else {
-    const maxX = Math.max(...existingNodes.map(s => s.x));
-    candidateX = maxX + 180;
-    candidateY = 160;
-  }
-
-  // Prevent overlap with ANY existing node
-  let attempts = 0;
-  while (attempts < 40) {
-    const hit = existingNodes.some(s => Math.abs(s.x - candidateX) < 165 && Math.abs(s.y - candidateY) < 85);
-    if (!hit) break;
-    candidateX += 180;
-    attempts++;
-  }
-
-  return { x: candidateX, y: candidateY };
-}
 
   // Update pilot location (e.g. buddy sets their location or moves)
   if (req.url === '/api/map/pilot' && req.method === 'POST') {
@@ -813,7 +817,28 @@ function detectHostCharacterName() {
   return null;
 }
 
-let hostPilotName = detectHostCharacterName();
+function normalizePilot(pilot) {
+  if (!pilot) return 'Fleet Scout';
+  const p = pilot.trim();
+  if (p.toLowerCase().includes('ennis') || p.toLowerCase().includes('hauler')) {
+    return 'USS Hauler';
+  }
+  if (p.toLowerCase().includes('syndra')) {
+    return 'Syndra en Tilavine';
+  }
+  return p;
+}
+
+function isMatchingPilot(entry, target) {
+  const e = (entry || '').toLowerCase();
+  const t = (target || '').toLowerCase();
+  if (e === t) return true;
+  if ((e.includes('ennis') || e.includes('hauler')) && (t.includes('ennis') || t.includes('hauler'))) return true;
+  if (e.includes('syndra') && t.includes('syndra')) return true;
+  return false;
+}
+
+let hostPilotName = normalizePilot(detectHostCharacterName());
 console.log(`[Host Character Identified] Flying as: ${hostPilotName || 'Awaiting Pilot Sign In'}`);
 
 const pilotLastSystem = new Map(); // pilotName -> lastSystemName
@@ -822,7 +847,7 @@ function handleSystemTransition(newSys, fromSys, customPilot) {
   if (!newSys) return;
   newSys = newSys.trim();
 
-  const activePilot = customPilot || hostPilotName || 'Fleet Scout';
+  const activePilot = normalizePilot(customPilot || hostPilotName || 'Fleet Scout');
   const lastSysForPilot = pilotLastSystem.get(activePilot);
 
   if (newSys === lastSysForPilot) return;
@@ -844,12 +869,12 @@ function handleSystemTransition(newSys, fromSys, customPilot) {
     else whClass = 'C2';
   }
 
-  // Remove host pilot from other systems so marker stays only on current system
+  // Remove this pilot from other systems so marker stays only on current system
   Object.values(chainMap.systems).forEach(sys => {
-    sys.activePilots = (sys.activePilots || []).filter(p => !p.includes(activePilot));
+    sys.activePilots = (sys.activePilots || []).filter(p => !isMatchingPilot(p, activePilot));
   });
 
-  const hostTag = `${activePilot}`;
+  const hostTag = activePilot;
   const { x: newX, y: newY } = getFreeNodePosition(previous);
 
   if (!chainMap.systems[newSys]) {
@@ -857,7 +882,7 @@ function handleSystemTransition(newSys, fromSys, customPilot) {
       id: newSys,
       name: newSys,
       systemClass: whClass,
-      statics: whClass === 'C2' ? ['C2', 'Highsec'] : whClass === 'C3' ? ['Lowsec'] : [],
+      statics: whClass.startsWith('C') ? [whClass, 'Highsec'] : [],
       structures: [],
       activePilots: [hostTag],
       signatures: [],
@@ -869,7 +894,7 @@ function handleSystemTransition(newSys, fromSys, customPilot) {
     if (chainMap.systems[newSys].x === undefined) chainMap.systems[newSys].x = newX;
     if (chainMap.systems[newSys].y === undefined) chainMap.systems[newSys].y = newY;
     chainMap.systems[newSys].activePilots = chainMap.systems[newSys].activePilots || [];
-    if (!chainMap.systems[newSys].activePilots.includes(hostTag)) {
+    if (!chainMap.systems[newSys].activePilots.some(p => isMatchingPilot(p, hostTag))) {
       chainMap.systems[newSys].activePilots.push(hostTag);
     }
     chainMap.systems[newSys].lastUpdated = getEveTimeString();
@@ -932,7 +957,8 @@ function pollActiveChatlogs() {
           return { file: full, mtime: fs.statSync(full).mtime.getTime() };
         } catch { return null; }
       })
-      .filter(f => f && (now - f.mtime) < 4 * 60 * 60 * 1000);
+      .filter(f => f && (now - f.mtime) < 4 * 60 * 60 * 1000)
+      .sort((a, b) => a.mtime - b.mtime);
   } catch (e) {
     return;
   }
@@ -942,7 +968,7 @@ function pollActiveChatlogs() {
       const stat = fs.statSync(file);
       if (!trackedChatFiles.has(file)) {
         // Read recent jumps from end of file on startup (even offset for utf16le)
-        let startOffset = Math.max(0, stat.size - 4000);
+        let startOffset = Math.max(0, stat.size - 60000);
         if (startOffset % 2 !== 0) startOffset--;
         trackedChatFiles.set(file, startOffset);
       }
@@ -1003,7 +1029,8 @@ function pollActiveGamelogs() {
           return { file: full, mtime: fs.statSync(full).mtime.getTime() };
         } catch { return null; }
       })
-      .filter(f => f && (now - f.mtime) < 4 * 60 * 60 * 1000);
+      .filter(f => f && (now - f.mtime) < 4 * 60 * 60 * 1000)
+      .sort((a, b) => a.mtime - b.mtime);
   } catch (e) {
     return;
   }
@@ -1012,7 +1039,7 @@ function pollActiveGamelogs() {
     try {
       const stat = fs.statSync(file);
       if (!trackedGameFiles.has(file)) {
-        trackedGameFiles.set(file, Math.max(0, stat.size - 4000));
+        trackedGameFiles.set(file, Math.max(0, stat.size - 60000));
       }
 
       const prevSize = trackedGameFiles.get(file);

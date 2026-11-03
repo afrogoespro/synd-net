@@ -407,7 +407,7 @@ export const ChainMapperView: React.FC = () => {
     }
   };
 
-  // Live GalaxyFinder Follow-Me auto-tracking
+  // Live GalaxyFinder Follow-Me auto-tracking & Jump Signature Prompt
   useEffect(() => {
     const unsubJump = mapperService.onJump((jump) => {
       setSelectedSystemId(jump.systemName);
@@ -422,9 +422,26 @@ export const ChainMapperView: React.FC = () => {
           centerOnSystem(jump.systemName);
         }, 120);
       }
+
+      // Automatically prompt signature & origin modal when pilot jumps out or between systems!
+      if (jump.fromSystem && jump.systemName && jump.fromSystem !== jump.systemName) {
+        const isWh = jump.isWormhole || jump.systemName.startsWith('J') || jump.fromSystem.startsWith('J');
+        const existingConn = mapState.connections.find(
+          c => (c.from === jump.fromSystem && c.to === jump.systemName) || (c.from === jump.systemName && c.to === jump.fromSystem)
+        );
+        setSelectedConnection(existingConn || {
+          id: `conn-${Date.now()}`,
+          from: jump.fromSystem,
+          to: jump.systemName,
+          wormholeType: isWh ? 'Wormhole' : 'Stargate',
+          massStatus: 'stable',
+          timeStatus: 'stable'
+        });
+        setIsConnModalOpen(true);
+      }
     });
     return () => unsubJump();
-  }, [followMe, zoom, mapState.systems]);
+  }, [followMe, zoom, mapState.systems, mapState.connections]);
 
   // Real-time matching systems for quick search & scan
   const matchingSystems = useMemo(() => {
@@ -1434,14 +1451,63 @@ export const ChainMapperView: React.FC = () => {
               const toSys = mapState.systems[conn.to];
               if (!fromSys || !toSys) return null;
 
-              const x1 = (fromSys.x !== undefined ? fromSys.x : 578) + NODE_W / 2;
-              const y1 = (fromSys.y !== undefined ? fromSys.y : 160) + NODE_H;
-              const x2 = (toSys.x !== undefined ? toSys.x : 578) + NODE_W / 2;
-              const y2 = toSys.y !== undefined ? toSys.y : 160;
+              const fx = fromSys.x !== undefined ? fromSys.x : 578;
+              const fy = fromSys.y !== undefined ? fromSys.y : 160;
+              const tx = toSys.x !== undefined ? toSys.x : 578;
+              const ty = toSys.y !== undefined ? toSys.y : 160;
+
+              const fcx = fx + NODE_W / 2;
+              const fcy = fy + NODE_H / 2;
+              const tcx = tx + NODE_W / 2;
+              const tcy = ty + NODE_H / 2;
+
+              const dx = tcx - fcx;
+              const dy = tcy - fcy;
+
+              let x1: number, y1: number, x2: number, y2: number;
+              let pathData: string;
+
+              // Check if connection is predominantly horizontal (side-by-side) or vertical (tree layout)
+              if (Math.abs(dx) >= Math.abs(dy)) {
+                if (dx >= 0) {
+                  // To is to the right of From
+                  x1 = fx + NODE_W;
+                  y1 = fcy;
+                  x2 = tx;
+                  y2 = tcy;
+                  const cdx = Math.max(25, Math.abs(x2 - x1) * 0.45);
+                  pathData = `M ${x1} ${y1} C ${x1 + cdx} ${y1}, ${x2 - cdx} ${y2}, ${x2} ${y2}`;
+                } else {
+                  // To is to the left of From
+                  x1 = fx;
+                  y1 = fcy;
+                  x2 = tx + NODE_W;
+                  y2 = tcy;
+                  const cdx = Math.max(25, Math.abs(x2 - x1) * 0.45);
+                  pathData = `M ${x1} ${y1} C ${x1 - cdx} ${y1}, ${x2 + cdx} ${y2}, ${x2} ${y2}`;
+                }
+              } else {
+                if (dy >= 0) {
+                  // To is below From (standard tree downward)
+                  x1 = fcx;
+                  y1 = fy + NODE_H;
+                  x2 = tcx;
+                  y2 = ty;
+                  const cdy = Math.max(20, Math.abs(y2 - y1) * 0.45);
+                  pathData = `M ${x1} ${y1} C ${x1} ${y1 + cdy}, ${x2} ${y2 - cdy}, ${x2} ${y2}`;
+                } else {
+                  // To is above From (upward)
+                  x1 = fcx;
+                  y1 = fy;
+                  x2 = tcx;
+                  y2 = ty + NODE_H;
+                  const cdy = Math.max(20, Math.abs(y2 - y1) * 0.45);
+                  pathData = `M ${x1} ${y1} C ${x1} ${y1 - cdy}, ${x2} ${y2 + cdy}, ${x2} ${y2}`;
+                }
+              }
 
               const midY = (y1 + y2) / 2;
               const midX = (x1 + x2) / 2;
-              const pathData = `M ${x1} ${y1} L ${x1} ${midY} L ${x2} ${midY} L ${x2} ${y2}`;
 
               const isStargate = conn.wormholeType === 'Stargate';
               const isEOL = conn.timeStatus === 'eol';
@@ -1890,29 +1956,40 @@ export const ChainMapperView: React.FC = () => {
                       )}
                     </div>
 
-                    {/* Pilot Icon Badge (Shows user icon and tooltip on hover, click to center) */}
+                    {/* Pilot Icon Badges (Clean icon badges without dangling names underneath) */}
                     {pilotCount > 0 && (
                       <div 
-                        className="absolute -top-2 -right-2 z-30 group/pilot pointer-events-auto"
+                        className="absolute -top-2.5 -right-2 z-30 group/pilot flex items-center -space-x-1 pointer-events-auto"
                         title={`Pilots in ${node.name}: ${sortedPilots.join(', ')}`}
                       >
-                        <div 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedSystemId(node.id);
-                            centerOnSystem(node.id);
-                          }}
-                          className={`h-5 px-1.5 rounded-full flex items-center justify-center gap-0.5 shadow-lg border cursor-pointer hover:scale-110 transition-transform ${
-                            sortedPilots.some(p => currentPilot && p.toLowerCase().includes(currentPilot.characterName.toLowerCase()))
-                              ? 'bg-cyan-500 text-black border-cyan-300 ring-2 ring-cyan-400/50 shadow-[0_0_12px_rgba(6,182,212,0.6)] font-bold'
-                              : 'bg-purple-600 border-purple-300 text-white shadow-[0_0_12px_rgba(168,85,247,0.8)] font-bold'
-                          }`}
-                        >
-                          <User className="w-3 h-3 shrink-0" />
-                          {pilotCount > 1 && (
-                            <span className="text-[9px] font-bold leading-none">{pilotCount}</span>
-                          )}
-                        </div>
+                        {sortedPilots.map((pilotName, pIdx) => {
+                          const isSyndra = pilotName.toLowerCase().includes('syndra');
+                          const isHauler = pilotName.toLowerCase().includes('hauler') || pilotName.toLowerCase().includes('ennis');
+                          const isMe = currentPilot && pilotName.toLowerCase().includes(currentPilot.characterName.toLowerCase());
+
+                          const badgeStyle = isSyndra
+                            ? 'bg-cyan-500 text-black border-cyan-200 ring-2 ring-cyan-400/60 shadow-[0_0_12px_rgba(6,182,212,0.8)]'
+                            : isHauler
+                            ? 'bg-purple-600 text-white border-purple-200 ring-2 ring-purple-400/60 shadow-[0_0_12px_rgba(168,85,247,0.8)]'
+                            : 'bg-emerald-600 text-white border-emerald-200 ring-2 ring-emerald-400/60 shadow-[0_0_12px_rgba(16,185,129,0.8)]';
+
+                          const pilotInit = isSyndra ? 'S' : isHauler ? 'H' : pilotName.slice(0, 1).toUpperCase();
+
+                          return (
+                            <div 
+                              key={pIdx}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedSystemId(node.id);
+                                centerOnSystem(node.id);
+                              }}
+                              className={`h-5 min-w-[20px] px-1 rounded-full flex items-center justify-center gap-0.5 shadow-lg border cursor-pointer hover:scale-125 transition-transform text-[9px] font-black ${badgeStyle}`}
+                            >
+                              <User className="w-2.5 h-2.5 shrink-0" />
+                              <span>{pilotInit}</span>
+                            </div>
+                          );
+                        })}
 
                         {/* Hover Tooltip with Alphabetical Pilot Names */}
                         <div className={`opacity-0 group-hover/pilot:opacity-100 pointer-events-none group-hover/pilot:pointer-events-auto transition-all duration-150 absolute top-full right-0 mt-1 min-w-[170px] p-2.5 rounded-2xl backdrop-blur-2xl border shadow-2xl z-50 animate-in fade-in zoom-in-95 ${
