@@ -1455,18 +1455,19 @@ export const ChainMapperView: React.FC = () => {
               // Critical mass = orange/red (#f97316)
               const destClass = toSys.systemClass;
               const whClassColor = getSystemClassColor(destClass);
+              // Stargates & Known Space = solid emerald (#22c55e)
+              // Wormholes = solid class color
+              // Dashed line is ONLY for EOL (<4h remaining)
               let strokeColor = isStargate ? '#22c55e' : whClassColor;
-              let strokeDash: string | undefined = isStargate ? undefined : '6 3';
+              let strokeDash: string | undefined = undefined; // Default solid for all normal connections and known space
 
               if (isEOL) {
                 strokeColor = '#ef4444'; // EOL Bright Red
-                strokeDash = '5 3';
+                strokeDash = '6 4'; // Dashed line ONLY for EOL (<4h remaining)
               } else if (isCrit) {
-                strokeColor = '#f97316'; // Orange Critical
-                strokeDash = '4 3';
+                strokeColor = '#f97316'; // Orange Critical Mass
               } else if (isDestab) {
-                strokeColor = '#eab308'; // Amber Destabilized
-                strokeDash = '6 3';
+                strokeColor = '#eab308'; // Amber Destabilized Mass
               }
 
               // Signature label with lifetime badge (<4h EOL / >4h Stable)

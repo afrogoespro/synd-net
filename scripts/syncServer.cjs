@@ -103,6 +103,15 @@ function getEveTimeString() {
 // Connected SSE clients (browsers of you and your buddy)
 let sseClients = [];
 
+// Send periodic SSE keep-alive ping every 15s to keep Cloudflare tunnels alive indefinitely
+setInterval(() => {
+  sseClients.forEach(res => {
+    try {
+      res.write(': ping\n\n');
+    } catch (e) {}
+  });
+}, 15000);
+
 function broadcastUpdate(type, payload) {
   const data = JSON.stringify({ type, payload, timestamp: new Date().toISOString() });
   sseClients.forEach(res => {
@@ -128,8 +137,10 @@ const server = http.createServer((req, res) => {
   if (req.url === '/api/map/stream') {
     res.writeHead(200, {
       'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive'
+      'Cache-Control': 'no-cache, no-transform',
+      'Connection': 'keep-alive',
+      'X-Accel-Buffering': 'no',
+      'Access-Control-Allow-Origin': '*'
     });
 
     // Send initial full map immediately upon buddy connecting
@@ -886,6 +897,7 @@ function handleSystemTransition(newSys, fromSys, customPilot) {
 
   broadcastUpdate('MAP_UPDATE', chainMap);
   broadcastUpdate('JUMP', { 
+    pilot: activePilot,
     systemName: newSys, 
     fromSystem: previous,
     isWormhole: isWormhole

@@ -71,6 +71,11 @@ class MapperService {
   constructor() {
     this.fetchInitialState();
     this.connectStream();
+
+    // Dual-engine live sync: Background poll every 3s as fallback so buddy location NEVER lags even if SSE reconnects
+    setInterval(() => {
+      this.fetchInitialState();
+    }, 3000);
   }
 
   private async fetchInitialState() {
@@ -79,8 +84,12 @@ class MapperService {
       if (res.ok) {
         const data = await res.json();
         if (data && data.systems) {
-          this.state = data;
-          this.notify();
+          const prevJson = JSON.stringify(this.state);
+          const newJson = JSON.stringify(data);
+          if (prevJson !== newJson) {
+            this.state = data;
+            this.notify();
+          }
         }
       }
     } catch {}
@@ -88,6 +97,11 @@ class MapperService {
 
   private connectStream() {
     try {
+      if (this.eventSource) {
+        try { this.eventSource.close(); } catch {}
+        this.eventSource = null;
+      }
+
       this.eventSource = new EventSource('/api/map/stream');
       
       this.eventSource.onmessage = (e) => {
@@ -112,7 +126,12 @@ class MapperService {
       };
 
       this.eventSource.onerror = () => {
-        // Fallback silently if sync server isn't running
+        // Automatically reconnect to SSE stream after brief pause if disconnected
+        if (this.eventSource) {
+          try { this.eventSource.close(); } catch {}
+          this.eventSource = null;
+        }
+        setTimeout(() => this.connectStream(), 2000);
       };
     } catch {}
   }

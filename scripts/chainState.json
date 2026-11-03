@@ -38,87 +38,87 @@
       ],
       "signatures": [
         {
-          "id": "sig-1793672892238-0.7337120962105245",
+          "id": "sig-1793672978541-0.5049356883471994",
           "sigId": "GFV-740",
           "type": "Wormhole",
           "name": "Unstable Wormhole",
           "group": "Wormhole",
           "distance": "6.39 AU",
           "signalPercent": 100,
-          "createdTime": "02:28"
+          "createdTime": "02:29"
         },
         {
-          "id": "sig-1793672892238-0.016837521938875777",
+          "id": "sig-1793672978541-0.15018087167508043",
           "sigId": "OHP-280",
           "type": "Wormhole",
           "name": "Unstable Wormhole",
           "group": "Wormhole",
           "distance": "18.96 AU",
           "signalPercent": 100,
-          "createdTime": "02:28"
+          "createdTime": "02:29"
         },
         {
-          "id": "sig-1793672892238-0.12253607269338196",
+          "id": "sig-1793672978541-0.8561280215348576",
           "sigId": "OQO-022",
           "type": "Wormhole",
           "name": "Unstable Wormhole",
           "group": "Wormhole",
           "distance": "3.624 m",
           "signalPercent": 100,
-          "createdTime": "02:28"
+          "createdTime": "02:29"
         },
         {
-          "id": "sig-1793672892238-0.13370043708889967",
+          "id": "sig-1793672978541-0.6946576092070811",
           "sigId": "MWB-836",
           "type": "Gas",
           "name": "Barren Perimeter Reservoir",
           "group": "Gas Site",
           "distance": "7.36 AU",
           "signalPercent": 100,
-          "createdTime": "02:28"
+          "createdTime": "02:29"
         },
         {
-          "id": "sig-1793672892238-0.945947554049432",
+          "id": "sig-1793672978541-0.6483872606542018",
           "sigId": "BDI-439",
           "type": "Gas",
           "name": "Gas Site",
           "group": "Gas Site",
           "distance": "2.63 AU",
           "signalPercent": 100,
-          "createdTime": "02:28"
+          "createdTime": "02:29"
         },
         {
-          "id": "sig-1793672892238-0.39767747105967943",
+          "id": "sig-1793672978541-0.3414927736797525",
           "sigId": "EYK-128",
           "type": "Gas",
           "name": "Gas Site",
           "group": "Gas Site",
           "distance": "3.57 AU",
           "signalPercent": 100,
-          "createdTime": "02:28"
+          "createdTime": "02:29"
         },
         {
-          "id": "sig-1793672892238-0.48452912691673256",
+          "id": "sig-1793672978541-0.1519557274597073",
           "sigId": "QHV-410",
           "type": "Data",
           "name": "Data Site",
           "group": "Data Site",
           "distance": "9.61 AU",
           "signalPercent": 100,
-          "createdTime": "02:28"
+          "createdTime": "02:29"
         },
         {
-          "id": "sig-1793672892238-0.28529963354649956",
+          "id": "sig-1793672978541-0.6672730202688278",
           "sigId": "MUL-248",
           "type": "Anomaly",
           "name": "Cosmic Signature",
           "group": "Unknown",
           "distance": "14.92 AU",
           "signalPercent": 100,
-          "createdTime": "02:28"
+          "createdTime": "02:29"
         }
       ],
-      "lastUpdated": "02:28",
+      "lastUpdated": "02:30",
       "x": 415,
       "y": -32,
       "isCollapsed": false
@@ -465,87 +465,87 @@
       ],
       "signatures": [
         {
-          "id": "sig-1793672841566-GFV-740",
+          "id": "sig-1793673025209-0.6981878736447801",
           "sigId": "GFV-740",
-          "type": "Anomaly",
+          "type": "Wormhole",
           "name": "Unstable Wormhole",
-          "group": "Cosmic Signature",
-          "distance": "6,39 AU",
+          "group": "Wormhole",
+          "distance": "6.39 AU",
           "signalPercent": 100,
-          "createdTime": "02:27"
+          "createdTime": "02:30"
         },
         {
-          "id": "sig-1793672841566-OHP-280",
+          "id": "sig-1793673025209-0.6238179429987002",
           "sigId": "OHP-280",
-          "type": "Anomaly",
+          "type": "Wormhole",
           "name": "Unstable Wormhole",
-          "group": "Cosmic Signature",
-          "distance": "18,96 AU",
+          "group": "Wormhole",
+          "distance": "18.96 AU",
           "signalPercent": 100,
-          "createdTime": "02:27"
+          "createdTime": "02:30"
         },
         {
-          "id": "sig-1793672841566-OQO-022",
+          "id": "sig-1793673025209-0.2923671871705056",
           "sigId": "OQO-022",
-          "type": "Anomaly",
+          "type": "Wormhole",
           "name": "Unstable Wormhole",
-          "group": "Cosmic Signature",
-          "distance": "3.624 m",
+          "group": "Wormhole",
+          "distance": "3,624 m",
           "signalPercent": 100,
-          "createdTime": "02:27"
+          "createdTime": "02:30"
         },
         {
-          "id": "sig-1793672841566-MWB-836",
+          "id": "sig-1793673025209-0.6448793981224025",
           "sigId": "MWB-836",
-          "type": "Anomaly",
+          "type": "Gas",
           "name": "Barren Perimeter Reservoir",
-          "group": "Cosmic Signature",
-          "distance": "7,36 AU",
+          "group": "Gas Site",
+          "distance": "7.36 AU",
           "signalPercent": 100,
-          "createdTime": "02:27"
+          "createdTime": "02:30"
         },
         {
-          "id": "sig-1793672841566-BDI-439",
+          "id": "sig-1793673025209-0.38430953423910774",
           "sigId": "BDI-439",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Cosmic Signature",
-          "distance": "2,63 AU",
-          "signalPercent": 0,
-          "createdTime": "02:27"
+          "type": "Gas",
+          "name": "Gas Site",
+          "group": "Gas Site",
+          "distance": "2.63 AU",
+          "signalPercent": 100,
+          "createdTime": "02:30"
         },
         {
-          "id": "sig-1793672841566-EYK-128",
+          "id": "sig-1793673025209-0.041580084007356355",
           "sigId": "EYK-128",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Cosmic Signature",
-          "distance": "3,57 AU",
-          "signalPercent": 0,
-          "createdTime": "02:27"
+          "type": "Gas",
+          "name": "Gas Site",
+          "group": "Gas Site",
+          "distance": "3.57 AU",
+          "signalPercent": 100,
+          "createdTime": "02:30"
         },
         {
-          "id": "sig-1793672841566-QHV-410",
+          "id": "sig-1793673025209-0.8546707176874901",
           "sigId": "QHV-410",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Cosmic Signature",
-          "distance": "9,61 AU",
-          "signalPercent": 0,
-          "createdTime": "02:27"
+          "type": "Data",
+          "name": "Data Site",
+          "group": "Data Site",
+          "distance": "9.61 AU",
+          "signalPercent": 100,
+          "createdTime": "02:30"
         },
         {
-          "id": "sig-1793672841566-MUL-248",
+          "id": "sig-1793673025209-0.3063426159809506",
           "sigId": "MUL-248",
           "type": "Anomaly",
           "name": "Cosmic Signature",
-          "group": "Cosmic Signature",
-          "distance": "14,92 AU",
-          "signalPercent": 0,
-          "createdTime": "02:27"
+          "group": "Unknown",
+          "distance": "14.92 AU",
+          "signalPercent": 100,
+          "createdTime": "02:30"
         }
       ],
-      "lastUpdated": "02:28",
+      "lastUpdated": "02:30",
       "x": 978,
       "y": 270
     }
