@@ -1847,6 +1847,35 @@ export const ChainMapperView: React.FC = () => {
                         </div>
                       </div>
                     )}
+
+                    {/* LIVE PILOT NAME PILLS (Pinned directly to card bottom so USS Hauler is instantly visible on map) */}
+                    {pilotCount > 0 && (
+                      <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 flex items-center justify-center gap-1 z-30 pointer-events-auto max-w-[110%]">
+                        {sortedPilots.map((pName, pIdx) => {
+                          const isMe = currentPilot && pName.toLowerCase().includes(currentPilot.characterName.toLowerCase());
+                          return (
+                            <div 
+                              key={pIdx}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedSystemId(node.id);
+                                centerOnSystem(node.id);
+                              }}
+                              className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold shadow-lg backdrop-blur-md transition-all whitespace-nowrap border cursor-pointer hover:scale-105 ${
+                                isMe
+                                  ? 'bg-cyan-500 text-black border-cyan-300 ring-2 ring-cyan-400/50 shadow-[0_0_12px_rgba(6,182,212,0.6)]'
+                                  : 'bg-purple-600/95 text-white border-purple-300/70 shadow-[0_0_14px_rgba(168,85,247,0.7)]'
+                              }`}
+                              title={`Active Pilot in ${node.name}: ${pName} (click to center)`}
+                            >
+                              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isMe ? 'bg-black animate-pulse' : 'bg-emerald-300 animate-pulse'}`} />
+                              <User className="w-2.5 h-2.5 shrink-0" />
+                              <span className="truncate max-w-[110px]">{pName}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 </div>
               );
@@ -2823,6 +2852,35 @@ export const ChainMapperView: React.FC = () => {
                     </button>
                   </div>
                 )}
+
+                {/* Manual Pilot Location Control (Move USS Hauler or self to this system) */}
+                <div className="pt-2 border-t border-white/5 space-y-1.5">
+                  <div className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider flex items-center justify-between">
+                    <span>Move Pilot to {selectedSystem.name}:</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {['USS Hauler', currentPilot?.characterName || 'Syndra en Tilavine'].filter(Boolean).map((pName, idx) => {
+                      const isInThisSys = selectedSystem.activePilots?.some(p => p.toLowerCase().includes(pName.toLowerCase()));
+                      return (
+                        <button
+                          key={idx}
+                          onClick={() => mapperService.setPilotLocation(pName, selectedSystem.id)}
+                          disabled={isInThisSys}
+                          className={`py-1.5 px-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1 border transition-all cursor-pointer disabled:opacity-40 disabled:cursor-default ${
+                            isInThisSys
+                              ? 'bg-purple-500/20 border-purple-500/40 text-purple-300'
+                              : 'bg-white/5 hover:bg-white/10 border-white/10 text-slate-200'
+                          }`}
+                          title={`Move ${pName} to ${selectedSystem.name}`}
+                        >
+                          <MapPin className="w-3 h-3 text-cyan-400 shrink-0" />
+                          <span className="truncate">{pName}</span>
+                          {isInThisSys && <span className="text-[9px] text-emerald-400 font-bold ml-0.5">✓</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
 
                 {!currentPilot && (
                   <button
