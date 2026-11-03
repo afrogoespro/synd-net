@@ -36,6 +36,7 @@ export const SignaturePromptModal: React.FC<SignaturePromptModalProps> = ({
   onClose,
   onSaved
 }) => {
+  const [currentFromSystem, setCurrentFromSystem] = useState<string>(fromSystem);
   const [sigInput, setSigInput] = useState<string>(initialSig);
   const [wormholeType, setWormholeType] = useState<string>(initialType);
   const [massStatus, setMassStatus] = useState<'stable' | 'destab' | 'critical'>(initialMass);
@@ -44,7 +45,10 @@ export const SignaturePromptModal: React.FC<SignaturePromptModalProps> = ({
   const [isFrig, setIsFrig] = useState<boolean>(initialIsFrig);
   const [pasteText, setPasteText] = useState<string>('');
 
+  const knownSystems = Object.keys(mapperService.getState().systems).filter(s => s !== toSystem);
+
   useEffect(() => {
+    setCurrentFromSystem(fromSystem || knownSystems[0] || 'Previous System');
     setSigInput(initialSig);
     setWormholeType(initialType || 'K162');
     setMassStatus(initialMass);
@@ -91,9 +95,10 @@ export const SignaturePromptModal: React.FC<SignaturePromptModalProps> = ({
 
   const handleSave = () => {
     const cleanSig = sigInput.trim().toUpperCase();
+    const effectiveFrom = currentFromSystem.trim() || fromSystem;
     mapperService.updateConnection({
       connectionId,
-      from: fromSystem,
+      from: effectiveFrom,
       to: toSystem,
       sigFrom: cleanSig || undefined,
       wormholeType: wormholeType.trim().toUpperCase() || 'Wormhole',
@@ -108,8 +113,9 @@ export const SignaturePromptModal: React.FC<SignaturePromptModalProps> = ({
   };
 
   const handleDeleteConnection = () => {
-    if (window.confirm(`Delete connection between ${fromSystem} and ${toSystem}?`)) {
-      mapperService.deleteConnection(connectionId, fromSystem, toSystem);
+    const effectiveFrom = currentFromSystem.trim() || fromSystem;
+    if (window.confirm(`Delete connection between ${effectiveFrom} and ${toSystem}?`)) {
+      mapperService.deleteConnection(connectionId, effectiveFrom, toSystem);
       onClose();
     }
   };
@@ -131,11 +137,31 @@ export const SignaturePromptModal: React.FC<SignaturePromptModalProps> = ({
                 </span>
                 <span className="text-xs text-gray-400">ASSIGN FEATURES</span>
               </div>
-              <h2 className="text-base font-bold text-white flex items-center gap-2 mt-0.5">
-                <span className="text-gray-300">{fromSystem}</span>
-                <ArrowRight className="w-4 h-4 text-cyan-400" />
-                <span className="text-cyan-300 drop-shadow-[0_0_8px_rgba(6,182,212,0.6)]">{toSystem}</span>
-              </h2>
+              <div className="flex items-center gap-2 mt-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] text-gray-400 font-bold uppercase">Jumped from:</span>
+                  <select
+                    value={currentFromSystem}
+                    onChange={(e) => setCurrentFromSystem(e.target.value)}
+                    className="bg-black/70 border border-cyan-500/40 rounded-lg px-2 py-0.5 text-xs text-white font-bold focus:outline-none focus:border-cyan-400 cursor-pointer"
+                  >
+                    {knownSystems.map(sys => (
+                      <option key={sys} value={sys} className="bg-[#0a0f1d] text-white">
+                        {sys}
+                      </option>
+                    ))}
+                    {!knownSystems.includes(currentFromSystem) && currentFromSystem && (
+                      <option value={currentFromSystem} className="bg-[#0a0f1d] text-white">
+                        {currentFromSystem}
+                      </option>
+                    )}
+                  </select>
+                </div>
+                <ArrowRight className="w-4 h-4 text-cyan-400 shrink-0" />
+                <span className="text-cyan-300 font-bold text-sm drop-shadow-[0_0_8px_rgba(6,182,212,0.6)]">
+                  {toSystem}
+                </span>
+              </div>
             </div>
           </div>
 

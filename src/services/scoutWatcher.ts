@@ -8,7 +8,7 @@ export interface ScoutAlertEvent {
   id: string;
   timestamp: Date;
   systemName: string;
-  source: 'dscan_paste' | 'system_detected' | 'clipboard_auto' | 'esi_jump' | 'probe_signatures';
+  source: 'dscan_paste' | 'system_detected' | 'clipboard_auto' | 'esi_jump' | 'probe_signatures' | 'remote_clipboard';
   wormholeInfo: WormholeSystemInfo;
   dscanReport?: DScanReport;
   structuresDetected: { name: string; type: string; distance: string }[];
@@ -24,6 +24,9 @@ class ScoutWatcherService {
   private isWatching: boolean = false;
   private intervalId: any = null;
   private lastClipboardText: string = '';
+  private lastBroadcastText: string = '';
+  private lastProcessedText: string = '';
+  private lastProcessedTime: number = 0;
   private lastClickCheckTime: number = 0;
   private listeners: ScoutAlertCallback[] = [];
   private clipboardListeners: RawClipboardCallback[] = [];
@@ -115,10 +118,20 @@ class ScoutWatcherService {
     if (!text || text.trim() === '') return false;
     const clean = text.trim();
 
-    // If local manual paste or direct clipboard read, broadcast wirelessly to fleet
+    // Prevent echo loops: only broadcast to fleet if this originated locally from user gesture / local clipboard
     if (source === 'dscan_paste' || source === 'clipboard_auto') {
-      this.broadcastClipboard(clean);
+      if (clean !== this.lastBroadcastText) {
+        this.lastBroadcastText = clean;
+        this.broadcastClipboard(clean);
+      }
     }
+
+    // Deduplicate rapid processing of identical text
+    if (clean === this.lastProcessedText && (Date.now() - this.lastProcessedTime < 3000)) {
+      return false;
+    }
+    this.lastProcessedText = clean;
+    this.lastProcessedTime = Date.now();
 
     // Notify raw clipboard subscribers (e.g. D-Scan live view)
     this.notifyRawClipboard(clean);
@@ -264,21 +277,6 @@ class ScoutWatcherService {
   public startClipboardPolling(intervalMs: number = 2000) {
     if (this.isWatching) return;
     this.isWatching = true;
-
-    // Connect to SSE stream
-    try {
-      const eventSource = new EventSource('/api/map/stream');
-      eventSource.onmessage = (e) => {
-        try {
-          const payload = JSON.parse(e.data);
-          if (payload.type === 'JUMP' && payload.systemName) {
-            this.evaluateText(payload.systemName, 'esi_jump');
-          } else if (payload.type === 'CLIPBOARD_TEXT' && payload.text) {
-            this.evaluateText(payload.text, 'clipboard_auto');
-          }
-        } catch {}
-      };
-    } catch {}
 
     // Focus interval fallback
     this.intervalId = setInterval(async () => {

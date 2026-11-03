@@ -50,25 +50,50 @@ export function App() {
     toSystem: string;
   } | null>(null);
 
+  const lastSystemRef = React.useRef<string>(currentSystem);
+
   // Subscribe to live character jumps from EVE log tailer and SSE stream
   useEffect(() => {
     const unsubJump = mapperService.onJump((jumpData) => {
+      const prev = jumpData.fromSystem || (lastSystemRef.current !== jumpData.systemName ? lastSystemRef.current : undefined);
+      lastSystemRef.current = jumpData.systemName;
       setCurrentSystem(jumpData.systemName);
-      const isWh = jumpData.systemName.startsWith('J') || (jumpData.fromSystem && jumpData.fromSystem.startsWith('J')) || jumpData.isWormhole;
+
+      const isWh = jumpData.systemName.startsWith('J') || (prev && prev.startsWith('J')) || jumpData.isWormhole;
       if (isWh) {
         setShowHud(true);
         playTacticalAlert('wh_entry');
+        if (prev && prev !== jumpData.systemName) {
+          setJumpSigModal({
+            isOpen: true,
+            fromSystem: prev,
+            toSystem: jumpData.systemName
+          });
+        }
       }
     });
 
     // Subscribe to live character jumps from official EVE SSO scope access (esi-location.read_location.v1)
     const unsubSSO = authService.onLocationUpdate(({ systemName, shipName }) => {
+      const prev = lastSystemRef.current !== systemName ? lastSystemRef.current : undefined;
+      lastSystemRef.current = systemName;
       setCurrentSystem(systemName);
+
       const pilot = authService.getPilot();
       if (pilot) {
-        mapperService.setPilotLocation(pilot.characterName, systemName, shipName);
+        mapperService.setPilotLocation(pilot.characterName, systemName, shipName, prev);
       }
-      playTacticalAlert('wh_entry');
+      const isWh = systemName.startsWith('J') || (prev && prev.startsWith('J'));
+      if (isWh) {
+        playTacticalAlert('wh_entry');
+        if (prev && prev !== systemName) {
+          setJumpSigModal({
+            isOpen: true,
+            fromSystem: prev,
+            toSystem: systemName
+          });
+        }
+      }
     });
 
     return () => {
@@ -256,6 +281,17 @@ export function App() {
 
       {/* Floating Apple-Style Music Player Popup with Volume Slider */}
       <MusicPlayerPopup theme={theme} />
+
+      {/* Signature & Connection Assignment Modal on System Jump */}
+      {jumpSigModal && jumpSigModal.isOpen && (
+        <SignaturePromptModal
+          isOpen={jumpSigModal.isOpen}
+          fromSystem={jumpSigModal.fromSystem}
+          toSystem={jumpSigModal.toSystem}
+          onClose={() => setJumpSigModal(null)}
+          onSaved={() => setJumpSigModal(null)}
+        />
+      )}
 
 
 

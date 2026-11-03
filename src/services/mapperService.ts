@@ -117,7 +117,7 @@ class MapperService {
           }
           if (data.type === 'CLIPBOARD_TEXT' && data.payload?.text) {
             import('./scoutWatcher').then(({ scoutWatcher }) => {
-              scoutWatcher.evaluateText(data.payload.text, 'clipboard_auto');
+              scoutWatcher.evaluateText(data.payload.text, 'remote_clipboard');
             }).catch(() => {});
           }
         } catch (err) {
@@ -411,9 +411,11 @@ class MapperService {
   }
 
   // Set a pilot's location (e.g. buddy sets their position to this system)
-  public async setPilotLocation(pilotName: string, systemName: string, shipName?: string) {
+  public async setPilotLocation(pilotName: string, systemName: string, shipName?: string, fromSystem?: string) {
     if (!pilotName || !systemName) return;
 
+    const previousSys = fromSystem || (this.activeSystemId !== systemName ? this.activeSystemId : undefined);
+    this.activeSystemId = systemName;
     const pilotEntry = shipName ? `${pilotName} (${shipName})` : pilotName;
 
     // Update local state immediately
@@ -443,13 +445,32 @@ class MapperService {
         y: 160
       };
     }
+
+    // Automatically connect previous system to new system if not already linked
+    if (previousSys && previousSys !== systemName && this.state.systems[previousSys]) {
+      const connExists = this.state.connections.some(
+        c => (c.from === previousSys && c.to === systemName) || (c.from === systemName && c.to === previousSys)
+      );
+      if (!connExists) {
+        const isWh = systemName.startsWith('J') || previousSys.startsWith('J');
+        this.state.connections.push({
+          id: `conn-${Date.now()}`,
+          from: previousSys,
+          to: systemName,
+          wormholeType: isWh ? 'Wormhole' : 'Stargate',
+          massStatus: 'stable',
+          timeStatus: 'stable'
+        });
+      }
+    }
+
     this.notify();
 
     try {
       await fetch('/api/map/pilot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pilotName, systemName })
+        body: JSON.stringify({ pilotName, systemName, fromSystem: previousSys })
       });
     } catch {}
   }

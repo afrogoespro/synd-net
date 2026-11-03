@@ -536,7 +536,7 @@ function getFreeNodePosition(previousSysId) {
     req.on('data', chunk => { body += chunk; });
     req.on('end', () => {
       try {
-        const { pilotName, systemName } = JSON.parse(body);
+        const { pilotName, systemName, fromSystem } = JSON.parse(body);
         if (!pilotName || !systemName) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'pilotName and systemName are required' }));
@@ -545,9 +545,9 @@ function getFreeNodePosition(previousSysId) {
 
         const cleanSys = systemName.trim();
         // Track previous system for this pilot
-        let previousSys = null;
+        let previousSys = (fromSystem || '').trim() || pilotLastSystem.get(pilotName) || null;
         Object.entries(chainMap.systems).forEach(([sysId, sys]) => {
-          if ((sys.activePilots || []).some(p => p.startsWith(pilotName))) {
+          if (!previousSys && (sys.activePilots || []).some(p => p.startsWith(pilotName))) {
             previousSys = sysId;
           }
           sys.activePilots = (sys.activePilots || []).filter(p => !p.startsWith(pilotName));
