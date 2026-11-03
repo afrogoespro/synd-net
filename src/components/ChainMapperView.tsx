@@ -343,10 +343,10 @@ export const ChainMapperView: React.FC = () => {
       }
     });
 
-    const unsubLoc = authService.onLocationUpdate(({ systemName, shipName }) => {
+    const unsubLoc = authService.onLocationUpdate(({ systemName, shipName, fromSystem }) => {
       const pilot = authService.getPilot();
       if (pilot && systemName) {
-        mapperService.setPilotLocation(pilot.characterName, systemName, shipName);
+        mapperService.setPilotLocation(pilot.characterName, systemName, shipName, fromSystem);
         setSelectedSystemId(systemName);
         setLastJumpAlert({
           systemName,
@@ -1673,7 +1673,14 @@ export const ChainMapperView: React.FC = () => {
               const midY = (y1 + y2) / 2;
               const midX = (x1 + x2) / 2;
 
-              const isActualWormhole = conn.wormholeType === 'Wormhole' || fromSys.id.startsWith('J') || toSys.id.startsWith('J') || fromSys.systemClass?.startsWith('C') || toSys.systemClass?.startsWith('C');
+              const isActualWormhole = conn.wormholeType !== 'Stargate' && (
+                conn.wormholeType === 'Wormhole' || 
+                conn.wormholeType === 'K162' || 
+                fromSys.id.startsWith('J') || 
+                toSys.id.startsWith('J') || 
+                /^C[1-6]$/i.test(fromSys.systemClass || '') || 
+                /^C[1-6]$/i.test(toSys.systemClass || '')
+              );
               const isStargate = !isActualWormhole;
               const isEOL = conn.timeStatus === 'eol';
               const isCrit = conn.massStatus === 'critical';

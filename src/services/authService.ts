@@ -57,7 +57,7 @@ const STORAGE_KEY_STATE = 'synd_sso_state';
 const STALE_PLACEHOLDER_CLIENT_ID = '83ad96423e904102b300736dd5440cb4';
 
 type AuthListener = (profile: PilotProfile | null) => void;
-type LocationListener = (data: { systemId: number; systemName: string; shipName?: string }) => void;
+type LocationListener = (data: { systemId: number; systemName: string; shipName?: string; fromSystem?: string }) => void;
 
 // Helper: base64url encoding
 function base64UrlEncode(buffer: ArrayBuffer): string {
@@ -581,12 +581,12 @@ class AuthService {
               this.currentPilot.currentSystem = systemName;
               localStorage.setItem(STORAGE_KEY_PILOT, JSON.stringify(this.currentPilot));
               this.notify();
-              this.locationListeners.forEach(cb => cb({ systemId, systemName, shipName: this.currentPilot?.activeShip }));
+              this.locationListeners.forEach(cb => cb({ systemId, systemName, shipName: this.currentPilot?.activeShip, fromSystem: prevSys }));
 
               // Direct sync to shared mapper service & fleet server immediately
               try {
                 const { mapperService } = await import('./mapperService');
-                await mapperService.setPilotLocation(this.currentPilot.characterName, systemName, this.currentPilot?.activeShip);
+                await mapperService.setPilotLocation(this.currentPilot.characterName, systemName, this.currentPilot?.activeShip, prevSys);
               } catch (e) {
                 console.warn('[EVE SSO] Failed to broadcast live jump to mapper service', e);
               }

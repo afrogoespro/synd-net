@@ -752,6 +752,101 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // === CORP BUYBACK PROGRAM TICKETS API ===
+  // GET /api/buyback/tickets - Fetch all tickets
+  if (req.url === '/api/buyback/tickets' && req.method === 'GET') {
+    const ticketsFile = path.join(__dirname, 'buybackTickets.json');
+    let tickets = [];
+    try {
+      if (fs.existsSync(ticketsFile)) {
+        tickets = JSON.parse(fs.readFileSync(ticketsFile, 'utf8'));
+      }
+    } catch (e) {}
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(tickets));
+    return;
+  }
+
+  // POST /api/buyback/tickets/create - Submit a new buyback ticket
+  if (req.url === '/api/buyback/tickets/create' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body);
+        const ticketsFile = path.join(__dirname, 'buybackTickets.json');
+        let tickets = [];
+        try {
+          if (fs.existsSync(ticketsFile)) {
+            tickets = JSON.parse(fs.readFileSync(ticketsFile, 'utf8'));
+          }
+        } catch (e) {}
+
+        const newTicket = {
+          id: `BB-${Date.now().toString(36).toUpperCase()}`,
+          pilotName: payload.pilotName || 'Anonymous Capsuleer',
+          systemName: payload.systemName || 'J121452',
+          stationOrStructure: payload.stationOrStructure || 'Caldari Control Tower / Upwell Structure',
+          submittedAt: new Date().toISOString(),
+          status: 'pending', // 'pending' | 'accepted' | 'paid' | 'rejected'
+          items: payload.items || [],
+          totalJitaValue: payload.totalJitaValue || 0,
+          totalBuybackValue: payload.totalBuybackValue || 0, // -10% of Jita
+          discountPercent: payload.discountPercent !== undefined ? payload.discountPercent : 10,
+          totalVolumeM3: payload.totalVolumeM3 || 0,
+          contractNote: payload.contractNote || '',
+          payoutTxHash: payload.payoutTxHash || null
+        };
+
+        tickets.unshift(newTicket);
+        fs.writeFileSync(ticketsFile, JSON.stringify(tickets, null, 2));
+
+        console.log(`\n📦 [BUYBACK TICKET SUBMITTED] ${newTicket.id} by ${newTicket.pilotName}: ${newTicket.totalBuybackValue.toLocaleString()} ISK (-10% Jita)`);
+        broadcastUpdate('BUYBACK_TICKET_NEW', newTicket);
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, ticket: newTicket }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // POST /api/buyback/tickets/status - Update ticket status (e.g. accepted, paid, rejected)
+  if (req.url === '/api/buyback/tickets/status' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try {
+        const { ticketId, status, notes } = JSON.parse(body);
+        const ticketsFile = path.join(__dirname, 'buybackTickets.json');
+        let tickets = [];
+        if (fs.existsSync(ticketsFile)) {
+          tickets = JSON.parse(fs.readFileSync(ticketsFile, 'utf8'));
+        }
+
+        const ticket = tickets.find(t => t.id === ticketId);
+        if (ticket) {
+          ticket.status = status;
+          if (notes) ticket.managerNotes = notes;
+          ticket.updatedAt = new Date().toISOString();
+          fs.writeFileSync(ticketsFile, JSON.stringify(tickets, null, 2));
+          broadcastUpdate('BUYBACK_TICKET_UPDATE', ticket);
+          console.log(`[BUYBACK TICKET STATUS] ${ticketId} -> ${status}`);
+        }
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, ticket }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
+
   // Clear or reset map
   if (req.url === '/api/map/clear' && req.method === 'POST') {
     chainMap = {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Radar, Users, Flame, Cpu, Volume2, VolumeX, Clock, 
   Radio, Network, Pickaxe, ExternalLink, KeyRound, LogOut, User,
-  LayoutDashboard, Sparkles, Sun, Moon, Wallet
+  LayoutDashboard, Sparkles, Sun, Moon, Wallet, Package
 } from 'lucide-react';
 import { WalletPill } from './WalletView';
 import { authService, PilotProfile } from '../services/authService';
@@ -11,8 +11,8 @@ import { soundManager } from '../services/soundEffects';
 import { PilotLoginModal } from './PilotLoginModal';
 
 interface HeaderProps {
-  activeTab: 'dashboard' | 'dscan' | 'mapper' | 'ore' | 'local' | 'killfeed' | 'eft' | 'wallet';
-  setActiveTab: (tab: 'dashboard' | 'dscan' | 'mapper' | 'ore' | 'local' | 'killfeed' | 'eft' | 'wallet') => void;
+  activeTab: 'dashboard' | 'dscan' | 'mapper' | 'ore' | 'buyback' | 'local' | 'killfeed' | 'eft' | 'wallet';
+  setActiveTab: (tab: 'dashboard' | 'dscan' | 'mapper' | 'ore' | 'buyback' | 'local' | 'killfeed' | 'eft' | 'wallet') => void;
   audioAlertsEnabled: boolean;
   setAudioAlertsEnabled: (enabled: boolean) => void;
   autoWatchEnabled: boolean;
@@ -141,6 +141,25 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Pickaxe className="w-3.5 h-3.5 text-amber-400" />
               <span>Ore &amp; Gas</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('buyback')}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                activeTab === 'buyback'
+                  ? isDark 
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-semibold shadow-sm' 
+                    : 'bg-white text-emerald-600 font-semibold shadow-sm border border-slate-200/60'
+                  : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Package className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Buyback</span>
+              <span className={`text-[9px] px-1 py-0.2 rounded font-mono font-bold ${
+                isDark ? 'bg-emerald-400/20 text-emerald-300' : 'bg-emerald-100 text-emerald-700'
+              }`}>
+                -10%
+              </span>
             </button>
 
             <button
