@@ -116,7 +116,7 @@
           "createdTime": "02:48"
         }
       ],
-      "lastUpdated": "03:34",
+      "lastUpdated": "05:11",
       "x": 415,
       "y": -32,
       "isCollapsed": false
@@ -250,8 +250,8 @@
         }
       ],
       "activePilots": [
-        "USS Hauler",
-        "Syndra en Tilavine"
+        "Syndra en Tilavine",
+        "USS Hauler"
       ],
       "signatures": [
         {
@@ -345,9 +345,9 @@
           "createdTime": "02:03"
         }
       ],
-      "lastUpdated": "03:34",
-      "x": 1319,
-      "y": 54
+      "lastUpdated": "05:11",
+      "x": 1296,
+      "y": 38
     },
     "J121452": {
       "id": "J121452",
@@ -655,6 +655,84 @@
       "lastUpdated": "03:34",
       "x": 1719,
       "y": 285
+    },
+    "J135827": {
+      "id": "J135827",
+      "name": "J135827",
+      "systemClass": "C2",
+      "statics": [
+        "C2",
+        "Highsec"
+      ],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "05:11",
+      "x": 1858,
+      "y": 148
+    },
+    "Hykkota": {
+      "id": "Hykkota",
+      "name": "Hykkota",
+      "systemClass": "Highsec",
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "05:11",
+      "x": 2038,
+      "y": 78
+    },
+    "Oimmo": {
+      "id": "Oimmo",
+      "name": "Oimmo",
+      "systemClass": "Highsec",
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "05:11",
+      "x": 2218,
+      "y": 148
+    },
+    "J212504": {
+      "id": "J212504",
+      "name": "J212504",
+      "systemClass": "C6",
+      "statics": [
+        "C6",
+        "Highsec"
+      ],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "05:11",
+      "x": 2398,
+      "y": 78
+    },
+    "Kisogo": {
+      "id": "Kisogo",
+      "name": "Kisogo",
+      "systemClass": "Highsec",
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "05:11",
+      "x": 2016,
+      "y": 258
+    },
+    "Ajanen": {
+      "id": "Ajanen",
+      "name": "Ajanen",
+      "systemClass": "Highsec",
+      "statics": [],
+      "structures": [],
+      "activePilots": [],
+      "signatures": [],
+      "lastUpdated": "05:11",
+      "x": 2578,
+      "y": 78
     }
   },
   "connections": [
@@ -662,7 +740,7 @@
       "id": "conn-1793594653578",
       "from": "Ikuchi",
       "to": "Jita",
-      "wormholeType": "Wormhole",
+      "wormholeType": "Stargate",
       "massStatus": "stable",
       "timeStatus": "stable"
     },
@@ -686,7 +764,7 @@
       "id": "conn-1793594784962",
       "from": "Jita",
       "to": "New Caldari",
-      "wormholeType": "Wormhole",
+      "wormholeType": "Stargate",
       "massStatus": "stable",
       "timeStatus": "stable"
     },
@@ -694,7 +772,7 @@
       "id": "conn-1793594784962",
       "from": "New Caldari",
       "to": "Josameto",
-      "wormholeType": "Wormhole",
+      "wormholeType": "Stargate",
       "massStatus": "stable",
       "timeStatus": "stable"
     },
@@ -702,7 +780,7 @@
       "id": "conn-1793669564661",
       "from": "Jita",
       "to": "Sobaseki",
-      "wormholeType": "Wormhole",
+      "wormholeType": "Stargate",
       "massStatus": "stable",
       "timeStatus": "stable"
     },
@@ -755,10 +833,74 @@
       "timeStatus": "stable"
     },
     {
-      "id": "conn-1793676855437",
+      "id": "conn-1793682660564",
       "from": "Iidoken",
+      "to": "J135827",
+      "wormholeType": "Wormhole",
+      "massStatus": "stable",
+      "timeStatus": "stable"
+    },
+    {
+      "id": "conn-1793682660566",
+      "from": "J135827",
       "to": "Jita",
       "wormholeType": "Wormhole",
+      "massStatus": "stable",
+      "timeStatus": "stable"
+    },
+    {
+      "id": "conn-1793682660567",
+      "from": "Jita",
+      "to": "Hykkota",
+      "wormholeType": "Wormhole",
+      "massStatus": "stable",
+      "timeStatus": "stable"
+    },
+    {
+      "id": "conn-1793682660570",
+      "from": "Iidoken",
+      "to": "Oimmo",
+      "wormholeType": "Stargate",
+      "massStatus": "stable",
+      "timeStatus": "stable"
+    },
+    {
+      "id": "conn-1793682660571",
+      "from": "Jita",
+      "to": "J212504",
+      "wormholeType": "Wormhole",
+      "massStatus": "stable",
+      "timeStatus": "stable"
+    },
+    {
+      "id": "conn-1793682660574",
+      "from": "Oimmo",
+      "to": "Kisogo",
+      "wormholeType": "Stargate",
+      "massStatus": "stable",
+      "timeStatus": "stable"
+    },
+    {
+      "id": "conn-1793682660576",
+      "from": "Jita",
+      "to": "Ajanen",
+      "wormholeType": "Wormhole",
+      "massStatus": "stable",
+      "timeStatus": "stable"
+    },
+    {
+      "id": "conn-1793682660578",
+      "from": "Jita",
+      "to": "Iidoken",
+      "wormholeType": "Wormhole",
+      "massStatus": "stable",
+      "timeStatus": "stable"
+    },
+    {
+      "id": "conn-1793682660579",
+      "from": "Kisogo",
+      "to": "Iidoken",
+      "wormholeType": "Stargate",
       "massStatus": "stable",
       "timeStatus": "stable"
     }

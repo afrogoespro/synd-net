@@ -842,13 +842,24 @@ let hostPilotName = normalizePilot(detectHostCharacterName());
 console.log(`[Host Character Identified] Flying as: ${hostPilotName || 'Awaiting Pilot Sign In'}`);
 
 const pilotLastSystem = new Map(); // pilotName -> lastSystemName
+let isBootSweep = true;
 
 function handleSystemTransition(newSys, fromSys, customPilot) {
   if (!newSys) return;
   newSys = newSys.trim();
 
   const activePilot = normalizePilot(customPilot || hostPilotName || 'Fleet Scout');
-  const lastSysForPilot = pilotLastSystem.get(activePilot);
+  
+  // Find pilot's previous system from memory or existing map
+  let lastSysForPilot = pilotLastSystem.get(activePilot);
+  if (!lastSysForPilot) {
+    for (const [sysId, sysObj] of Object.entries(chainMap.systems)) {
+      if ((sysObj.activePilots || []).some(p => isMatchingPilot(p, activePilot))) {
+        lastSysForPilot = sysId;
+        break;
+      }
+    }
+  }
 
   if (newSys === lastSysForPilot) return;
   pilotLastSystem.set(activePilot, newSys);
@@ -860,7 +871,7 @@ function handleSystemTransition(newSys, fromSys, customPilot) {
   let whClass = 'Highsec';
   if (newSys.startsWith('J')) {
     const num = parseInt(newSys.replace(/\D/g, ''), 10) || 0;
-    if (num >= 100000 && num <= 119999) whClass = 'C2';
+    if (num >= 100000 && num <= 119999) whClass = 'C1';
     else if (num >= 120000 && num <= 139999) whClass = 'C2';
     else if (num >= 140000 && num <= 159999) whClass = 'C3';
     else if (num >= 160000 && num <= 179999) whClass = 'C4';
@@ -901,7 +912,7 @@ function handleSystemTransition(newSys, fromSys, customPilot) {
   }
 
   // Connect previous system to new system
-  let isWormhole = newSys.startsWith('J') || (previous && previous.startsWith('J'));
+  const isWormhole = newSys.startsWith('J') || (previous && previous.startsWith('J'));
   if (previous && previous !== newSys) {
     const connExists = chainMap.connections.some(
       c => (c.from === previous && c.to === newSys) || (c.from === newSys && c.to === previous)
@@ -920,13 +931,15 @@ function handleSystemTransition(newSys, fromSys, customPilot) {
 
   saveState();
 
-  broadcastUpdate('MAP_UPDATE', chainMap);
-  broadcastUpdate('JUMP', { 
-    pilot: activePilot,
-    systemName: newSys, 
-    fromSystem: previous,
-    isWormhole: isWormhole
-  });
+  if (!isBootSweep) {
+    broadcastUpdate('MAP_UPDATE', chainMap);
+    broadcastUpdate('JUMP', { 
+      pilot: activePilot,
+      systemName: newSys, 
+      fromSystem: previous,
+      isWormhole: isWormhole
+    });
+  }
 }
 
 // 1. Multi-File Tailer for Local Chatlogs (Fires instantly on EVERY wormhole & gate jump)
@@ -967,10 +980,7 @@ function pollActiveChatlogs() {
     try {
       const stat = fs.statSync(file);
       if (!trackedChatFiles.has(file)) {
-        // Read recent jumps from end of file on startup (even offset for utf16le)
-        let startOffset = Math.max(0, stat.size - 60000);
-        if (startOffset % 2 !== 0) startOffset--;
-        trackedChatFiles.set(file, startOffset);
+        trackedChatFiles.set(file, stat.size);
       }
 
       let prevSize = trackedChatFiles.get(file);
@@ -1039,7 +1049,7 @@ function pollActiveGamelogs() {
     try {
       const stat = fs.statSync(file);
       if (!trackedGameFiles.has(file)) {
-        trackedGameFiles.set(file, Math.max(0, stat.size - 60000));
+        trackedGameFiles.set(file, stat.size);
       }
 
       const prevSize = trackedGameFiles.get(file);
@@ -1075,9 +1085,64 @@ function pollActiveGamelogs() {
   }
 }
 
-// Initial sweep on boot
-pollActiveChatlogs();
-pollActiveGamelogs();
+// Initial sweep on boot to find latest pilot positions without broadcasting JUMP spam
+function initBootState() {
+  if (!eveLogsBase) {
+    isBootSweep = false;
+    return;
+  }
+  const chatDir = path.join(eveLogsBase, 'Chatlogs');
+  if (fs.existsSync(chatDir)) {
+    try {
+      const files = fs.readdirSync(chatDir)
+        .filter(f => f.startsWith('Local_') && f.endsWith('.txt'))
+        .map(f => path.join(chatDir, f));
+      for (const file of files) {
+        try {
+          const stat = fs.statSync(file);
+          trackedChatFiles.set(file, stat.size);
+          const listener = getChatListener(file);
+          if (listener) {
+            const readLen = Math.min(stat.size, 30000);
+            let start = stat.size - readLen;
+            if (start % 2 !== 0) start--;
+            const buf = Buffer.alloc(readLen);
+            const fd = fs.openSync(file, 'r');
+            fs.readSync(fd, buf, 0, readLen, start);
+            fs.closeSync(fd);
+            const text = buf.toString('utf16le');
+            const matches = [...text.matchAll(/Channel changed to Local\s*:\s*([^\r\n]+)/gi)];
+            if (matches.length > 0) {
+              const lastSys = matches[matches.length - 1][1].replace(/<[^>]+>/g, '').trim();
+              if (lastSys) {
+                handleSystemTransition(lastSys, null, listener);
+              }
+            }
+          }
+        } catch {}
+      }
+    } catch {}
+  }
+
+  const gameDir = path.join(eveLogsBase, 'Gamelogs');
+  if (fs.existsSync(gameDir)) {
+    try {
+      const files = fs.readdirSync(gameDir)
+        .filter(f => f.endsWith('.txt'))
+        .map(f => path.join(gameDir, f));
+      for (const file of files) {
+        try {
+          const stat = fs.statSync(file);
+          trackedGameFiles.set(file, stat.size);
+        } catch {}
+      }
+    } catch {}
+  }
+
+  isBootSweep = false;
+}
+
+initBootState();
 
 // High frequency polling (every 400ms for instant reaction)
 setInterval(pollActiveChatlogs, 400);

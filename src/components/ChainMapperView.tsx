@@ -20,6 +20,7 @@ import { IntegratedIntelDeck } from './IntegratedIntelDeck';
 import { ShipFittingsModal } from './ShipFittingsModal';
 import { WirelessPasteModal } from './WirelessPasteModal';
 import { getWormholeSystemMetadata } from '../data/wormholeDatabase';
+import { soundManager } from '../services/soundEffects';
 
 const getStructureInfo = (type: string) => {
   const t = (type || '').toLowerCase();
@@ -417,6 +418,12 @@ export const ChainMapperView: React.FC = () => {
         pilotName: jump.pilot,
         timestamp: Date.now()
       });
+
+      // Audio notification on fleet jump
+      try {
+        soundManager.playAlert();
+      } catch {}
+
       if (followMe) {
         setTimeout(() => {
           centerOnSystem(jump.systemName);
@@ -424,14 +431,15 @@ export const ChainMapperView: React.FC = () => {
       }
 
       // Automatically prompt signature & origin modal when pilot jumps out or between systems!
-      if (jump.fromSystem && jump.systemName && jump.fromSystem !== jump.systemName) {
-        const isWh = jump.isWormhole || jump.systemName.startsWith('J') || jump.fromSystem.startsWith('J');
+      const prevSys = jump.fromSystem || (activeSystem && activeSystem.id !== jump.systemName ? activeSystem.id : null);
+      if (prevSys && jump.systemName && prevSys !== jump.systemName) {
+        const isWh = jump.isWormhole || jump.systemName.startsWith('J') || prevSys.startsWith('J');
         const existingConn = mapState.connections.find(
-          c => (c.from === jump.fromSystem && c.to === jump.systemName) || (c.from === jump.systemName && c.to === jump.fromSystem)
+          c => (c.from === prevSys && c.to === jump.systemName) || (c.from === jump.systemName && c.to === prevSys)
         );
         setSelectedConnection(existingConn || {
           id: `conn-${Date.now()}`,
-          from: jump.fromSystem,
+          from: prevSys,
           to: jump.systemName,
           wormholeType: isWh ? 'Wormhole' : 'Stargate',
           massStatus: 'stable',
@@ -1245,52 +1253,71 @@ export const ChainMapperView: React.FC = () => {
         style={getCanvasBackground()}
       >
         {/* LIVE JUMP DETECTED FLOATING HUD BANNER */}
-        {lastJumpAlert && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-auto animate-in fade-in slide-in-from-top-3 duration-200">
-            <div className={`px-4 py-2 rounded-2xl border backdrop-blur-2xl shadow-2xl flex items-center gap-3 font-sans ${
-              isDark 
-                ? 'bg-[#161c28]/95 border-emerald-500/40 text-white shadow-[0_8px_32px_rgba(16,185,129,0.25)]' 
-                : 'bg-white/95 border-emerald-400 text-slate-900 shadow-xl'
-            }`}>
-              <div className="w-7 h-7 rounded-xl bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center text-emerald-400 shrink-0">
-                <Navigation className="w-3.5 h-3.5 animate-pulse" />
-              </div>
-              <div className="text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-emerald-400 text-[11px] tracking-wide">JUMP DETECTED</span>
-                  <span className="text-[10px] text-slate-400">Live Pilot Follower</span>
+        {lastJumpAlert && (() => {
+          const isHauler = (lastJumpAlert.pilotName || '').toLowerCase().includes('hauler') || (lastJumpAlert.pilotName || '').toLowerCase().includes('ennis');
+          return (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-auto animate-in fade-in slide-in-from-top-3 duration-200">
+              <div className={`px-4 py-2.5 rounded-2xl border backdrop-blur-2xl shadow-2xl flex items-center gap-3 font-sans ${
+                isHauler
+                  ? 'bg-[#181126]/95 border-purple-500/60 text-white shadow-[0_8px_32px_rgba(168,85,247,0.35)]'
+                  : isDark 
+                  ? 'bg-[#161c28]/95 border-emerald-500/40 text-white shadow-[0_8px_32px_rgba(16,185,129,0.25)]' 
+                  : 'bg-white/95 border-emerald-400 text-slate-900 shadow-xl'
+              }`}>
+                <div className={`w-8 h-8 rounded-xl border flex items-center justify-center shrink-0 ${
+                  isHauler 
+                    ? 'bg-purple-500/20 border-purple-400 text-purple-300' 
+                    : 'bg-emerald-500/20 border-emerald-400/50 text-emerald-400'
+                }`}>
+                  <Navigation className="w-4 h-4 animate-pulse" />
                 </div>
-                <div className="text-slate-200 text-xs mt-0.5">
-                  <span className="font-semibold text-white">{lastJumpAlert.pilotName || 'Pilot'}</span>
-                  {lastJumpAlert.fromSystem ? (
-                    <> jumped from <span className="text-cyan-300 font-mono font-medium">{lastJumpAlert.fromSystem}</span> to </>
-                  ) : (
-                    <> entered </>
-                  )}
-                  <span className="text-emerald-300 font-bold font-mono text-sm underline decoration-emerald-500/40">{lastJumpAlert.systemName}</span>
-                  {lastJumpAlert.shipName && (
-                    <span className="text-slate-400 text-[11px] ml-1.5">({lastJumpAlert.shipName})</span>
-                  )}
+                <div className="text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className={`font-black text-[11px] tracking-wide ${isHauler ? 'text-purple-300' : 'text-emerald-400'}`}>
+                      {isHauler ? '🚀 HAULER JUMP DETECTED' : 'JUMP DETECTED'}
+                    </span>
+                    <span className="text-[10px] text-slate-400">Live Pilot Follower</span>
+                  </div>
+                  <div className="text-slate-200 text-xs mt-0.5">
+                    <span className={`font-bold ${isHauler ? 'text-purple-300' : 'text-white'}`}>
+                      {lastJumpAlert.pilotName || 'Pilot'}
+                    </span>
+                    {lastJumpAlert.fromSystem ? (
+                      <> jumped from <span className="text-cyan-300 font-mono font-medium">{lastJumpAlert.fromSystem}</span> to </>
+                    ) : (
+                      <> entered </>
+                    )}
+                    <span className={`font-bold font-mono text-sm underline ${isHauler ? 'text-purple-200 decoration-purple-500/50' : 'text-emerald-300 decoration-emerald-500/40'}`}>
+                      {lastJumpAlert.systemName}
+                    </span>
+                    {lastJumpAlert.shipName && (
+                      <span className="text-slate-400 text-[11px] ml-1.5">({lastJumpAlert.shipName})</span>
+                    )}
+                  </div>
                 </div>
+                <button
+                  onClick={() => {
+                    setSelectedSystemId(lastJumpAlert.systemName);
+                    centerOnSystem(lastJumpAlert.systemName);
+                  }}
+                  className={`px-3 py-1 rounded-xl font-bold text-xs ml-2 cursor-pointer shadow-sm transition-all ${
+                    isHauler
+                      ? 'bg-purple-500 hover:bg-purple-400 text-white shadow-purple-500/30'
+                      : 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/30'
+                  }`}
+                >
+                  Focus
+                </button>
+                <button
+                  onClick={() => setLastJumpAlert(null)}
+                  className="p-1 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
               </div>
-              <button
-                onClick={() => {
-                  setSelectedSystemId(lastJumpAlert.systemName);
-                  centerOnSystem(lastJumpAlert.systemName);
-                }}
-                className="px-2.5 py-1 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-xs ml-2 cursor-pointer shadow-sm transition-all"
-              >
-                Focus
-              </button>
-              <button
-                onClick={() => setLastJumpAlert(null)}
-                className="p-1 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* INTERACTIVE LINKING MODE HUD BANNER */}
         {linkingFromId && (
@@ -1509,7 +1536,8 @@ export const ChainMapperView: React.FC = () => {
               const midY = (y1 + y2) / 2;
               const midX = (x1 + x2) / 2;
 
-              const isStargate = conn.wormholeType === 'Stargate';
+              const isActualWormhole = conn.wormholeType === 'Wormhole' || fromSys.id.startsWith('J') || toSys.id.startsWith('J') || fromSys.systemClass?.startsWith('C') || toSys.systemClass?.startsWith('C');
+              const isStargate = !isActualWormhole;
               const isEOL = conn.timeStatus === 'eol';
               const isCrit = conn.massStatus === 'critical';
               const isDestab = conn.massStatus === 'destab';
