@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   Network, Compass, Building2, Users, Plus, Trash2, 
-  Check, Share2, ZoomIn, ZoomOut, Maximize2, Crosshair, Grid,
+  Check, Share2, ZoomIn, ZoomOut, Maximize2, Crosshair, Grid, Palette,
   User, MapPin, Eye, Radio, ExternalLink, Layers, Sparkles, KeyRound, LogOut,
   Sun, Moon, ChevronDown, ChevronRight, FolderTree, GitFork, Copy, Route, Navigation, Zap,
   Clock, Hourglass, Skull, ShieldAlert, X, Cpu, BoxSelect, ArrowRight,
@@ -112,15 +112,123 @@ export const ChainMapperView: React.FC = () => {
 
   const isDark = theme === 'dark';
 
-  // Tactical Grid Mode (Grey slate background with engineering grid coordinates)
-  const [showGrid, setShowGrid] = useState<boolean>(() => {
-    return localStorage.getItem('synd_show_grid') !== 'false';
+  // Canvas Background Presets (Deep Space Void, Infinite Tactical Grid, Void Grid, Blueprint)
+  const [bgTheme, setBgTheme] = useState<'classic_void' | 'tactical_grey_grid' | 'void_grid' | 'blueprint_light'>(() => {
+    return (localStorage.getItem('synd_bg_theme') as any) || 'classic_void';
   });
+  const [showBgMenu, setShowBgMenu] = useState<boolean>(false);
 
-  const toggleGrid = () => {
-    const next = !showGrid;
-    setShowGrid(next);
-    localStorage.setItem('synd_show_grid', String(next));
+  const selectBgTheme = (themeName: 'classic_void' | 'tactical_grey_grid' | 'void_grid' | 'blueprint_light') => {
+    setBgTheme(themeName);
+    localStorage.setItem('synd_bg_theme', themeName);
+    setShowBgMenu(false);
+  };
+
+  // Computes truly infinite CSS background for any pan & zoom position
+  const getCanvasBackground = () => {
+    const cellSize = Math.round(40 * zoom);
+    const majorSize = Math.round(200 * zoom);
+    const px = Math.round(pan.x % cellSize);
+    const py = Math.round(pan.y % cellSize);
+    const mpx = Math.round(pan.x % majorSize);
+    const mpy = Math.round(pan.y % majorSize);
+
+    if (bgTheme === 'classic_void') {
+      // The original beloved deep space void with nebula and stars
+      return {
+        backgroundColor: '#050813',
+        backgroundImage: `
+          radial-gradient(ellipse 70% 45% at 90% 15%, rgba(56, 189, 248, 0.15) 0%, rgba(14, 165, 233, 0.05) 45%, transparent 75%),
+          radial-gradient(ellipse 60% 40% at 10% 85%, rgba(168, 85, 247, 0.10) 0%, transparent 60%),
+          radial-gradient(1.5px 1.5px at 30px 40px, rgba(255,255,255,0.25), transparent),
+          radial-gradient(1px 1px at 80px 120px, rgba(56,189,248,0.20), transparent),
+          radial-gradient(1.5px 1.5px at 180px 70px, rgba(168,85,247,0.20), transparent)
+        `,
+        backgroundSize: '100% 100%, 100% 100%, 260px 260px, 260px 260px, 260px 260px',
+        backgroundPosition: 'center, center, 0 0, 0 0, 0 0'
+      };
+    }
+
+    if (bgTheme === 'tactical_grey_grid') {
+      // Truly infinite tactical slate grey grid
+      return {
+        backgroundColor: '#121620',
+        backgroundImage: `
+          linear-gradient(to right, rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+          linear-gradient(to right, rgba(56, 189, 248, 0.18) 1.5px, transparent 1.5px),
+          linear-gradient(to bottom, rgba(56, 189, 248, 0.18) 1.5px, transparent 1.5px),
+          radial-gradient(ellipse 75% 50% at 85% 15%, rgba(56, 189, 248, 0.08) 0%, transparent 70%),
+          radial-gradient(ellipse 65% 45% at 15% 85%, rgba(168, 85, 247, 0.06) 0%, transparent 60%)
+        `,
+        backgroundSize: `
+          ${cellSize}px ${cellSize}px,
+          ${cellSize}px ${cellSize}px,
+          ${majorSize}px ${majorSize}px,
+          ${majorSize}px ${majorSize}px,
+          100% 100%,
+          100% 100%
+        `,
+        backgroundPosition: `
+          ${px}px ${py}px,
+          ${px}px ${py}px,
+          ${mpx}px ${mpy}px,
+          ${mpx}px ${mpy}px,
+          center,
+          center
+        `
+      };
+    }
+
+    if (bgTheme === 'void_grid') {
+      // The original nebula + stars combined with the infinite square grid
+      return {
+        backgroundColor: '#050813',
+        backgroundImage: `
+          linear-gradient(to right, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+          linear-gradient(to right, rgba(56, 189, 248, 0.16) 1.5px, transparent 1.5px),
+          linear-gradient(to bottom, rgba(56, 189, 248, 0.16) 1.5px, transparent 1.5px),
+          radial-gradient(ellipse 70% 45% at 90% 15%, rgba(56, 189, 248, 0.15) 0%, rgba(14, 165, 233, 0.05) 45%, transparent 75%),
+          radial-gradient(ellipse 60% 40% at 10% 85%, rgba(168, 85, 247, 0.10) 0%, transparent 60%),
+          radial-gradient(1.5px 1.5px at 30px 40px, rgba(255,255,255,0.25), transparent),
+          radial-gradient(1px 1px at 80px 120px, rgba(56,189,248,0.20), transparent)
+        `,
+        backgroundSize: `
+          ${cellSize}px ${cellSize}px,
+          ${cellSize}px ${cellSize}px,
+          ${majorSize}px ${majorSize}px,
+          ${majorSize}px ${majorSize}px,
+          100% 100%,
+          100% 100%,
+          260px 260px,
+          260px 260px
+        `,
+        backgroundPosition: `
+          ${px}px ${py}px,
+          ${px}px ${py}px,
+          ${mpx}px ${mpy}px,
+          ${mpx}px ${mpy}px,
+          center,
+          center,
+          0 0,
+          0 0
+        `
+      };
+    }
+
+    // Daylight blueprint mode
+    return {
+      backgroundColor: '#f8fafc',
+      backgroundImage: `
+        linear-gradient(to right, rgba(148, 163, 184, 0.15) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(148, 163, 184, 0.15) 1px, transparent 1px),
+        linear-gradient(to right, rgba(14, 165, 233, 0.25) 1.5px, transparent 1.5px),
+        linear-gradient(to bottom, rgba(14, 165, 233, 0.25) 1.5px, transparent 1.5px)
+      `,
+      backgroundSize: `${cellSize}px ${cellSize}px, ${cellSize}px ${cellSize}px, ${majorSize}px ${majorSize}px, ${majorSize}px ${majorSize}px`,
+      backgroundPosition: `${px}px ${py}px, ${px}px ${py}px, ${mpx}px ${mpy}px, ${mpx}px ${mpy}px`
+    };
   };
 
   // Connection signature & status edit modal
@@ -1029,21 +1137,8 @@ export const ChainMapperView: React.FC = () => {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onWheel={handleWheel}
-        className={`flex-1 relative overflow-hidden ${isPanning ? 'cursor-grabbing select-none' : 'cursor-grab'} ${
-          isDark 
-            ? 'bg-[#121620]' 
-            : 'bg-slate-100'
-        }`}
-        style={{
-          backgroundImage: isDark ? `
-            radial-gradient(ellipse 75% 50% at 85% 15%, rgba(56, 189, 248, 0.08) 0%, rgba(14, 165, 233, 0.02) 45%, transparent 75%),
-            radial-gradient(ellipse 65% 45% at 15% 85%, rgba(168, 85, 247, 0.06) 0%, transparent 60%),
-            radial-gradient(circle at 50% 50%, rgba(30, 41, 59, 0.4) 0%, transparent 85%)
-          ` : `
-            radial-gradient(ellipse 70% 50% at 50% 50%, rgba(241, 245, 249, 0.9) 0%, rgba(226, 232, 240, 0.6) 100%)
-          `,
-          backgroundColor: isDark ? '#121620' : '#f8fafc'
-        }}
+        className={`flex-1 relative overflow-hidden ${isPanning ? 'cursor-grabbing select-none' : 'cursor-grab'}`}
+        style={getCanvasBackground()}
       >
         {/* LIVE JUMP DETECTED FLOATING HUD BANNER */}
         {lastJumpAlert && (
@@ -1244,10 +1339,6 @@ export const ChainMapperView: React.FC = () => {
               </filter>
             </defs>
 
-            {/* TACTICAL GRID LAYER */}
-            {showGrid && (
-              <rect width="4000" height="3000" fill="url(#tactical-grid-major)" />
-            )}
 
             {mapState.connections.map((conn) => {
               if (hiddenNodeIds.has(conn.from) || hiddenNodeIds.has(conn.to)) return null;
@@ -1886,17 +1977,104 @@ export const ChainMapperView: React.FC = () => {
             <ZoomOut className="w-4 h-4" />
           </button>
           <div className={`w-4 h-px ${isDark ? 'bg-white/10' : 'bg-slate-200'}`}></div>
-          <button
-            onClick={toggleGrid}
-            className={`p-2 rounded-lg transition-colors ${
-              showGrid 
-                ? 'bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30' 
-                : 'hover:bg-cyan-950/60 text-gray-400 hover:text-gray-200'
-            }`}
-            title={`Toggle Tactical Grid (${showGrid ? 'Active' : 'Hidden'})`}
-          >
-            <Grid className="w-4 h-4" />
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowBgMenu(prev => !prev)}
+              className={`p-2 rounded-lg transition-colors cursor-pointer ${
+                showBgMenu || bgTheme !== 'classic_void'
+                  ? 'bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30 ring-1 ring-cyan-500/40' 
+                  : 'hover:bg-cyan-950/60 text-gray-400 hover:text-gray-200'
+              }`}
+              title="Canvas Background & Infinite Grid Presets"
+            >
+              <Palette className="w-4 h-4" />
+            </button>
+
+            {/* Background Theme Selector Popover */}
+            {showBgMenu && (
+              <div 
+                className="absolute bottom-11 left-0 w-64 p-2.5 rounded-2xl bg-[#0f172a]/95 border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.8)] backdrop-blur-2xl z-50 animate-in fade-in zoom-in-95 duration-150 font-sans text-xs space-y-1.5"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between px-1.5 pt-0.5 pb-1 border-b border-white/10 text-[10px] uppercase font-bold tracking-wider text-slate-400">
+                  <span>Canvas Background</span>
+                  <button onClick={() => setShowBgMenu(false)} className="hover:text-white p-0.5 cursor-pointer"><X className="w-3 h-3" /></button>
+                </div>
+
+                <button
+                  onClick={() => selectBgTheme('classic_void')}
+                  className={`w-full text-left p-2 rounded-xl flex items-center justify-between transition-all cursor-pointer ${
+                    bgTheme === 'classic_void'
+                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                      : 'hover:bg-white/5 text-slate-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-5 h-5 rounded-lg bg-[#050813] border border-cyan-500/30 flex items-center justify-center text-[10px]">🌌</div>
+                    <div>
+                      <div className="font-semibold text-xs text-white">Deep Space (Classic)</div>
+                      <div className="text-[10px] text-slate-400">Original starry nebula void</div>
+                    </div>
+                  </div>
+                  {bgTheme === 'classic_void' && <Check className="w-3.5 h-3.5 text-cyan-400" />}
+                </button>
+
+                <button
+                  onClick={() => selectBgTheme('tactical_grey_grid')}
+                  className={`w-full text-left p-2 rounded-xl flex items-center justify-between transition-all cursor-pointer ${
+                    bgTheme === 'tactical_grey_grid'
+                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                      : 'hover:bg-white/5 text-slate-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-5 h-5 rounded-lg bg-[#121620] border border-slate-600 flex items-center justify-center text-[10px]">📐</div>
+                    <div>
+                      <div className="font-semibold text-xs text-white">Infinite Tactical Grid</div>
+                      <div className="text-[10px] text-slate-400">Slate grey infinite square coordinates</div>
+                    </div>
+                  </div>
+                  {bgTheme === 'tactical_grey_grid' && <Check className="w-3.5 h-3.5 text-cyan-400" />}
+                </button>
+
+                <button
+                  onClick={() => selectBgTheme('void_grid')}
+                  className={`w-full text-left p-2 rounded-xl flex items-center justify-between transition-all cursor-pointer ${
+                    bgTheme === 'void_grid'
+                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                      : 'hover:bg-white/5 text-slate-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-5 h-5 rounded-lg bg-[#050813] border border-cyan-400/50 flex items-center justify-center text-[10px]">🚀</div>
+                    <div>
+                      <div className="font-semibold text-xs text-white">Void + Grid</div>
+                      <div className="text-[10px] text-slate-400">Classic nebula with tactical grid</div>
+                    </div>
+                  </div>
+                  {bgTheme === 'void_grid' && <Check className="w-3.5 h-3.5 text-cyan-400" />}
+                </button>
+
+                <button
+                  onClick={() => selectBgTheme('blueprint_light')}
+                  className={`w-full text-left p-2 rounded-xl flex items-center justify-between transition-all cursor-pointer ${
+                    bgTheme === 'blueprint_light'
+                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                      : 'hover:bg-white/5 text-slate-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-5 h-5 rounded-lg bg-[#f8fafc] border border-slate-400 flex items-center justify-center text-[10px]">☀️</div>
+                    <div>
+                      <div className="font-semibold text-xs text-white">Daylight Blueprint</div>
+                      <div className="text-[10px] text-slate-400">Clean high-contrast grid</div>
+                    </div>
+                  </div>
+                  {bgTheme === 'blueprint_light' && <Check className="w-3.5 h-3.5 text-cyan-400" />}
+                </button>
+              </div>
+            )}
+          </div>
           <button
             onClick={handleFit}
             className="p-2 rounded-lg hover:bg-cyan-950/60 text-gray-300 hover:text-cyan-300 transition-colors"

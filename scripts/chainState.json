@@ -38,17 +38,97 @@
       ],
       "signatures": [
         {
-          "id": "sig-1793671114028-LLU-884",
-          "sigId": "LLU-884",
+          "id": "sig-1793671483738-OQO-022",
+          "sigId": "OQO-022",
           "type": "Anomaly",
           "name": "Cosmic Signature",
           "group": "Cosmic Signature",
-          "distance": "25,58 AU",
-          "signalPercent": 59,
-          "createdTime": "01:58"
+          "distance": "14,96 AU",
+          "signalPercent": 55,
+          "createdTime": "02:04"
+        },
+        {
+          "id": "sig-1793671483738-BDI-439",
+          "sigId": "BDI-439",
+          "type": "Anomaly",
+          "name": "Cosmic Signature",
+          "group": "Cosmic Signature",
+          "distance": "14,91 AU",
+          "signalPercent": 20,
+          "createdTime": "02:04"
+        },
+        {
+          "id": "sig-1793671483738-EYK-128",
+          "sigId": "EYK-128",
+          "type": "Anomaly",
+          "name": "Cosmic Signature",
+          "group": "Cosmic Signature",
+          "distance": "13,84 AU",
+          "signalPercent": 28,
+          "createdTime": "02:04"
+        },
+        {
+          "id": "sig-1793671483738-GFV-740",
+          "sigId": "GFV-740",
+          "type": "Anomaly",
+          "name": "Cosmic Signature",
+          "group": "Cosmic Signature",
+          "distance": "11,15 AU",
+          "signalPercent": 0,
+          "createdTime": "02:04"
+        },
+        {
+          "id": "sig-1793671483738-MWB-836",
+          "sigId": "MWB-836",
+          "type": "Anomaly",
+          "name": "Cosmic Signature",
+          "group": "Cosmic Signature",
+          "distance": "14,53 AU",
+          "signalPercent": 0,
+          "createdTime": "02:04"
+        },
+        {
+          "id": "sig-1793671483738-OHP-280",
+          "sigId": "OHP-280",
+          "type": "Anomaly",
+          "name": "Cosmic Signature",
+          "group": "Cosmic Signature",
+          "distance": "15,18 AU",
+          "signalPercent": 0,
+          "createdTime": "02:04"
+        },
+        {
+          "id": "sig-1793671483738-QHV-410",
+          "sigId": "QHV-410",
+          "type": "Anomaly",
+          "name": "Cosmic Signature",
+          "group": "Cosmic Signature",
+          "distance": "15,57 AU",
+          "signalPercent": 0,
+          "createdTime": "02:04"
+        },
+        {
+          "id": "sig-1793671483738-MUL-248",
+          "sigId": "MUL-248",
+          "type": "Anomaly",
+          "name": "Cosmic Signature",
+          "group": "Cosmic Signature",
+          "distance": "7,36 AU",
+          "signalPercent": 0,
+          "createdTime": "02:04"
+        },
+        {
+          "id": "sig-1793671483738-PBB-493",
+          "sigId": "PBB-493",
+          "type": "Anomaly",
+          "name": "Cosmic Signature",
+          "group": "Cosmic Signature",
+          "distance": "10,82 AU",
+          "signalPercent": 0,
+          "createdTime": "02:04"
         }
       ],
-      "lastUpdated": "01:58",
+      "lastUpdated": "02:04",
       "x": 577,
       "y": -3,
       "isCollapsed": false
@@ -186,97 +266,97 @@
       "activePilots": [],
       "signatures": [
         {
-          "id": "sig-1793671264044-OQO-022",
+          "id": "sig-1793671427504-OQO-022",
           "sigId": "OQO-022",
           "type": "Anomaly",
           "name": "Cosmic Signature",
           "group": "Cosmic Signature",
-          "distance": "15,63 AU",
-          "signalPercent": 28,
-          "createdTime": "02:01"
+          "distance": "14,96 AU",
+          "signalPercent": 55,
+          "createdTime": "02:03"
         },
         {
-          "id": "sig-1793671264044-BDI-439",
+          "id": "sig-1793671427504-BDI-439",
           "sigId": "BDI-439",
           "type": "Anomaly",
           "name": "Cosmic Signature",
           "group": "Cosmic Signature",
-          "distance": "13,53 AU",
-          "signalPercent": 26,
-          "createdTime": "02:01"
+          "distance": "14,91 AU",
+          "signalPercent": 20,
+          "createdTime": "02:03"
         },
         {
-          "id": "sig-1793671264044-EYK-128",
+          "id": "sig-1793671427504-EYK-128",
           "sigId": "EYK-128",
           "type": "Anomaly",
           "name": "Cosmic Signature",
           "group": "Cosmic Signature",
-          "distance": "14,53 AU",
-          "signalPercent": 29,
-          "createdTime": "02:01"
+          "distance": "13,84 AU",
+          "signalPercent": 28,
+          "createdTime": "02:03"
         },
         {
-          "id": "sig-1793671264044-GFV-740",
+          "id": "sig-1793671427504-GFV-740",
           "sigId": "GFV-740",
           "type": "Anomaly",
           "name": "Cosmic Signature",
           "group": "Cosmic Signature",
           "distance": "11,15 AU",
-          "signalPercent": 13,
-          "createdTime": "02:01"
+          "signalPercent": 0,
+          "createdTime": "02:03"
         },
         {
-          "id": "sig-1793671264044-MWB-836",
+          "id": "sig-1793671427504-MWB-836",
           "sigId": "MWB-836",
           "type": "Anomaly",
           "name": "Cosmic Signature",
           "group": "Cosmic Signature",
           "distance": "14,53 AU",
-          "signalPercent": 8,
-          "createdTime": "02:01"
+          "signalPercent": 0,
+          "createdTime": "02:03"
         },
         {
-          "id": "sig-1793671264044-OHP-280",
+          "id": "sig-1793671427504-OHP-280",
           "sigId": "OHP-280",
           "type": "Anomaly",
           "name": "Cosmic Signature",
           "group": "Cosmic Signature",
           "distance": "15,18 AU",
           "signalPercent": 0,
-          "createdTime": "02:01"
+          "createdTime": "02:03"
         },
         {
-          "id": "sig-1793671264044-QHV-410",
+          "id": "sig-1793671427504-QHV-410",
           "sigId": "QHV-410",
           "type": "Anomaly",
           "name": "Cosmic Signature",
           "group": "Cosmic Signature",
           "distance": "15,57 AU",
-          "signalPercent": 1,
-          "createdTime": "02:01"
+          "signalPercent": 0,
+          "createdTime": "02:03"
         },
         {
-          "id": "sig-1793671264044-MUL-248",
+          "id": "sig-1793671427504-MUL-248",
           "sigId": "MUL-248",
           "type": "Anomaly",
           "name": "Cosmic Signature",
           "group": "Cosmic Signature",
           "distance": "7,36 AU",
           "signalPercent": 0,
-          "createdTime": "02:01"
+          "createdTime": "02:03"
         },
         {
-          "id": "sig-1793671264044-PBB-493",
+          "id": "sig-1793671427504-PBB-493",
           "sigId": "PBB-493",
           "type": "Anomaly",
           "name": "Cosmic Signature",
           "group": "Cosmic Signature",
           "distance": "10,82 AU",
-          "signalPercent": 4,
-          "createdTime": "02:01"
+          "signalPercent": 0,
+          "createdTime": "02:03"
         }
       ],
-      "lastUpdated": "02:01",
+      "lastUpdated": "02:03",
       "x": 1141,
       "y": 160
     },
@@ -289,9 +369,7 @@
         "Highsec"
       ],
       "structures": [],
-      "activePilots": [
-        "Syndra en Tilavine"
-      ],
+      "activePilots": [],
       "signatures": [
         {
           "id": "sig-1793671264043-0.5244580416564812",
@@ -434,6 +512,14 @@
       "id": "conn-1793669564661",
       "from": "Jita",
       "to": "Sobaseki",
+      "wormholeType": "Wormhole",
+      "massStatus": "stable",
+      "timeStatus": "stable"
+    },
+    {
+      "id": "conn-1793671800000",
+      "from": "Sobaseki",
+      "to": "Veisto",
       "wormholeType": "Wormhole",
       "massStatus": "stable",
       "timeStatus": "stable"
