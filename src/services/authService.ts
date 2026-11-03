@@ -53,8 +53,8 @@ const STORAGE_KEY_CLIENT_ID = 'synd_eve_client_id';
 const STORAGE_KEY_PKCE_VERIFIER = 'synd_sso_pkce_verifier';
 const STORAGE_KEY_STATE = 'synd_sso_state';
 
-// Official Built-in CCP EVE SSO Application Client ID (zero setup for all fleet members)
-const BUILTIN_EVE_CLIENT_ID = '83ad96423e904102b300736dd5440cb4';
+// Stale placeholder ID to purge from cache if encountered
+const STALE_PLACEHOLDER_CLIENT_ID = '83ad96423e904102b300736dd5440cb4';
 
 type AuthListener = (profile: PilotProfile | null) => void;
 type LocationListener = (data: { systemId: number; systemName: string; shipName?: string }) => void;
@@ -117,16 +117,18 @@ class AuthService {
       const res = await fetch('/api/auth/config');
       if (res.ok) {
         const data = await res.json();
-        if (data.clientId) {
+        if (data.clientId && data.clientId !== STALE_PLACEHOLDER_CLIENT_ID) {
           localStorage.setItem(STORAGE_KEY_CLIENT_ID, data.clientId);
           return data.clientId;
         }
       }
     } catch {}
     const stored = localStorage.getItem(STORAGE_KEY_CLIENT_ID);
-    if (stored) return stored;
-    localStorage.setItem(STORAGE_KEY_CLIENT_ID, BUILTIN_EVE_CLIENT_ID);
-    return BUILTIN_EVE_CLIENT_ID;
+    if (stored === STALE_PLACEHOLDER_CLIENT_ID) {
+      localStorage.removeItem(STORAGE_KEY_CLIENT_ID);
+      return '';
+    }
+    return stored || '';
   }
 
   /**
@@ -134,8 +136,10 @@ class AuthService {
    */
   public async saveSharedClientId(clientId: string): Promise<boolean> {
     const clean = (clientId || '').trim();
-    if (clean) {
+    if (clean && clean !== STALE_PLACEHOLDER_CLIENT_ID) {
       localStorage.setItem(STORAGE_KEY_CLIENT_ID, clean);
+    } else {
+      localStorage.removeItem(STORAGE_KEY_CLIENT_ID);
     }
     try {
       const res = await fetch('/api/auth/config', {
@@ -147,6 +151,15 @@ class AuthService {
     } catch {
       return false;
     }
+  }
+
+  public getStoredClientId(): string {
+    const stored = localStorage.getItem(STORAGE_KEY_CLIENT_ID) || '';
+    if (stored === STALE_PLACEHOLDER_CLIENT_ID) {
+      localStorage.removeItem(STORAGE_KEY_CLIENT_ID);
+      return '';
+    }
+    return stored;
   }
 
   private loadSession() {
@@ -217,16 +230,18 @@ class AuthService {
    * Scopes: esi-location.read_location.v1, esi-location.read_ship_type.v1, esi-location.read_online.v1, esi-ui.write_waypoint.v1
    */
   public async initiateEveSSO(customClientId?: string) {
-    let clientId = (customClientId || '').trim() || localStorage.getItem(STORAGE_KEY_CLIENT_ID) || '';
+    let clientId = (customClientId || '').trim() || this.getStoredClientId();
     if (!clientId) {
       clientId = await this.loadSharedConfig();
     }
     const envClientId = (import.meta as any).env?.VITE_EVE_CLIENT_ID;
-    if (!clientId && envClientId) {
+    if (!clientId && envClientId && String(envClientId).trim() !== STALE_PLACEHOLDER_CLIENT_ID) {
       clientId = String(envClientId).trim();
     }
-    if (!clientId) {
-      clientId = BUILTIN_EVE_CLIENT_ID;
+    if (!clientId || clientId === STALE_PLACEHOLDER_CLIENT_ID) {
+      throw new Error(
+        'Please enter the CCP Application Client ID from developers.eveonline.com to connect EVE SSO.'
+      );
     }
 
     localStorage.setItem(STORAGE_KEY_CLIENT_ID, clientId);

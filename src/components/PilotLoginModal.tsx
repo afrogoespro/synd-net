@@ -20,9 +20,13 @@ export const PilotLoginModal: React.FC<PilotLoginModalProps> = ({
   
   // Custom CCP Application Client ID & Callback
   const [clientId, setClientId] = useState<string>(() => {
-    return localStorage.getItem('synd_eve_client_id') || '';
+    const stored = localStorage.getItem('synd_eve_client_id') || '';
+    return stored === '83ad96423e904102b300736dd5440cb4' ? '' : stored;
   });
-  const [showConfig, setShowConfig] = useState<boolean>(false);
+  const [showConfig, setShowConfig] = useState<boolean>(() => {
+    const stored = localStorage.getItem('synd_eve_client_id') || '';
+    return !stored || stored === '83ad96423e904102b300736dd5440cb4';
+  });
   const [copiedCallback, setCopiedCallback] = useState<boolean>(false);
 
   // Instant Pilot Lookup Name
@@ -34,7 +38,7 @@ export const PilotLoginModal: React.FC<PilotLoginModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       authService.loadSharedConfig().then(sharedId => {
-        if (sharedId && !clientId) {
+        if (sharedId && sharedId !== '83ad96423e904102b300736dd5440cb4' && !clientId) {
           setClientId(sharedId);
         }
       });
@@ -57,13 +61,16 @@ export const PilotLoginModal: React.FC<PilotLoginModalProps> = ({
 
   // Primary 1-Click EVE Online SSO
   const handleSSORedirect = async () => {
+    if (!clientId.trim()) {
+      setShowConfig(true);
+      setError('Please paste your CCP Application Client ID from developers.eveonline.com below.');
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
-      if (clientId.trim()) {
-        await authService.saveSharedClientId(clientId.trim());
-      }
-      await authService.initiateEveSSO(clientId.trim() || undefined);
+      await authService.saveSharedClientId(clientId.trim());
+      await authService.initiateEveSSO(clientId.trim());
     } catch (err: any) {
       setError(err.message || 'Failed to connect to EVE Online SSO.');
       setLoading(false);
@@ -161,14 +168,18 @@ export const PilotLoginModal: React.FC<PilotLoginModalProps> = ({
                   type="button"
                   onClick={handleSSORedirect}
                   disabled={loading}
-                  className="w-full py-4 px-5 rounded-2xl bg-[#142036] hover:bg-[#1b2b48] border border-cyan-500/40 hover:border-cyan-400 text-white font-bold text-sm flex items-center justify-between transition-all shadow-[0_4px_24px_rgba(0,0,0,0.5)] hover:shadow-[0_0_24px_rgba(6,182,212,0.35)] cursor-pointer group disabled:opacity-50"
+                  className={`w-full py-4 px-5 rounded-2xl border text-white font-bold text-sm flex items-center justify-between transition-all shadow-[0_4px_24px_rgba(0,0,0,0.5)] cursor-pointer group disabled:opacity-50 ${
+                    clientId.trim()
+                      ? 'bg-[#142036] hover:bg-[#1b2b48] border-cyan-500/40 hover:border-cyan-400 hover:shadow-[0_0_24px_rgba(6,182,212,0.35)]'
+                      : 'bg-amber-950/30 hover:bg-amber-900/40 border-amber-500/40 hover:border-amber-400'
+                  }`}
                 >
                   <div className="flex items-center gap-3">
                     <span className="font-mono text-xs tracking-wider bg-black/60 px-2 py-0.5 rounded border border-white/10 text-cyan-300 font-extrabold">
                       EVE
                     </span>
                     <span className="text-sm font-semibold tracking-wide text-white group-hover:text-cyan-200 transition-colors">
-                      Sign in with EVE Online
+                      {clientId.trim() ? 'Sign in with EVE Online' : 'Paste Client ID Below to Sign In'}
                     </span>
                   </div>
                   {loading ? (
@@ -179,72 +190,68 @@ export const PilotLoginModal: React.FC<PilotLoginModalProps> = ({
                 </button>
               </div>
 
-              {/* Collapsible CCP Developer Settings Accordion */}
+              {/* CCP Developer Settings */}
               <div className="border border-white/10 rounded-2xl p-3.5 bg-black/30 space-y-3">
-                <button
-                  type="button"
-                  onClick={() => setShowConfig(prev => !prev)}
-                  className="w-full flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-cyan-300 transition-colors cursor-pointer"
-                >
+                <div className="flex items-center justify-between text-xs font-semibold text-slate-300">
                   <div className="flex items-center gap-2">
                     <Settings2 className="w-3.5 h-3.5 text-cyan-400" />
-                    <span>CCP Application Settings (Client ID)</span>
+                    <span>CCP Application Setup (1-Time)</span>
                   </div>
-                  <span className="text-[10px] text-cyan-400 font-mono">
-                    {showConfig ? 'Hide ▲' : 'Configure ▼'}
-                  </span>
-                </button>
+                  {clientId.trim() && (
+                    <span className="text-[10px] text-emerald-400 flex items-center gap-1 font-mono">
+                      <Check className="w-3 h-3" /> Configured
+                    </span>
+                  )}
+                </div>
 
-                {showConfig && (
-                  <div className="pt-2 border-t border-white/5 space-y-3 animate-in fade-in duration-150">
-                    {/* Exact Callback URL to copy */}
-                    <div>
-                      <div className="flex items-center justify-between text-[11px] mb-1">
-                        <span className="text-slate-400 font-medium">Callback URL (developers.eveonline.com):</span>
-                        <button
-                          type="button"
-                          onClick={handleCopyCallback}
-                          className="flex items-center gap-1 text-[10px] text-cyan-400 hover:text-cyan-300 cursor-pointer"
-                        >
-                          {copiedCallback ? (
-                            <>
-                              <Check className="w-3 h-3 text-emerald-400" />
-                              <span className="text-emerald-400 font-bold">Copied!</span>
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="w-3 h-3" />
-                              <span>Copy URL</span>
-                            </>
-                          )}
-                        </button>
-                      </div>
-                      <div className="p-2 rounded-xl bg-black/60 border border-white/10 font-mono text-[11px] text-cyan-300 select-all break-all">
-                        {callbackUrl}
-                      </div>
-                      <p className="text-[10px] text-slate-500 mt-1">
-                        Must match the Callback URL in your CCP app setting character-for-character (no trailing slash).
-                      </p>
+                <div className="pt-2 border-t border-white/5 space-y-3">
+                  {/* Step 1: Callback URL */}
+                  <div>
+                    <div className="flex items-center justify-between text-[11px] mb-1">
+                      <span className="text-slate-300 font-medium">1. Callback URL (developers.eveonline.com):</span>
+                      <button
+                        type="button"
+                        onClick={handleCopyCallback}
+                        className="flex items-center gap-1 text-[10px] text-cyan-400 hover:text-cyan-300 cursor-pointer"
+                      >
+                        {copiedCallback ? (
+                          <>
+                            <Check className="w-3 h-3 text-emerald-400" />
+                            <span className="text-emerald-400 font-bold">Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3 h-3" />
+                            <span>Copy URL</span>
+                          </>
+                        )}
+                      </button>
                     </div>
-
-                    {/* Client ID Input */}
-                    <div>
-                      <label className="block text-[11px] text-slate-400 font-medium mb-1">
-                        Application Client ID (from your CCP app):
-                      </label>
-                      <input
-                        type="text"
-                        value={clientId}
-                        onChange={(e) => handleSaveClientId(e.target.value)}
-                        placeholder="e.g. 83ad96423e904102b300..."
-                        className="w-full px-3 py-2 rounded-xl bg-black/60 border border-white/10 text-white font-mono text-xs focus:outline-none focus:border-cyan-400 transition-colors placeholder:text-slate-600"
-                      />
-                      <p className="text-[10px] text-slate-500 mt-1">
-                        Copy the Client ID from your <strong className="text-slate-400">Eve online Utility tracker</strong> app and paste it above. It automatically syncs to your fleet server.
-                      </p>
+                    <div className="p-2 rounded-xl bg-black/60 border border-white/10 font-mono text-[11px] text-cyan-300 select-all break-all">
+                      {callbackUrl}
                     </div>
+                    <p className="text-[10px] text-amber-300/80 mt-1">
+                      ⚠️ Make sure to click <strong className="text-amber-200">"SAVE CHANGES"</strong> at the bottom of the developer portal after pasting!
+                    </p>
                   </div>
-                )}
+
+                  {/* Step 2: Client ID Input */}
+                  <div>
+                    <label className="block text-[11px] text-slate-300 font-medium mb-1">
+                      2. Paste your CCP Application Client ID:
+                    </label>
+                    <input
+                      type="text"
+                      value={clientId}
+                      onChange={(e) => handleSaveClientId(e.target.value)}
+                      placeholder="Paste 32-character Client ID from your CCP app"
+                      className="w-full px-3 py-2 rounded-xl bg-black/60 border border-white/15 text-white font-mono text-xs focus:outline-none focus:border-cyan-400 transition-colors placeholder:text-slate-600"
+                    />
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      Find the <strong>Client ID</strong> on your <span className="text-slate-300">Eve online Utility tracker</span> app page and paste it above. It automatically syncs to your fleet server!
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           ) : (
