@@ -1449,17 +1449,13 @@ export const ChainMapperView: React.FC = () => {
               const isDestab = conn.massStatus === 'destab';
 
               // User requirement:
-              // Known space (stargates) = emerald green (#22c55e) solid
-              // Wormholes = purple or individual class color
-              // EOL overrides = bright crimson red (#ef4444) dashed with slight pulse & broken chain
-              // Critical mass = orange/red (#f97316)
-              const destClass = toSys.systemClass;
-              const whClassColor = getSystemClassColor(destClass);
-              // Stargates & Known Space = solid emerald (#22c55e)
-              // Wormholes = solid class color
-              // Dashed line is ONLY for EOL (<4h remaining)
-              let strokeColor = isStargate ? '#22c55e' : whClassColor;
-              let strokeDash: string | undefined = undefined; // Default solid for all normal connections and known space
+              // Known space / Stargates = emerald green (#22c55e) solid
+              // Actual Wormholes = vibrant purple (#a855f7) solid
+              // EOL overrides = bright crimson red (#ef4444) dashed ('6 4')
+              // Critical mass = orange (#f97316)
+              // Destab mass = yellow (#eab308)
+              let strokeColor = isStargate ? '#22c55e' : '#a855f7';
+              let strokeDash: string | undefined = undefined; // Solid line for all normal connections and known space
 
               if (isEOL) {
                 strokeColor = '#ef4444'; // EOL Bright Red
@@ -1470,12 +1466,25 @@ export const ChainMapperView: React.FC = () => {
                 strokeColor = '#eab308'; // Amber Destabilized Mass
               }
 
-              // Signature label with lifetime badge (<4h EOL / >4h Stable)
+              // User requirement: "dont show wormhole tag"
+              // Never show generic "Wormhole" or "Wormhole [>4h]". Only show badge if there is a real signature, EOL, critical/destab mass, or tactical alert.
               const sigLabel = conn.sigFrom 
                 ? (toSys.systemClass?.startsWith('C') ? `TC [${conn.sigFrom}]` : `[${conn.sigFrom}]`)
-                : (conn.wormholeType || 'WH');
-              const badgeText = isEOL ? `💔 ${sigLabel} [<4h EOL]` : (!isStargate ? `${sigLabel} [>4h]` : sigLabel);
-              const badgeWidth = Math.max(54, badgeText.length * 7.2 + (isEOL ? 18 : 12));
+                : '';
+              
+              let badgeText = '';
+              if (isEOL) {
+                badgeText = sigLabel ? `💔 ${sigLabel} [<4h EOL]` : `💔 [<4h EOL]`;
+              } else if (isCrit) {
+                badgeText = sigLabel ? `${sigLabel} [Crit]` : `[Crit Mass]`;
+              } else if (isDestab) {
+                badgeText = sigLabel ? `${sigLabel} [Destab]` : `[Destab]`;
+              } else if (sigLabel) {
+                badgeText = sigLabel;
+              }
+
+              const hasBadge = !!badgeText || !!conn.tactical || !!conn.isFrig;
+              const badgeWidth = Math.max(48, badgeText.length * 7.2 + (isEOL ? 16 : 10));
 
               return (
                 <g key={conn.id} className="cursor-pointer group pointer-events-auto">
@@ -1541,8 +1550,8 @@ export const ChainMapperView: React.FC = () => {
                     </>
                   )}
 
-                  {/* Midpoint Label Tag (rendered on wormholes, or any connection marked EOL/Crit/custom) */}
-                  {(!isStargate || isEOL || isCrit || isDestab || conn.sigFrom) && (
+                  {/* Midpoint Label Tag (rendered ONLY if signature, EOL, critical/destab mass, or tactical alert is present) */}
+                  {hasBadge && (
                     <g 
                       transform={`translate(${midX}, ${midY})`}
                       className="pointer-events-auto cursor-pointer"
