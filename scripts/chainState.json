@@ -38,97 +38,87 @@
       ],
       "signatures": [
         {
-          "id": "sig-1793672113725-GFV-740",
+          "id": "sig-1793672303124-GFV-740",
           "sigId": "GFV-740",
           "type": "Anomaly",
           "name": "Unstable Wormhole",
           "group": "Cosmic Signature",
           "distance": "11,22 AU",
           "signalPercent": 100,
-          "createdTime": "02:15"
+          "createdTime": "02:18"
         },
         {
-          "id": "sig-1793672113725-OQO-022",
+          "id": "sig-1793672303124-OHP-280",
+          "sigId": "OHP-280",
+          "type": "Anomaly",
+          "name": "Cosmic Signature",
+          "group": "Cosmic Signature",
+          "distance": "15,27 AU",
+          "signalPercent": 58,
+          "createdTime": "02:18"
+        },
+        {
+          "id": "sig-1793672303124-OQO-022",
           "sigId": "OQO-022",
           "type": "Anomaly",
           "name": "Unstable Wormhole",
           "group": "Cosmic Signature",
           "distance": "14,95 AU",
           "signalPercent": 100,
-          "createdTime": "02:15"
+          "createdTime": "02:18"
         },
         {
-          "id": "sig-1793672113725-BDI-439",
+          "id": "sig-1793672303124-MWB-836",
+          "sigId": "MWB-836",
+          "type": "Anomaly",
+          "name": "Barren Perimeter Reservoir",
+          "group": "Cosmic Signature",
+          "distance": "14,82 AU",
+          "signalPercent": 100,
+          "createdTime": "02:18"
+        },
+        {
+          "id": "sig-1793672303124-BDI-439",
           "sigId": "BDI-439",
           "type": "Anomaly",
           "name": "Cosmic Signature",
           "group": "Cosmic Signature",
-          "distance": "13,79 AU",
+          "distance": "13,72 AU",
           "signalPercent": 0,
-          "createdTime": "02:15"
+          "createdTime": "02:18"
         },
         {
-          "id": "sig-1793672113725-EYK-128",
+          "id": "sig-1793672303124-EYK-128",
           "sigId": "EYK-128",
           "type": "Anomaly",
           "name": "Cosmic Signature",
           "group": "Cosmic Signature",
-          "distance": "12,43 AU",
+          "distance": "13,51 AU",
           "signalPercent": 0,
-          "createdTime": "02:15"
+          "createdTime": "02:18"
         },
         {
-          "id": "sig-1793672113725-PBB-493",
-          "sigId": "PBB-493",
-          "type": "Anomaly",
-          "name": "Rampant Drone Fabricator",
-          "group": "Cosmic Signature",
-          "distance": "12,28 AU",
-          "signalPercent": 78,
-          "createdTime": "02:15"
-        },
-        {
-          "id": "sig-1793672113725-MWB-836",
-          "sigId": "MWB-836",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Cosmic Signature",
-          "distance": "15,01 AU",
-          "signalPercent": 0,
-          "createdTime": "02:15"
-        },
-        {
-          "id": "sig-1793672113725-OHP-280",
-          "sigId": "OHP-280",
-          "type": "Anomaly",
-          "name": "Cosmic Signature",
-          "group": "Cosmic Signature",
-          "distance": "15,18 AU",
-          "signalPercent": 0,
-          "createdTime": "02:15"
-        },
-        {
-          "id": "sig-1793672113725-QHV-410",
+          "id": "sig-1793672303124-QHV-410",
           "sigId": "QHV-410",
           "type": "Anomaly",
           "name": "Cosmic Signature",
           "group": "Cosmic Signature",
-          "distance": "14,19 AU",
+          "distance": "15,56 AU",
           "signalPercent": 0,
-          "createdTime": "02:15"
+          "createdTime": "02:18"
         },
         {
-          "id": "sig-1793672113725-MUL-248",
+          "id": "sig-1793672303124-MUL-248",
           "sigId": "MUL-248",
           "type": "Anomaly",
           "name": "Cosmic Signature",
           "group": "Cosmic Signature",
           "distance": "7,36 AU",
           "signalPercent": 0,
-          "createdTime": "02:15"
+          "createdTime": "02:18"
         }
       ],
-      "lastUpdated": "02:15",
+      "lastUpdated": "02:18",
       "x": 415,
       "y": -32,
       "isCollapsed": false

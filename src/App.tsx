@@ -50,7 +50,7 @@ export function App() {
     toSystem: string;
   } | null>(null);
 
-  // Subscribe to live character jumps from EVE log tailer
+  // Subscribe to live character jumps from EVE log tailer and SSE stream
   useEffect(() => {
     const unsubJump = mapperService.onJump((jumpData) => {
       setCurrentSystem(jumpData.systemName);
@@ -58,13 +58,6 @@ export function App() {
       if (isWh) {
         setShowHud(true);
         playTacticalAlert('wh_entry');
-        if (jumpData.fromSystem && jumpData.fromSystem !== jumpData.systemName) {
-          setJumpSigModal({
-            isOpen: true,
-            fromSystem: jumpData.fromSystem,
-            toSystem: jumpData.systemName
-          });
-        }
       }
     });
 
@@ -127,10 +120,7 @@ export function App() {
   // Subscribe to automated scout watcher
   useEffect(() => {
     const unsubscribe = scoutWatcher.subscribe((event) => {
-      setActiveScoutAlert(event);
-      playTacticalAlert('wh_entry');
-
-      // If structures were detected in D-scan, sync them to shared mapper!
+      // Structures automatically sync to shared mapper without annoying popup spam
       if (event.structuresDetected.length > 0) {
         mapperService.syncScannedStructures(event.systemName, event.structuresDetected);
       }
@@ -267,23 +257,7 @@ export function App() {
       {/* Floating Apple-Style Music Player Popup with Volume Slider */}
       <MusicPlayerPopup theme={theme} />
 
-      {/* Pop-up Wormhole Scout HUD Modal */}
-      <WormholeScoutPopup
-        event={activeScoutAlert}
-        onClose={() => setActiveScoutAlert(null)}
-        onCopyReport={handleCopyDiscordReport}
-        copied={copiedReport}
-      />
 
-      {/* Signature Prompt Modal on Wormhole Jump */}
-      {jumpSigModal && (
-        <SignaturePromptModal
-          isOpen={jumpSigModal.isOpen}
-          fromSystem={jumpSigModal.fromSystem}
-          toSystem={jumpSigModal.toSystem}
-          onClose={() => setJumpSigModal(null)}
-        />
-      )}
 
       {/* Footer (hidden in mapper for 100% full-screen edge-to-edge canvas) */}
       {activeTab !== 'mapper' && (

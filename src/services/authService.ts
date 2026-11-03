@@ -539,7 +539,7 @@ class AuthService {
   /**
    * Starts live ESI background location & ship polling using esi-location scopes.
    */
-  public startLocationTracking(intervalMs: number = 5000) {
+  public startLocationTracking(intervalMs: number = 3000) {
     if (this.trackingInterval) {
       clearInterval(this.trackingInterval);
     }
@@ -562,10 +562,19 @@ class AuthService {
           if (systemId) {
             const systemName = await this.resolveSystemName(systemId);
             if (this.currentPilot.currentSystem !== systemName) {
+              const prevSys = this.currentPilot.currentSystem;
               this.currentPilot.currentSystem = systemName;
               localStorage.setItem(STORAGE_KEY_PILOT, JSON.stringify(this.currentPilot));
               this.notify();
               this.locationListeners.forEach(cb => cb({ systemId, systemName, shipName: this.currentPilot?.activeShip }));
+
+              // Direct sync to shared mapper service & fleet server immediately
+              try {
+                const { mapperService } = await import('./mapperService');
+                await mapperService.setPilotLocation(this.currentPilot.characterName, systemName, this.currentPilot?.activeShip);
+              } catch (e) {
+                console.warn('[EVE SSO] Failed to broadcast live jump to mapper service', e);
+              }
             }
           }
         } else if (locRes.status === 403) {

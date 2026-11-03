@@ -605,8 +605,7 @@ function getFreeNodePosition(previousSysId) {
           chainMap.onlineBuddies.push(pilotName);
         }
 
-        // Active pilot tracking
-        hostPilotName = pilotName;
+        pilotLastSystem.set(pilotName, cleanSys);
 
         saveState();
         broadcastUpdate('MAP_UPDATE', chainMap);
