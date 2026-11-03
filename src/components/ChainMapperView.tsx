@@ -5,7 +5,7 @@ import {
   User, MapPin, Eye, Radio, ExternalLink, Layers, Sparkles, KeyRound, LogOut,
   Sun, Moon, ChevronDown, ChevronRight, FolderTree, GitFork, Copy, Route, Navigation, Zap,
   Clock, Hourglass, Skull, ShieldAlert, X, Cpu, BoxSelect, ArrowRight,
-  Link2, ClipboardCheck, ClipboardPaste
+  Link2, ClipboardCheck, ClipboardPaste, Search
 } from 'lucide-react';
 import { mapperService } from '../services/mapperService';
 import { ChainMapState, WormholeNode, WormholeConnection, WormholeSignature, StructureTimer } from '../types/mapper';
@@ -18,6 +18,7 @@ import { SignaturePromptModal } from './SignaturePromptModal';
 import { StructureTimerModal } from './StructureTimerModal';
 import { IntegratedIntelDeck } from './IntegratedIntelDeck';
 import { ShipFittingsModal } from './ShipFittingsModal';
+import { WirelessPasteModal } from './WirelessPasteModal';
 import { getWormholeSystemMetadata } from '../data/wormholeDatabase';
 
 const getStructureInfo = (type: string) => {
@@ -78,6 +79,10 @@ export const ChainMapperView: React.FC = () => {
   const [linkingFromId, setLinkingFromId] = useState<string | null>(null);
   const [quickConnectTarget, setQuickConnectTarget] = useState<string>('');
   const [quickConnectType, setQuickConnectType] = useState<string>('Wormhole');
+
+  // Fast System Quick-Search & Scanner
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
 
   // Wireless Clipboard State & Quick Paste Drawer
   const [isPasteModalOpen, setIsPasteModalOpen] = useState<boolean>(false);
@@ -420,6 +425,15 @@ export const ChainMapperView: React.FC = () => {
     });
     return () => unsubJump();
   }, [followMe, zoom, mapState.systems]);
+
+  // Real-time matching systems for quick search & scan
+  const matchingSystems = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const q = searchQuery.toLowerCase().trim();
+    return Object.values(mapState.systems)
+      .filter(s => s.name.toLowerCase().includes(q) || s.systemClass.toLowerCase().includes(q) || (s.region && s.region.toLowerCase().includes(q)))
+      .slice(0, 8);
+  }, [mapState.systems, searchQuery]);
 
   const prevActiveSysId = useRef<string | null>(null);
   useEffect(() => {
@@ -960,7 +974,80 @@ export const ChainMapperView: React.FC = () => {
         </div>
 
         {/* Top Controls (Apple Segmented Pill Toolbar) */}
-        <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Quick System Search / Scanner Input */}
+          <div className="relative">
+            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs transition-all ${
+              isDark ? 'bg-black/50 border-white/10 focus-within:border-cyan-400 focus-within:ring-1 focus-within:ring-cyan-400/40' : 'bg-slate-100 border-slate-300 focus-within:border-cyan-500'
+            }`}>
+              <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setIsSearchOpen(true);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && matchingSystems.length > 0) {
+                    const first = matchingSystems[0];
+                    setSelectedSystemId(first.id);
+                    centerOnSystem(first.id);
+                    setSearchQuery('');
+                    setIsSearchOpen(false);
+                  }
+                  if (e.key === 'Escape') {
+                    setIsSearchOpen(false);
+                  }
+                }}
+                onFocus={() => setIsSearchOpen(true)}
+                placeholder="Search system..."
+                className="bg-transparent border-none outline-none text-xs w-28 sm:w-36 text-white placeholder:text-slate-500 font-sans"
+              />
+              {searchQuery && (
+                <button 
+                  onClick={() => { setSearchQuery(''); setIsSearchOpen(false); }} 
+                  className="text-slate-500 hover:text-white p-0.5 cursor-pointer"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+
+            {/* Instant Search Suggestions Dropdown */}
+            {isSearchOpen && matchingSystems.length > 0 && (
+              <div 
+                className="absolute top-full left-0 mt-1 w-56 p-1.5 rounded-2xl bg-[#0d1424]/95 border border-white/10 shadow-2xl backdrop-blur-2xl z-50 animate-in fade-in zoom-in-95 font-sans text-xs space-y-0.5 max-h-64 overflow-y-auto"
+                onMouseDown={(e) => e.stopPropagation()}
+              >
+                <div className="px-2 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-white/5 flex items-center justify-between">
+                  <span>Systems on Map</span>
+                  <span>{matchingSystems.length} found</span>
+                </div>
+                {matchingSystems.map(sys => (
+                  <button
+                    key={sys.id}
+                    onClick={() => {
+                      setSelectedSystemId(sys.id);
+                      centerOnSystem(sys.id);
+                      setSearchQuery('');
+                      setIsSearchOpen(false);
+                    }}
+                    className="w-full px-2.5 py-1.5 rounded-xl flex items-center justify-between text-left hover:bg-white/10 transition-colors cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-white group-hover:text-cyan-300 font-mono text-xs">{sys.name}</span>
+                      {sys.activePilots && sys.activePilots.length > 0 && (
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title={`Pilots: ${sys.activePilots.join(', ')}`} />
+                      )}
+                    </div>
+                    <span className="text-[10px] text-cyan-400 font-mono">{sys.systemClass}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Segmented Controls Group */}
           <div className={`flex items-center p-0.5 rounded-full border ${
             isDark ? 'bg-black/40 border-white/10' : 'bg-slate-100 border-slate-200'
@@ -1793,36 +1880,50 @@ export const ChainMapperView: React.FC = () => {
                       )}
                     </div>
 
-                    {/* Pilot Presence Badge (Purple Circle with number) + Hover Tooltip */}
+                    {/* Pilot Icon Badge (Shows user icon and tooltip on hover, click to center) */}
                     {pilotCount > 0 && (
-                      <div className="absolute -top-2 -right-2 group/pilot z-30">
-                        {/* Purple Circular Count Badge */}
+                      <div 
+                        className="absolute -top-2 -right-2 z-30 group/pilot pointer-events-auto"
+                        title={`Pilots in ${node.name}: ${sortedPilots.join(', ')}`}
+                      >
                         <div 
-                          className="w-5 h-5 rounded-full bg-purple-600 border border-purple-300 text-white font-bold text-[10px] flex items-center justify-center shadow-[0_0_12px_rgba(168,85,247,0.8)] cursor-pointer hover:scale-110 transition-transform"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedSystemId(node.id);
+                            centerOnSystem(node.id);
+                          }}
+                          className={`h-5 px-1.5 rounded-full flex items-center justify-center gap-0.5 shadow-lg border cursor-pointer hover:scale-110 transition-transform ${
+                            sortedPilots.some(p => currentPilot && p.toLowerCase().includes(currentPilot.characterName.toLowerCase()))
+                              ? 'bg-cyan-500 text-black border-cyan-300 ring-2 ring-cyan-400/50 shadow-[0_0_12px_rgba(6,182,212,0.6)] font-bold'
+                              : 'bg-purple-600 border-purple-300 text-white shadow-[0_0_12px_rgba(168,85,247,0.8)] font-bold'
+                          }`}
                         >
-                          {pilotCount}
+                          <User className="w-3 h-3 shrink-0" />
+                          {pilotCount > 1 && (
+                            <span className="text-[9px] font-bold leading-none">{pilotCount}</span>
+                          )}
                         </div>
 
-                        {/* Stacked Pilots in Alphabetical Order on Hover */}
-                        <div className={`opacity-0 group-hover/pilot:opacity-100 pointer-events-none group-hover/pilot:pointer-events-auto transition-all duration-150 absolute top-full right-0 mt-1 min-w-[200px] p-3 rounded-2xl backdrop-blur-2xl border shadow-2xl z-50 animate-in fade-in zoom-in-95 ${
+                        {/* Hover Tooltip with Alphabetical Pilot Names */}
+                        <div className={`opacity-0 group-hover/pilot:opacity-100 pointer-events-none group-hover/pilot:pointer-events-auto transition-all duration-150 absolute top-full right-0 mt-1 min-w-[170px] p-2.5 rounded-2xl backdrop-blur-2xl border shadow-2xl z-50 animate-in fade-in zoom-in-95 ${
                           isDark 
                             ? 'bg-[#0a0f1d]/95 border-purple-500/40 text-white shadow-[0_0_24px_rgba(168,85,247,0.25)]' 
                             : 'bg-white/95 border-purple-200 text-slate-900 shadow-xl'
                         }`}>
-                          <div className={`text-[9px] font-sans font-bold uppercase tracking-wider pb-1.5 mb-2 border-b flex items-center justify-between ${
+                          <div className={`text-[9px] font-sans font-bold uppercase tracking-wider pb-1 mb-1.5 border-b flex items-center justify-between ${
                             isDark ? 'text-purple-300 border-purple-500/20' : 'text-purple-700 border-purple-100'
                           }`}>
                             <span>Pilots in {node.name}</span>
-                            <span className="px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-bold">{pilotCount}</span>
+                            <span className="px-1.5 py-0.2 rounded-full bg-purple-500/20 text-purple-300 font-bold">{pilotCount}</span>
                           </div>
                           
-                          <div className="space-y-1.5">
+                          <div className="space-y-1">
                             {sortedPilots.map((pilotName, pIdx) => {
                               const isMe = currentPilot && pilotName.toLowerCase().includes(currentPilot.characterName.toLowerCase());
                               return (
                                 <div
                                   key={pIdx}
-                                  className={`px-2.5 py-1.5 rounded-xl text-xs font-sans flex items-center gap-2 border transition-colors ${
+                                  className={`px-2 py-1 rounded-lg text-xs font-sans flex items-center gap-1.5 border transition-colors ${
                                     isMe
                                       ? isDark
                                         ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-200'
@@ -1832,11 +1933,10 @@ export const ChainMapperView: React.FC = () => {
                                       : 'bg-slate-50 border-slate-200 text-slate-800'
                                   }`}
                                 >
-                                  <span className={`w-2 h-2 rounded-full shrink-0 ${isMe ? 'bg-cyan-400' : 'bg-purple-400 animate-pulse'}`}></span>
-                                  <User className={`w-3.5 h-3.5 shrink-0 ${isMe ? 'text-cyan-400' : 'text-purple-400'}`} />
+                                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isMe ? 'bg-cyan-400' : 'bg-emerald-400 animate-pulse'}`}></span>
                                   <span className="font-semibold truncate flex-1">{pilotName}</span>
                                   {isMe && (
-                                    <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-bold uppercase">
+                                    <span className="text-[8px] px-1 py-0.2 rounded-full bg-cyan-500/20 text-cyan-300 font-bold uppercase">
                                       YOU
                                     </span>
                                   )}
@@ -1845,35 +1945,6 @@ export const ChainMapperView: React.FC = () => {
                             })}
                           </div>
                         </div>
-                      </div>
-                    )}
-
-                    {/* LIVE PILOT NAME PILLS (Pinned directly to card bottom so USS Hauler is instantly visible on map) */}
-                    {pilotCount > 0 && (
-                      <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 flex items-center justify-center gap-1 z-30 pointer-events-auto max-w-[110%]">
-                        {sortedPilots.map((pName, pIdx) => {
-                          const isMe = currentPilot && pName.toLowerCase().includes(currentPilot.characterName.toLowerCase());
-                          return (
-                            <div 
-                              key={pIdx}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedSystemId(node.id);
-                                centerOnSystem(node.id);
-                              }}
-                              className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold shadow-lg backdrop-blur-md transition-all whitespace-nowrap border cursor-pointer hover:scale-105 ${
-                                isMe
-                                  ? 'bg-cyan-500 text-black border-cyan-300 ring-2 ring-cyan-400/50 shadow-[0_0_12px_rgba(6,182,212,0.6)]'
-                                  : 'bg-purple-600/95 text-white border-purple-300/70 shadow-[0_0_14px_rgba(168,85,247,0.7)]'
-                              }`}
-                              title={`Active Pilot in ${node.name}: ${pName} (click to center)`}
-                            >
-                              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isMe ? 'bg-black animate-pulse' : 'bg-emerald-300 animate-pulse'}`} />
-                              <User className="w-2.5 h-2.5 shrink-0" />
-                              <span className="truncate max-w-[110px]">{pName}</span>
-                            </div>
-                          );
-                        })}
                       </div>
                     )}
                   </div>
@@ -3295,74 +3366,11 @@ export const ChainMapperView: React.FC = () => {
       </div>
 
       {/* Wireless Clipboard Manual Scan Paste Modal */}
-      {isPasteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in duration-150">
-          <div className={`w-full max-w-lg rounded-2xl border shadow-2xl p-5 font-sans ${
-            isDark ? 'bg-[#121622] border-purple-500/30 text-white shadow-[0_12px_48px_rgba(0,0,0,0.85)]' : 'bg-white border-slate-200 text-slate-900 shadow-xl'
-          }`}>
-            <div className="flex items-center justify-between pb-3 mb-3 border-b border-white/10">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center text-purple-300">
-                  <ClipboardCheck className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-sm text-white">Wireless Clipboard Bridge</h3>
-                  <p className="text-[11px] text-slate-400">Share D-Scan, Cosmic Signatures, or Systems wirelessly with fleet</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsPasteModalOpen(false)}
-                className="p-1 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <p className="text-xs text-slate-300 mb-2 leading-relaxed">
-              In EVE Online, copy any <strong className="text-purple-300">D-Scan window</strong> (Ctrl+A, Ctrl+C), <strong className="text-cyan-300">Probe Scanner signatures</strong>, or <strong className="text-emerald-300">System Name</strong>. Paste below to broadcast to all connected fleet members:
-            </p>
-
-            <textarea
-              value={manualPasteText}
-              onChange={(e) => setManualPasteText(e.target.value)}
-              placeholder="Paste EVE clipboard text here (Ctrl+V)..."
-              rows={6}
-              className="w-full bg-black/60 border border-white/10 rounded-xl p-3 font-mono text-xs text-slate-200 focus:outline-none focus:border-purple-400 resize-none mb-4"
-              autoFocus
-            />
-
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] text-slate-400 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                OS Auto-Listener Active
-              </span>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setIsPasteModalOpen(false)}
-                  className="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-slate-300 text-xs font-semibold cursor-pointer transition-all"
-                >
-                  Close
-                </button>
-                <button
-                  onClick={() => {
-                    if (manualPasteText.trim()) {
-                      import('../services/scoutWatcher').then(({ scoutWatcher }) => {
-                        scoutWatcher.evaluateText(manualPasteText.trim(), 'dscan_paste');
-                      });
-                      setManualPasteText('');
-                      setIsPasteModalOpen(false);
-                    }
-                  }}
-                  disabled={!manualPasteText.trim()}
-                  className="px-4 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:bg-gray-800 disabled:text-gray-500 text-white font-bold text-xs shadow-lg shadow-purple-600/30 cursor-pointer transition-all"
-                >
-                  Broadcast Scan
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <WirelessPasteModal
+        isOpen={isPasteModalOpen}
+        onClose={() => setIsPasteModalOpen(false)}
+        isDark={isDark}
+      />
 
       {/* Ship Fittings Window Modal */}
       <ShipFittingsModal
