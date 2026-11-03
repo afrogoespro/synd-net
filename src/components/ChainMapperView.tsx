@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   Network, Compass, Building2, Users, Plus, Trash2, 
-  Check, Share2, ZoomIn, ZoomOut, Maximize2, Crosshair,
+  Check, Share2, ZoomIn, ZoomOut, Maximize2, Crosshair, Grid,
   User, MapPin, Eye, Radio, ExternalLink, Layers, Sparkles, KeyRound, LogOut,
   Sun, Moon, ChevronDown, ChevronRight, FolderTree, GitFork, Copy, Route, Navigation, Zap,
   Clock, Hourglass, Skull, ShieldAlert, X, Cpu, BoxSelect, ArrowRight
@@ -94,6 +94,17 @@ export const ChainMapperView: React.FC = () => {
   };
 
   const isDark = theme === 'dark';
+
+  // Tactical Grid Mode (Grey slate background with engineering grid coordinates)
+  const [showGrid, setShowGrid] = useState<boolean>(() => {
+    return localStorage.getItem('synd_show_grid') !== 'false';
+  });
+
+  const toggleGrid = () => {
+    const next = !showGrid;
+    setShowGrid(next);
+    localStorage.setItem('synd_show_grid', String(next));
+  };
 
   // Connection signature & status edit modal
   const [selectedConnection, setSelectedConnection] = useState<WormholeConnection | null>(null);
@@ -643,12 +654,12 @@ export const ChainMapperView: React.FC = () => {
 
   return (
     <div className={`flex flex-col w-full h-full min-h-0 font-mono select-none overflow-hidden relative ${
-      isDark ? 'bg-[#04060c] text-gray-200' : 'bg-slate-100 text-slate-800'
+      isDark ? 'bg-[#121620] text-gray-200' : 'bg-slate-100 text-slate-800'
     }`}>
       
       {/* 1. TOP TITLE BAR (Apple macOS Sequoia / VisionOS Frosted Glass Bar) */}
       <div className={`border-b px-4 py-2 flex items-center justify-between text-xs z-20 flex-wrap gap-2.5 backdrop-blur-2xl transition-colors ${
-        isDark ? 'bg-[#090d16]/85 border-white/10 text-gray-200 shadow-md shadow-black/30' : 'bg-white/85 border-slate-200/80 text-slate-800 shadow-sm'
+        isDark ? 'bg-[#161c28]/90 border-white/10 text-gray-200 shadow-md shadow-black/30' : 'bg-white/85 border-slate-200/80 text-slate-800 shadow-sm'
       }`}>
         <div className="flex items-center gap-2.5 flex-wrap">
           {/* Pilot Identity & EVE SSO Profile (Apple Capsule) */}
@@ -910,21 +921,18 @@ export const ChainMapperView: React.FC = () => {
         onWheel={handleWheel}
         className={`flex-1 relative overflow-hidden ${isPanning ? 'cursor-grabbing select-none' : 'cursor-grab'} ${
           isDark 
-            ? 'bg-[#040711]' 
+            ? 'bg-[#121620]' 
             : 'bg-slate-100'
         }`}
         style={{
           backgroundImage: isDark ? `
-            radial-gradient(ellipse 70% 45% at 90% 15%, rgba(56, 189, 248, 0.15) 0%, rgba(14, 165, 233, 0.05) 45%, transparent 75%),
-            radial-gradient(ellipse 60% 40% at 10% 85%, rgba(168, 85, 247, 0.10) 0%, transparent 60%),
-            radial-gradient(1.5px 1.5px at 30px 40px, rgba(255,255,255,0.25), transparent),
-            radial-gradient(1px 1px at 80px 120px, rgba(56,189,248,0.20), transparent),
-            radial-gradient(1.5px 1.5px at 180px 70px, rgba(168,85,247,0.20), transparent)
+            radial-gradient(ellipse 75% 50% at 85% 15%, rgba(56, 189, 248, 0.08) 0%, rgba(14, 165, 233, 0.02) 45%, transparent 75%),
+            radial-gradient(ellipse 65% 45% at 15% 85%, rgba(168, 85, 247, 0.06) 0%, transparent 60%),
+            radial-gradient(circle at 50% 50%, rgba(30, 41, 59, 0.4) 0%, transparent 85%)
           ` : `
-            radial-gradient(#94a3b840 1px, transparent 1px)
+            radial-gradient(ellipse 70% 50% at 50% 50%, rgba(241, 245, 249, 0.9) 0%, rgba(226, 232, 240, 0.6) 100%)
           `,
-          backgroundColor: isDark ? '#050813' : '#f8fafc',
-          backgroundSize: isDark ? '100% 100%, 100% 100%, 260px 260px, 260px 260px, 260px 260px' : '24px 24px'
+          backgroundColor: isDark ? '#121620' : '#f8fafc'
         }}
       >
         {/* Transformable Canvas Layer */}
@@ -939,6 +947,31 @@ export const ChainMapperView: React.FC = () => {
           {/* SVG CONNECTION LINES LAYER */}
           <svg className="absolute inset-0 w-full h-full pointer-events-none overflow-visible">
             <defs>
+              {/* Tactical Space Grid Pattern (scales & translates with pan/zoom) */}
+              <pattern id="tactical-grid-fine" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path 
+                  d="M 40 0 L 0 0 0 40" 
+                  fill="none" 
+                  stroke={isDark ? "rgba(148, 163, 184, 0.08)" : "rgba(100, 116, 139, 0.12)"} 
+                  strokeWidth="1" 
+                />
+              </pattern>
+              <pattern id="tactical-grid-major" width="200" height="200" patternUnits="userSpaceOnUse">
+                <rect width="200" height="200" fill="url(#tactical-grid-fine)" />
+                <path 
+                  d="M 200 0 L 0 0 0 200" 
+                  fill="none" 
+                  stroke={isDark ? "rgba(56, 189, 248, 0.18)" : "rgba(14, 165, 233, 0.22)"} 
+                  strokeWidth="1.2" 
+                />
+                {/* Precision Tactical Crosshairs (+) at every 200px intersection */}
+                <path 
+                  d="M -6 0 L 6 0 M 0 -6 L 0 6" 
+                  fill="none" 
+                  stroke={isDark ? "rgba(56, 189, 248, 0.5)" : "rgba(14, 165, 233, 0.55)"} 
+                  strokeWidth="1.5" 
+                />
+              </pattern>
               {/* Wormhole Glow Filter */}
               <filter id="wh-glow" x="-20%" y="-20%" width="140%" height="140%">
                 <feGaussianBlur stdDeviation="2" result="blur" />
@@ -955,6 +988,11 @@ export const ChainMapperView: React.FC = () => {
                 </feMerge>
               </filter>
             </defs>
+
+            {/* TACTICAL GRID LAYER */}
+            {showGrid && (
+              <rect width="4000" height="3000" fill="url(#tactical-grid-major)" />
+            )}
 
             {mapState.connections.map((conn) => {
               if (hiddenNodeIds.has(conn.from) || hiddenNodeIds.has(conn.to)) return null;
@@ -1515,39 +1553,52 @@ export const ChainMapperView: React.FC = () => {
         )}
 
         {/* 3. FLOATING CANVAS CONTROLS (Bottom-Left) */}
-        <div className="canvas-control absolute bottom-4 left-4 z-20 flex flex-col items-center bg-[#0d1220]/90 backdrop-blur-md border border-gray-800 rounded-xl p-1 shadow-2xl space-y-1">
+        <div className={`canvas-control absolute bottom-4 left-4 z-20 flex flex-col items-center backdrop-blur-md border rounded-xl p-1 shadow-2xl space-y-1 ${
+          isDark ? 'bg-[#161c28]/90 border-white/10' : 'bg-white/90 border-slate-200'
+        }`}>
           <button
             onClick={handleZoomIn}
-            className="p-2 rounded-lg hover:bg-cyan-950 text-gray-300 hover:text-cyan-300 transition-colors"
+            className="p-2 rounded-lg hover:bg-cyan-950/60 text-gray-300 hover:text-cyan-300 transition-colors"
             title="Zoom In (+)"
           >
             <ZoomIn className="w-4 h-4" />
           </button>
           <button
             onClick={handleZoomOut}
-            className="p-2 rounded-lg hover:bg-cyan-950 text-gray-300 hover:text-cyan-300 transition-colors"
+            className="p-2 rounded-lg hover:bg-cyan-950/60 text-gray-300 hover:text-cyan-300 transition-colors"
             title="Zoom Out (-)"
           >
             <ZoomOut className="w-4 h-4" />
           </button>
-          <div className="w-4 h-px bg-gray-800"></div>
+          <div className={`w-4 h-px ${isDark ? 'bg-white/10' : 'bg-slate-200'}`}></div>
+          <button
+            onClick={toggleGrid}
+            className={`p-2 rounded-lg transition-colors ${
+              showGrid 
+                ? 'bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30' 
+                : 'hover:bg-cyan-950/60 text-gray-400 hover:text-gray-200'
+            }`}
+            title={`Toggle Tactical Grid (${showGrid ? 'Active' : 'Hidden'})`}
+          >
+            <Grid className="w-4 h-4" />
+          </button>
           <button
             onClick={handleFit}
-            className="p-2 rounded-lg hover:bg-cyan-950 text-gray-300 hover:text-cyan-300 transition-colors"
+            className="p-2 rounded-lg hover:bg-cyan-950/60 text-gray-300 hover:text-cyan-300 transition-colors"
             title="Fit to Screen (Reset Zoom)"
           >
             <Sparkles className="w-4 h-4" />
           </button>
           <button
             onClick={handleCenterOnPilot}
-            className="p-2 rounded-lg hover:bg-cyan-950 text-cyan-400 hover:text-cyan-300 transition-colors"
+            className="p-2 rounded-lg hover:bg-cyan-950/60 text-cyan-400 hover:text-cyan-300 transition-colors"
             title="Center on Active Pilot (J103955)"
           >
             <Crosshair className="w-4 h-4" />
           </button>
           <button
             onClick={toggleFullscreen}
-            className="p-2 rounded-lg hover:bg-cyan-950 text-cyan-300 hover:text-white transition-colors"
+            className="p-2 rounded-lg hover:bg-cyan-950/60 text-cyan-300 hover:text-white transition-colors"
             title="Toggle True Fullscreen (Fills entire monitor)"
           >
             <Maximize2 className="w-4 h-4" />
@@ -1558,7 +1609,7 @@ export const ChainMapperView: React.FC = () => {
         {/* Floating GalaxyFinder Hubs, Timers & zKill Feed (Bottom-Right Apple Frosted Glass Panel) */}
         {!showInspector && (
           <div className={`canvas-control absolute bottom-4 right-4 z-20 w-80 backdrop-blur-2xl border rounded-2xl shadow-2xl overflow-hidden font-sans text-xs transition-all ${
-            isDark ? 'bg-[#090d16]/90 border-white/10 text-slate-200' : 'bg-white/95 border-slate-200 text-slate-800'
+            isDark ? 'bg-[#161c28]/90 border-white/10 text-slate-200' : 'bg-white/95 border-slate-200 text-slate-800'
           }`}>
             {/* Top 3-Way Tab Switcher */}
             <div className={`p-2 border-b flex items-center justify-between ${isDark ? 'border-white/5 bg-white/5' : 'border-slate-100 bg-slate-50'}`}>
